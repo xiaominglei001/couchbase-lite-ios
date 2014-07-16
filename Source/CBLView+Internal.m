@@ -17,7 +17,7 @@
 #import "CBLInternal.h"
 #import "CouchbaseLitePrivate.h"
 #import "CBLCollateJSON.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "CBLMisc.h"
 #import "CBLGeometry.h"
 
@@ -100,7 +100,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     }
 
     // Version string is based on a digest of the properties:
-    NSString* version = CBLHexSHA1Digest([CBLCanonicalJSON canonicalData: viewProps]);
+    NSString* version = CBLHexSHA1Digest([CBJSONEncoder canonicalEncoding: viewProps error: NULL]);
 
     [self setMapBlock: mapBlock reduceBlock: reduceBlock version: version];
 
