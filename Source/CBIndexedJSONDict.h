@@ -20,6 +20,8 @@
        addingValues: (NSDictionary*)dictToAdd
         cacheValues: (BOOL)cacheValues;
 
++ (id)JSONObjectWithData:(NSData *)data options:(NSJSONReadingOptions)opt error:(NSError **)error;
+
 /** Returns YES if the dictionary contains a value for the key.
     This is equivalent to `[dict objectForKey: key] != nil`, but faster because the value doesn't need to be parsed. */
 - (BOOL)containsValueForKey:(NSString *)key;

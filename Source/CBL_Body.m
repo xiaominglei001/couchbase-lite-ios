@@ -14,6 +14,8 @@
 //  and limitations under the License.
 
 #import "CBL_Body.h"
+#import "CBIndexedJSONEncoder.h"
+#import "CBIndexedJSONDict.h"
 
 
 @implementation CBL_Body
@@ -21,6 +23,7 @@
     @private
     NSData* _json;
     NSDictionary* _object;
+    BOOL _jsonIndexed;
     BOOL _error;
 }
 
@@ -41,6 +44,7 @@
     self = [super init];
     if (self) {
         _json = json ? [json copy] : [[NSData alloc] init];
+        _jsonIndexed = [CBIndexedJSONEncoder mayBeIndexedJSON: json];
     }
     return self;
 }
@@ -56,6 +60,7 @@
     CBL_Body* body = [[[self class] allocWithZone: zone] init];
     body->_object = [_object copy];
     body->_json = [_json copy];
+    body->_jsonIndexed = _jsonIndexed;
     body->_error = _error;
     return body;
 }
@@ -65,7 +70,7 @@
 - (BOOL) isValidJSON {
     // Yes, this is just like asObject except it doesn't warn.
     if (!_object && !_error) {
-        _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: NULL] copy];
+        _object = [[CBIndexedJSONDict JSONObjectWithData: _json options: 0 error: NULL] copy];
         if (!_object) {
             _error = YES;
         }
@@ -80,6 +85,8 @@
             Warn(@"CBL_Body: couldn't convert to JSON");
             _error = YES;
         }
+    } else if (_jsonIndexed) {
+        return [CBIndexedJSONEncoder removeIndex: _json];
     }
     return _json;
 }
@@ -106,7 +113,7 @@
 - (id) asObject {
     if (!_object && !_error) {
         NSError* error = nil;
-        _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: &error] copy];
+        _object = [[CBIndexedJSONDict JSONObjectWithData: _json options: 0 error: &error] copy];
         if (!_object) {
             Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
             _error = YES;

@@ -270,6 +270,7 @@ TestCase(API_ModelEncodableProperties) {
 
     CBLDocument* doc2 = [db createDocument];
     CAssert([doc2 putProperties: props error: NULL]);
+    Log(@"doc2.properties = %@", doc2.properties);//TEMP
     CBL_TestModel* model2 = [[CBL_TestModel alloc] initWithDocument: doc2];
     CAssertEqual(model2.subModel, name);
 

@@ -16,6 +16,7 @@
 #import "CBLDatabase+LocalDocs.h"
 #import "CBL_Revision.h"
 #import "CBL_Body.h"
+#import "CBIndexedJSONDict.h"
 #import "CBLInternal.h"
 
 #import "FMDatabase.h"
@@ -34,18 +35,15 @@
         if (revID && !$equal(revID, gotRevID))
             return nil;
         NSData* json = [r dataNoCopyForColumnIndex: 1];
-        NSMutableDictionary* properties;
-        if (json.length==0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
-            properties = $mdict();      // workaround for issue #44
-        else {
-            properties = [CBLJSON JSONObjectWithData: json
-                                            options:CBLJSONReadingMutableContainers
-                                              error: NULL];
+        NSDictionary* properties = @{@"_id": docID, @"_rev": gotRevID};
+        if (json.length==0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0)) {
+        } else {
+            properties = [[CBIndexedJSONDict alloc] initWithData: json
+                                                    addingValues: properties
+                                                     cacheValues: YES];
             if (!properties)
                 return nil;
         }
-        properties[@"_id"] = docID;
-        properties[@"_rev"] = gotRevID;
         result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: gotRevID deleted:NO];
         result.properties = properties;
     }

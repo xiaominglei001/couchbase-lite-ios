@@ -23,6 +23,8 @@
 #import "CBL_Puller.h"
 #import "CBL_Pusher.h"
 #import "CBL_Shared.h"
+#import "CBIndexedJSONEncoder.h"
+#import "CBIndexedJSONDict.h"
 #import "CBLMisc.h"
 #import "CBLDatabase.h"
 #import "CouchbaseLitePrivate.h"
@@ -759,20 +761,31 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
 
 
 /** Inserts the _id, _rev and _attachments properties into the JSON data and stores it in rev.
- Rev must already have its revID and sequence properties set. */
-- (void) expandStoredJSON: (NSData*)json
+    Rev must already have its revID and sequence properties set. */
+- (BOOL) expandStoredJSON: (NSData*)json
              intoRevision: (CBL_MutableRevision*)rev
                   options: (CBLContentOptions)options
 {
     NSMutableDictionary* extra = $mdict();
     [self extraPropertiesForRevision: rev options: options into: extra];
-    if (json.length > 0) {
-        rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
-    } else {
+    if (json.length == 0) {
         rev.properties = extra;
         if (json == nil)
             rev.missing = true;
+    } else if ([CBIndexedJSONEncoder mayBeIndexedJSON: json]) {
+        CBIndexedJSONDict* dict = [[CBIndexedJSONDict alloc] initWithData: json
+                                                             addingValues: extra
+                                                              cacheValues: YES];
+        if (!dict)
+            return NO;
+        rev.properties = dict;
+    } else {
+        json = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
+        if (!json)
+            return NO;
+        rev.asJSON = json;
     }
+    return YES;
 }
 
 
@@ -787,20 +800,20 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                                                   deleted: deleted];
     rev.sequence = sequence;
     rev.missing = (json == nil);
-    NSMutableDictionary* docProperties;
-    if (json.length == 0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0))
-        docProperties = $mdict();      // optimization, and workaround for issue #44
-    else {
-        docProperties = [CBLJSON JSONObjectWithData: json
-                                            options: CBLJSONReadingMutableContainers
-                                              error: NULL];
+    NSMutableDictionary* extraProperties = $mdict();
+    [self extraPropertiesForRevision: rev options: options into: extraProperties];
+    if (json.length == 0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0)) {
+        return extraProperties;
+    } else {
+        NSDictionary* docProperties = [[CBIndexedJSONDict alloc] initWithData: json
+                                                                 addingValues: extraProperties
+                                                                  cacheValues: YES];
         if (!docProperties) {
             Warn(@"Unparseable JSON for doc=%@, rev=%@: %@", docID, revID, [json my_UTF8ToString]);
-            docProperties = $mdict();
+            docProperties = $dict();
         }
+        return docProperties;
     }
-    [self extraPropertiesForRevision: rev options: options into: docProperties];
-    return docProperties;
 }
 
 
@@ -831,6 +844,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     } else if (![r next]) {
         status = revID ? kCBLStatusNotFound : kCBLStatusDeleted;
     } else {
+        status = kCBLStatusOK;
         if (!revID)
             revID = [r stringForColumnIndex: 0];
         BOOL deleted = [r boolForColumnIndex: 1];
@@ -843,9 +857,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                 json = [r dataNoCopyForColumnIndex: 4];
             if ([r boolForColumnIndex: 3]) // no_attachments == true
                 options |= kCBLNoAttachments;
-            [self expandStoredJSON: json intoRevision: result options: options];
+            if (![self expandStoredJSON: json intoRevision: result options: options])
+                status = kCBLStatusCorruptError;
         }
-        status = kCBLStatusOK;
     }
     [r close];
     if (outStatus)
@@ -881,10 +895,12 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
                                                       revID: [r stringForColumnIndex: 0]
                                                     deleted: [r boolForColumnIndex: 1]];
         result.sequence = sequence;
-        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 3]
+        if ([self expandStoredJSON: [r dataNoCopyForColumnIndex: 3]
                   intoRevision: result
-                       options: ([r boolForColumnIndex: 2] ? kCBLNoAttachments : 0)];
-        status = kCBLStatusOK;
+                       options: ([r boolForColumnIndex: 2] ? kCBLNoAttachments : 0)])
+            status = kCBLStatusOK;
+        else
+            status = kCBLStatusCorruptError;
     }
     [r close];
     if (outStatus)
@@ -918,7 +934,9 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         // Found the rev. But the JSON still might be null if the database has been compacted.
         status = kCBLStatusOK;
         rev.sequence = [r longLongIntForColumnIndex: 0];
-        [self expandStoredJSON: [r dataNoCopyForColumnIndex: 1] intoRevision: rev options: options];
+        if (![self expandStoredJSON: [r dataNoCopyForColumnIndex: 1] intoRevision: rev
+                            options: options])
+            status = kCBLStatusCorruptError;
     }
     [r close];
     return status;

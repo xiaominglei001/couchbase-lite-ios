@@ -24,8 +24,8 @@
 
 
 - (id) initWithData: (NSData*)indexedJSONData
-                 addingValues: (NSDictionary*)dictToAdd
-                  cacheValues: (BOOL)cacheValues
+       addingValues: (NSDictionary*)dictToAdd
+        cacheValues: (BOOL)cacheValues
 {
     NSParameterAssert(indexedJSONData);
     self = [super init];
@@ -36,6 +36,8 @@
                 return nil;
             NSDictionary* dict = [NSJSONSerialization JSONObjectWithData: indexedJSONData
                                                                  options: 0 error: NULL];
+            if (![dict isKindOfClass: [NSDictionary class]])
+                return nil;
             if (dictToAdd.count == 0)
                 return (id)dict;
             NSMutableDictionary* mdict = [dict mutableCopy];
@@ -55,6 +57,16 @@
             _cache = [[NSMutableDictionary alloc] init];
         }
     }
+    return self;
+}
+
+
++ (id)JSONObjectWithData:(NSData *)data options:(NSJSONReadingOptions)opt error:(NSError **)error {
+    return [[self alloc] initWithData: data addingValues: nil cacheValues: YES];
+}
+
+
+- (id) copyWithZone:(NSZone *)zone {
     return self;
 }
 
@@ -114,7 +126,7 @@
     id value = _cache[key];
     if (value)
         return value;
-    if (key && ![key isKindOfClass: [NSString class]])
+    if (!key || ![key isKindOfClass: [NSString class]])
         return nil;
 
     const uint8_t* endOfValue;

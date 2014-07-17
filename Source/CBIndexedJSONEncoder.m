@@ -70,6 +70,12 @@
 }
 
 
++ (BOOL) mayBeIndexedJSON: (NSData*)data {
+    const DictHeader* header = (const DictHeader*)data.bytes;
+    return data.length >= sizeof(DictHeader) && EndianU16_BtoN(header->magic) == kDictMagicNumber;
+}
+
+
 + (BOOL) isValidIndexedJSON: (NSData*)data {
     const DictHeader* header = (const DictHeader*)data.bytes;
     if (data.length < sizeof(DictHeader) || EndianU16_BtoN(header->magic) != kDictMagicNumber)
@@ -86,5 +92,20 @@
         return NO;
     return YES;
 }
+
+
++ (NSData*) removeIndex: (NSData*)data {
+    if (![self mayBeIndexedJSON: data])
+        return data;
+    const DictHeader* header = (const DictHeader*)data.bytes;
+    NSUInteger count = EndianU16_BtoN(header->count);
+    const uint8_t* jsonStart = (const uint8_t*)&header->entry[count];
+    NSUInteger indexLength = jsonStart - (const uint8_t*)header;
+    size_t dataLength = data.length;
+    if (indexLength > dataLength)
+        return data;
+    return [data subdataWithRange: NSMakeRange(indexLength, dataLength-indexLength)];
+}
+
 
 @end

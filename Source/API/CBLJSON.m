@@ -62,6 +62,8 @@ static NSTimeInterval k1970ToReferenceDate;
 + (NSData*) appendDictionary: (NSDictionary*)dict
         toJSONDictionaryData: (NSData*)json
 {
+    if (json.length == 0 || *(char*)json.bytes != '{')
+        return nil;
     if (!dict.count)
         return json;
     NSData* extraJson = [self dataWithJSONObject: dict options: 0 error: NULL];
