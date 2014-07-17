@@ -248,7 +248,7 @@ static inline NSData* toJSONData( UU id object ) {
                 return self.lastDbError;
             } else if (last < dbMaxSequence) {
                 minLastSequence = MIN(minLastSequence, last);
-                LogTo(ViewVerbose, @"    %@ last indexed at #%lld", view.name, last);
+                LogTo(View, @"    %@ last indexed at #%lld", view.name, last);
                 BOOL ok;
                 if (last == 0) {
                     // If the lastSequence has been reset to 0, make sure to remove all map results:

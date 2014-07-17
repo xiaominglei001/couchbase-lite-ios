@@ -35,11 +35,13 @@
         if (revID && !$equal(revID, gotRevID))
             return nil;
         NSData* json = [r dataNoCopyForColumnIndex: 1];
-        NSDictionary* properties = @{@"_id": docID, @"_rev": gotRevID};
+        NSMutableDictionary* metaProperties = $mdict({@"_id", docID}, {@"_rev", gotRevID});
+        NSDictionary* properties;
         if (json.length==0 || (json.length==2 && memcmp(json.bytes, "{}", 2)==0)) {
+            properties = metaProperties;
         } else {
             properties = [[CBIndexedJSONDict alloc] initWithData: json
-                                                    addingValues: properties
+                                                    addingValues: metaProperties
                                                      cacheValues: YES];
             if (!properties)
                 return nil;

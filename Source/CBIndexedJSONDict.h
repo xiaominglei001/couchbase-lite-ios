@@ -13,11 +13,11 @@
 
 /** Creates an instance.
     @param indexedJSONData  Must be Indexed JSON or plain JSON data. If it's plain JSON, it will be parsed and a regular NSDictionary will be returned.
-    @param dictToAdd  An optional dictionary of keys/values to add. Keys in this dictionary will override the corresponding keys in the Indexed JSON data.
+    @param dictToAdd  An optional dictionary of keys/values to add. Keys in this dictionary will override the corresponding keys in the Indexed JSON data. This dictionary must be mutable and will NOT be copied; the caller shouldn't use it afterwards.
     @param cacheValues  If YES, the value for a key will be cached after the first time it's parsed. This makes multiple accesses to the same key faster, at the expense of using more memory.
     @return  The dictionary, or nil if parsing failed. */
 - (id) initWithData: (NSData*)indexedJSONData
-       addingValues: (NSDictionary*)dictToAdd
+       addingValues: (NSMutableDictionary*)dictToAdd
         cacheValues: (BOOL)cacheValues;
 
 + (id)JSONObjectWithData:(NSData *)data options:(NSJSONReadingOptions)opt error:(NSError **)error;
@@ -27,6 +27,6 @@
 - (BOOL)containsValueForKey:(NSString *)key;
 
 /** The encoded Indexed JSON data of the dictionary (the same data that was given when initializing it.) */
-@property (readonly) NSData* JSONData;
+@property (readonly, nonatomic) NSData* JSONData;
 
 @end

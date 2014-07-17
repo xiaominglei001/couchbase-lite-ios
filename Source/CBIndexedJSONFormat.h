@@ -7,6 +7,8 @@
 //
 
 #import <stdint.h>
+#import "murmurhash3_x86_32.h"
+
 
 /*  Data format:
     uint16      magic number
@@ -29,3 +31,10 @@ typedef struct {
     uint16_t count;
     DictEntry entry[0];
 } DictHeader;
+
+
+static inline UInt16 CBJSONKeyHash(const void* bytes, size_t len) {
+    uint32_t output;
+    MurmurHash3_x86_32(bytes, (int)len, 0/*seed*/, &output);
+    return output & 0xFFFF;
+}

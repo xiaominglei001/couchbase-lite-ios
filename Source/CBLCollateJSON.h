@@ -31,3 +31,6 @@ int CBLCollateJSONLimited(void *context,
 
 // ASCII mode, which is like CouchDB default except that strings are compared as binary UTF-8
 #define kCBLCollateJSON_ASCII ((void*)2)
+
+
+NSString* CBLParseJSONString(const char** in, BOOL copyBytes);

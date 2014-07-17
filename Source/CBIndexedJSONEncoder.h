@@ -15,8 +15,6 @@
 
 + (BOOL) isValidIndexedJSON: (NSData*)data;
 
-+ (UInt16) indexHash: (NSString*)key;
-
 + (NSData*) removeIndex: (NSData*)indexedJSON;
 
 @end

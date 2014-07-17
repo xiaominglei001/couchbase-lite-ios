@@ -217,7 +217,7 @@ static int compareStringsUnicodeFast(const char** in1, const char** in2) {
 }
 
 
-static NSString* createStringFromJSON(const char** in) {
+NSString* CBLParseJSONString(const char** in, BOOL copyBytes) {
     // Scan the JSON string to find its end and whether it contains escapes:
     TestedBy(CBLCollateJSON);
     const char* start = ++*in;
@@ -252,10 +252,16 @@ static NSString* createStringFromJSON(const char** in) {
         freeWhenDone = YES;
     }
     
-    NSString* nsstr = [[NSString alloc] initWithBytesNoCopy: (void*)start
-                                                     length: length
-                                                   encoding: NSUTF8StringEncoding
-                                               freeWhenDone: freeWhenDone];
+    NSString* nsstr;
+    if (!freeWhenDone && copyBytes)
+        nsstr = [[NSString alloc] initWithBytes: (void*)start
+                                         length: length
+                                       encoding: NSUTF8StringEncoding];
+    else
+        nsstr = [[NSString alloc] initWithBytesNoCopy: (void*)start
+                                               length: length
+                                             encoding: NSUTF8StringEncoding
+                                         freeWhenDone: freeWhenDone];
     CAssert(nsstr != nil, @"Failed to convert to string: start=%p, length=%u", start, length);
     return nsstr;
 }
@@ -267,8 +273,8 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
         return result;
     // Fast compare failed, so resort to using NSString:
     @autoreleasepool {
-        NSString* str1 = createStringFromJSON(in1);
-        NSString* str2 = createStringFromJSON(in2);
+        NSString* str1 = CBLParseJSONString(in1, NO);
+        NSString* str2 = CBLParseJSONString(in2, NO);
         return (int)[str1 localizedCompare: str2];
     }
 }

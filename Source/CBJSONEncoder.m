@@ -10,6 +10,9 @@
 #include "yajl/yajl_gen.h"
 
 
+#define UU __unsafe_unretained
+
+
 @implementation CBJSONEncoder
 {
     NSMutableData* _encoded;
@@ -21,7 +24,7 @@
 @synthesize canonical=_canonical;
 
 
-+ (NSData*) encode: (id)object error: (NSError**)outError {
++ (NSData*) encode: (UU id)object error: (NSError**)outError {
     CBJSONEncoder* encoder = [[self alloc] init];
     if ([encoder encode: object])
         return encoder.encodedData;
@@ -30,7 +33,7 @@
     return nil;
 }
 
-+ (NSData*) canonicalEncoding: (id)object error: (NSError**)outError {
++ (NSData*) canonicalEncoding: (UU id)object error: (NSError**)outError {
     CBJSONEncoder* encoder = [[self alloc] init];
     encoder.canonical = YES;
     if ([encoder encode: object])
@@ -59,7 +62,7 @@
 }
 
 
-- (BOOL) encode: (id)object {
+- (BOOL) encode: (UU id)object {
     return [self encodeNestedObject: object];
 }
 
@@ -79,7 +82,10 @@
 }
 
 
-- (BOOL) encodeNestedObject: (__unsafe_unretained id)object {
+#define checkStatus(STATUS) ((_status = (STATUS)) == yajl_gen_status_ok)
+
+
+- (BOOL) encodeNestedObject: (UU id)object {
     if ([object isKindOfClass: [NSString class]]) {
         return [self encodeString: object];
     } else if ([object isKindOfClass: [NSDictionary class]]) {
@@ -96,25 +102,40 @@
 }
 
 
-- (BOOL) encodeString: (__unsafe_unretained NSString*)str {
+- (BOOL) encodeString: (UU NSString*)str {
     __block yajl_gen_status status = yajl_gen_invalid_string;
     CBWithStringBytes(str, ^(const char *chars, size_t len) {
         status = yajl_gen_string(_gen, (const unsigned char*)chars, len);
     });
-    return [self checkStatus: status];
+    return checkStatus(status);
 }
 
 
-- (BOOL) encodeNumber: (__unsafe_unretained NSNumber*)number {
+- (BOOL) encodeNumber: (UU NSNumber*)number {
     yajl_gen_status status;
     switch (number.objCType[0]) {
         case 'c':
             status = yajl_gen_bool(_gen, number.boolValue);
             break;
         case 'f':
-        case 'd':
-            status = yajl_gen_double(_gen, number.doubleValue);
+        case 'd': {
+            // Based on yajl_gen_double, except yajl uses too many significant figures (20 not 16)
+            // which causes some numbers to round badly (e.g "8.9900000000000002" for "8.99")
+            double n = number.doubleValue;
+            char str[32];
+            if (isnan(n) || isinf(n))  {
+                status = yajl_gen_invalid_number;
+                break;
+            }
+            unsigned len = sprintf(str, "%.16g", n);
+            if (strspn(str, "0123456789-") == strlen(str)) {
+                strcat(str, ".0");
+                len += 2;
+            }
+            status = yajl_gen_number(_gen, str, len);
+            //status = yajl_gen_double(_gen, number.doubleValue);
             break;
+        }
         case 'Q': {
             char str[32];
             unsigned len = sprintf(str, "%llu", number.unsignedLongLongValue);
@@ -125,26 +146,26 @@
             status = yajl_gen_integer(_gen, number.longLongValue);
             break;
     }
-    return [self checkStatus: status];
+    return checkStatus(status);
 }
 
 
 - (BOOL) encodeNull {
-    return [self checkStatus: yajl_gen_null(_gen)];
+    return checkStatus(yajl_gen_null(_gen));
 }
 
 
-- (BOOL) encodeArray: (__unsafe_unretained NSArray*)array {
+- (BOOL) encodeArray: (UU NSArray*)array {
     yajl_gen_array_open(_gen);
     for (id item in array)
         if (![self encodeNestedObject: item])
             return NO;
-    return [self checkStatus: yajl_gen_array_close(_gen)];
+    return checkStatus(yajl_gen_array_close(_gen));
 }
 
 
-- (BOOL) encodeDictionary: (__unsafe_unretained NSDictionary*)dict {
-    if (![self checkStatus: yajl_gen_map_open(_gen)])
+- (BOOL) encodeDictionary: (UU NSDictionary*)dict {
+    if (!checkStatus(yajl_gen_map_open(_gen)))
         return NO;
     id keys = dict;
     if (_canonical)
@@ -152,14 +173,14 @@
     for (NSString* key in keys)
         if (![self encodeKey: key value: dict[key]])
             return NO;
-    return [self checkStatus: yajl_gen_map_close(_gen)];
+    return checkStatus(yajl_gen_map_close(_gen));
 }
 
-- (BOOL) encodeKey: (__unsafe_unretained id)key value: (__unsafe_unretained id)value {
+- (BOOL) encodeKey: (UU id)key value: (UU id)value {
     return [self encodeNestedObject: key] && [self encodeNestedObject: value];
 }
 
-+ (NSArray*) orderedKeys: (__unsafe_unretained NSDictionary*)dict {
++ (NSArray*) orderedKeys: (UU NSDictionary*)dict {
     return [[dict allKeys] sortedArrayUsingComparator: ^NSComparisonResult(id s1, id s2) {
         return [s1 compare: s2 options: NSLiteralSearch];
         /* Alternate implementation in case NSLiteralSearch turns out to be inappropriate:
@@ -180,14 +201,6 @@
 }
 
 
-- (BOOL) checkStatus: (yajl_gen_status)status {
-    if (status == yajl_gen_status_ok)
-        return YES;
-    _status = status;
-    return NO;
-}
-
-
 - (NSError*) error {
     if (_status == yajl_gen_status_ok)
         return nil;
@@ -195,7 +208,7 @@
 }
 
 
-BOOL CBWithStringBytes(__unsafe_unretained NSString* str, void (^block)(const char*, size_t)) {
+BOOL CBWithStringBytes(UU NSString* str, void (^block)(const char*, size_t)) {
     // First attempt: Get a C string directly from the CFString if it's in the right format:
     const char* cstr = CFStringGetCStringPtr((CFStringRef)str, kCFStringEncodingUTF8);
     if (cstr) {

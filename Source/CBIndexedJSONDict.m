@@ -9,6 +9,10 @@
 #import "CBIndexedJSONDict.h"
 #import "CBIndexedJSONEncoder.h"
 #import "CBIndexedJSONFormat.h"
+#import "CBLCollateJSON.h"
+
+
+#define UU __unsafe_unretained
 
 
 @implementation CBIndexedJSONDict
@@ -23,8 +27,8 @@
 }
 
 
-- (id) initWithData: (NSData*)indexedJSONData
-       addingValues: (NSDictionary*)dictToAdd
+- (id) initWithData: (UU NSData*)indexedJSONData
+       addingValues: (UU NSMutableDictionary*)dictToAdd
         cacheValues: (BOOL)cacheValues
 {
     NSParameterAssert(indexedJSONData);
@@ -47,12 +51,12 @@
 
         _data = [indexedJSONData copy];
         _header = (const DictHeader*)_data.bytes;
-        UInt16 count = EndianU16_BtoN(_header->count);
+        UInt16 count = NSSwapBigShortToHost(_header->count);
         _json = (const uint8_t*)&_header->entry[count];
         _addToCache = cacheValues;
         if (dictToAdd.count > 0) {
             _hasAddedValues = YES;
-            _cache = [dictToAdd mutableCopy];
+            _cache = dictToAdd; // not copied, to save time
         } else if (cacheValues) {
             _cache = [[NSMutableDictionary alloc] init];
         }
@@ -74,42 +78,44 @@
 @synthesize JSONData=_data;
 
 
-- (const uint8_t*) _findValueFor:(id)key end: (const uint8_t**)endOfValue {
+- (const uint8_t*) _findValueFor:(UU id)key end: (const uint8_t**)endOfValue {
     NSParameterAssert(key != nil);
-    uint16_t hash = [CBIndexedJSONEncoder indexHash: key];
-    const DictEntry* entry = _header->entry;
-    const uint8_t* jsonKey = _json;
-    for (NSUInteger i = EndianU16_BtoN(_header->count); i > 0; i--, entry++) {
-        jsonKey += EndianU16_BtoN(entry->offset);
-        if (EndianU16_BtoN(entry->hash) == hash) {
-            // Hash code matches entry; now compare the key strings:
-            const uint8_t* jsonValue = matchString(jsonKey, key);
-            if (jsonValue) {
-                // Keys match! Find the byte range of the value:
-                jsonValue++; // skip the ':'
-                if (i > 1)
-                    *endOfValue = jsonKey + EndianU16_BtoN((entry+1)->offset) - 1;
-                else
-                    *endOfValue = _data.bytes + _data.length - 1;
-                return jsonValue;
+    __block const uint8_t* result = NULL;
+    CBWithStringBytes(key, ^(const char *keyUTF8, size_t keyUTF8Len) {
+        uint16_t hash = NSSwapHostShortToBig(CBJSONKeyHash(keyUTF8, keyUTF8Len));
+        const DictEntry* entry = _header->entry;
+        const uint8_t* jsonKey = _json;
+        for (NSUInteger i = NSSwapBigShortToHost(_header->count); i > 0; i--, entry++) {
+            jsonKey += NSSwapBigShortToHost(entry->offset);
+            if (entry->hash == hash) {
+                // Hash code matches entry; now compare the key strings:
+                const uint8_t* jsonValue = matchString(jsonKey, keyUTF8, keyUTF8Len);
+                if (jsonValue) {
+                    // Keys match! Find the byte range of the value:
+                    jsonValue++; // skip the ':'
+                    if (i > 1)
+                        *endOfValue = jsonKey + NSSwapBigShortToHost((entry+1)->offset) - 1;
+                    else
+                        *endOfValue = _data.bytes + _data.length - 1;
+                    result = jsonValue; // found it!
+                    return;
+                }
             }
         }
-    }
-    return NULL;
+    });
+    return result;
 }
 
 
-- (BOOL)containsValueForKey:(NSString *)key {
-    if (_cache[key] != nil )
-        return YES;
+- (BOOL)containsValueForKey:(UU NSString *)key {
     const uint8_t* end;
-    return [self _findValueFor: key end: &end] != NULL;
+    return _cache[key] != nil || [self _findValueFor: key end: &end] != NULL;
 }
 
 
 - (NSUInteger) count {
     if (_count == 0) {
-        _count = EndianU16_BtoN(_header->count);
+        _count = NSSwapBigShortToHost(_header->count);
         if (_hasAddedValues) {
             for (NSString* key in _cache) {
                 const uint8_t* end;
@@ -122,7 +128,7 @@
 }
 
 
-- (id) objectForKey:(id)key {
+- (id) objectForKey:(UU id)key {
     id value = _cache[key];
     if (value)
         return value;
@@ -132,42 +138,69 @@
     const uint8_t* endOfValue;
     const uint8_t* jsonValue = [self _findValueFor: key end: &endOfValue];
     if (!jsonValue)
-        return nil;
-    NSData* valueData = [[NSData alloc] initWithBytesNoCopy: (void*)jsonValue
-                                                     length: endOfValue - jsonValue
-                                               freeWhenDone: NO];
-    if (!valueData)
-        return nil;
-    NSError* error;
-    value = [NSJSONSerialization JSONObjectWithData: valueData
-                                            options: NSJSONReadingAllowFragments
-                                              error: &error];
+        return nil; // not present
+
+    if (jsonValue[0] == '"') {
+        const char* pos = (const char*)jsonValue;
+        value = CBLParseJSONString(&pos, YES);
+        if (_addToCache && value)
+            _cache[key] = value;
+    } else if (isdigit(jsonValue[0]) || jsonValue[0] == '-') {
+        char* end;
+        double num = strtod((const char*)jsonValue, &end);
+        value = @(num);
+    } else if (jsonValue[0] == 't') {
+        value = @YES;
+    } else if (jsonValue[0] == 'f') {
+        value = @NO;
+    } else {
+        NSData* valueData = [[NSData alloc] initWithBytesNoCopy: (void*)jsonValue
+                                                         length: endOfValue - jsonValue
+                                                   freeWhenDone: NO];
+        if (!valueData)
+            return nil;
+        NSError* error;
+        value = [NSJSONSerialization JSONObjectWithData: valueData
+                                                options: NSJSONReadingAllowFragments
+                                                  error: &error];
+        if (_addToCache && value)
+            _cache[key] = value;
+    }
+
     if (!value)
         NSLog(@"WARNING: CBLIndexedJSONDict: Unparseable JSON value for key \"%@\"", key);
-    else if (_addToCache)
-        _cache[key] = value;
     return value;
 }
 
 
-- (NSArray*) allKeys {
-    NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _header->count];
+- (void) forEachKey: (void(^)(NSString*))block {
     const DictEntry* entry = _header->entry;
     const uint8_t* jsonKey = _json;
-    for (NSUInteger i = EndianU16_BtoN(_header->count); i > 0; i--, entry++) {
-        jsonKey += EndianU16_BtoN(entry->offset);
-        NSString* key = extractString(jsonKey);
+    for (NSUInteger i = NSSwapBigShortToHost(_header->count); i > 0; i--, entry++) {
+        jsonKey += NSSwapBigShortToHost(entry->offset);
+        const char* start = (const char*)jsonKey;
+        NSString* key = CBLParseJSONString(&start, YES);
         if (key)
-            [keys addObject: key];
+            block(key);
+        else
+            Warn(@"CBIndexedJSONDict: Couldn't read key at %p", jsonKey);
     }
 
     if (_hasAddedValues) {
         for (NSString* key in _cache) {
             const uint8_t* end;
             if ([self _findValueFor: key end: &end] == NULL)
-                [keys addObject: key];
+                block(key);
         }
     }
+}
+
+
+- (NSArray*) allKeys {
+    NSMutableArray* keys = [NSMutableArray arrayWithCapacity: _header->count];
+    [self forEachKey:^(NSString *key) {
+        [keys addObject: key];
+    }];
     return keys;
 }
 
@@ -177,36 +210,51 @@
 }
 
 
-// Compares a JSON string to an NSString. jsonKey points to the opening quote character.
-// Returns a pointer to the byte past the closing quote character on match, or NULL on mismatch.
-static const uint8_t* matchString(const uint8_t* jsonKey, NSString* keyStr) {
-    __block const uint8_t* end = NULL;
-    CBWithStringBytes(keyStr, ^(const char *keyUTF8, size_t utf8Len) {
-        size_t keyUTF8Index = 0;
-        const uint8_t* pos = jsonKey + 1; // skip opening quote
-        while (*pos != '"') {
-            //TODO: Interpret "\" character!!
-            if (keyUTF8Index >= utf8Len || *pos != keyUTF8[keyUTF8Index])
-                return; // doesn't match
-            keyUTF8Index++;
-            pos++;
+// This is what the %@ substitution calls.
+- (NSString *)descriptionWithLocale:(id)locale indent:(NSUInteger)level {
+    NSMutableString* desc = [@"{\n" mutableCopy];
+    [self forEachKey:^(NSString *key) {
+        NSString* valStr;
+        char delim = '=';
+        const uint8_t* jsonEnd;
+        const uint8_t* jsonStr = [self _findValueFor: key end: &jsonEnd];
+        if (jsonStr) {
+            valStr = [[NSString alloc] initWithBytes: jsonStr length: jsonEnd-jsonStr
+                                            encoding: NSUTF8StringEncoding];
+            delim = ':';
+            if (_cache[key])
+                delim = '-';
+        } else {
+            id value = self[key];
+            if ([value respondsToSelector: @selector(descriptionWithLocale:indent:)])
+                valStr = [value descriptionWithLocale: locale indent:level+1];
+            else if ([value respondsToSelector: @selector(descriptionWithLocale:)])
+                valStr = [value descriptionWithLocale: locale];
+            else
+                valStr = [value description];
         }
-        if (keyUTF8Index == utf8Len)
-            end = pos + 1; // match!
-    });
-    return end;
+        [desc appendFormat: @"    \"%@\" %c %@,\n", key, delim, valStr];
+    }];
+    [desc appendString: @"}"];
+    return desc;
 }
 
 
-// Given a pointer to a JSON string, return it as an NSString
-static NSString* extractString(const uint8_t* jsonKey) {
-    const uint8_t* start = jsonKey + 1; // skip opening quote
-    const uint8_t* end = start;
-    while (*end != '"' || end[-1] == '\\') {
-        end++;
+// Compares a JSON string to a UTF-8 string. jsonKey points to the opening quote character.
+// Returns a pointer to the byte past the closing quote character on match, or NULL on mismatch.
+static const uint8_t* matchString(const uint8_t* jsonKey, const char *utf8, size_t utf8Len) {
+    size_t keyUTF8Index = 0;
+    const uint8_t* pos = jsonKey + 1; // skip opening quote
+    while (*pos != '"') {
+        //TODO: Interpret "\" character!!
+        if (keyUTF8Index >= utf8Len || *pos != utf8[keyUTF8Index])
+            return NULL; // doesn't match
+        keyUTF8Index++;
+        pos++;
     }
-    // TODO: Decode '\' escapes!
-    return [[NSString alloc] initWithBytes: start length: end-start encoding: NSUTF8StringEncoding];
+    if (keyUTF8Index != utf8Len)
+        return NULL;
+    return pos + 1; // match!
 }
 
 
