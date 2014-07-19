@@ -246,7 +246,7 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
     __unused int dbVersion = self.schemaVersion;
     
     // Incompatible version changes increment the hundreds' place:
-    if (dbVersion >= 100) {
+    if (dbVersion >= 200) {
         Warn(@"CBLDatabase: Database version (%d) is newer than I know how to work with", dbVersion);
         [_fmdb close];
         if (outError) *outError = [NSError errorWithDomain: @"CouchbaseLite" code: 1 userInfo: nil]; //FIX: Real code
@@ -423,6 +423,14 @@ NSString* const CBL_DatabaseWillBeDeletedNotification = @"CBL_DatabaseWillBeDele
         if (![self initialize: sql error: outError])
             return NO;
         dbVersion = 12;
+    }
+
+    if (dbVersion < 101) {
+        // Version 101: Mark major compatibility break due to indexed-JSON data format
+        NSString* sql = @"PRAGMA user_version = 101";
+        if (![self initialize: sql error: outError])
+            return NO;
+        dbVersion = 101;
     }
 
     if (isNew && ![self initialize: @"END TRANSACTION" error: outError])
