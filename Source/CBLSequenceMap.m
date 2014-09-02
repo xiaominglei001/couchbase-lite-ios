@@ -41,6 +41,8 @@
 
 
 - (void) removeSequence: (SequenceNumber)sequence {
+    if (sequence == 0)
+        return;
     Assert(sequence > 0 && sequence <= (SequenceNumber)_lastSequence,
            @"Invalid sequence %lld (latest is %u)", sequence, _lastSequence);
     [_sequences removeIndex: (NSUInteger) sequence];

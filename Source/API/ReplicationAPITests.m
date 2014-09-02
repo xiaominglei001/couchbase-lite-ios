@@ -490,6 +490,35 @@ TestCase(ReplicationCookie) {
 }
 
 
+TestCase(PullAdHocDocs) {
+    RequireTestCase(RunPullReplication);
+    NSURL* remoteDbURL = RemoteTestDBURL(kPushThenPullDBName);
+    if (!remoteDbURL) {
+        Warn(@"Skipping test PullAdHocDocs (no remote test DB URL)");
+        return;
+    }
+    CBLDatabase* db = createEmptyManagerAndDb();
+
+    Log(@"Pulling...");
+    CBLReplication* repl = [db createPullReplication: remoteDbURL];
+    repl.customProperties = @{@"add_docs": @NO}; // prevent repl from adding new docs by default
+    NSArray* docIDs = @[@"doc-13", @"doc-123", @"doc-456"];
+    [repl pullDocumentIDs: docIDs];
+
+    runReplication(repl, 0);
+    AssertNil(repl.lastError);
+
+    Log(@"Verifying documents...");
+    AssertEq(db.documentCount, docIDs.count);
+    for (NSString* docID in docIDs) {
+        CBLDocument* doc = db[docID];
+        Assert([doc[@"index"] intValue] > 0);
+        AssertEqual(doc[@"bar"], $false);
+    }
+    [db.manager close];
+}
+
+
 TestCase(API_Replicator) {
     RequireTestCase(CreateReplicators);
     RequireTestCase(RunReplicationWithError);

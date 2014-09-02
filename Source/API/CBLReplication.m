@@ -48,7 +48,8 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @implementation CBLReplication
 {
     bool _started;
-    CBL_Replicator* _bg_replicator;       // ONLY used on the server thread
+    CBL_Replicator* _bg_replicator;         // ONLY used on the server thread
+    NSMutableArray* _bg_pullDocIDs;         // ONLY used on the server thread
 }
 
 
@@ -118,13 +119,21 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (void) setChannels:(NSArray *)channels {
     if (channels) {
-        Assert(self.pull, @"filterChannels can only be set in pull replications");
+        Assert(self.pull, @"channels property can only be set in pull replications");
         self.filter = kByChannelFilterName;
         self.filterParams = @{kChannelsQueryParam: [channels componentsJoinedByString: @","]};
     } else if ($equal(self.filter, kByChannelFilterName)) {
         self.filter = nil;
         self.filterParams = nil;
     }
+}
+
+
+- (void) pullDocumentIDs: (NSArray*)docIDs {
+    Assert(self.pull, @"Only available in pull replications");
+    [self tellDatabaseManager:^(CBLManager* dbmgr) {
+        [self bg_pullDocumentIDs: docIDs];
+    }];
 }
 
 
@@ -442,12 +451,38 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     [self bg_setReplicator: repl];
     [repl start];
     [self bg_updateProgress];
+
+    if (_bg_pullDocIDs) {
+        [self bg_pullDocumentIDsNow: _bg_pullDocIDs];
+        _bg_pullDocIDs = nil;
+    }
 }
 
 
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_stopReplicator {
     [_bg_replicator stop];
+}
+
+
+// CAREFUL: This is called on the server's background thread!
+- (void) bg_pullDocumentIDs: (NSArray*)docIDs {
+    if (_bg_replicator.running) {
+        [self bg_pullDocumentIDsNow: docIDs];
+    } else {
+        if (_bg_pullDocIDs)
+            [_bg_pullDocIDs addObjectsFromArray: docIDs];
+        else
+            _bg_pullDocIDs = [docIDs mutableCopy];
+    }
+}
+
+// CAREFUL: This is called on the server's background thread!
+- (void) bg_pullDocumentIDsNow: (NSArray*)docIDs {
+    for (NSString* docID in docIDs) {
+        CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: nil deleted: NO];
+        [(CBL_Puller*)_bg_replicator getAdHocRevision: rev];
+    }
 }
 
 
