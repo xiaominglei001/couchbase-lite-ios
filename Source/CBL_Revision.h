@@ -105,6 +105,8 @@ typedef SInt64 SequenceNumber;
 - (void) removeRev: (CBL_Revision*)rev;
 - (CBL_Revision*) removeAndReturnRev: (CBL_Revision*)rev;  // returns the object removed, or nil
 
+- (void) filter: (BOOL(^)(CBL_Revision*))block;     // Remove revs for which block returns NO
+
 - (void) limit: (NSUInteger)limit;
 - (void) sortBySequence;
 

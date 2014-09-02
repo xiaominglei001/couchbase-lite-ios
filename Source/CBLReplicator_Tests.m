@@ -484,6 +484,61 @@ TestCase(CBL_Pusher_DocIDs) {
 }
 
 
+TestCase(CBL_Puller_NoAdd) {
+    RequireTestCase(CBL_Pusher); // CBL_Pusher populates the remote db that this test pulls from...
+
+    NSURL* remote = RemoteTestDBURL(kScratchDBName);
+    if (!remote) {
+        Warn(@"Skipping test: no remote URL");
+        return;
+    }
+
+    CBLManager* server = [CBLManager createEmptyAtTemporaryPath: @"CBLPuller_DocIDs_Test"];
+    CBLDatabase* db = [server databaseNamed: @"db" error: NULL];
+    CAssert(db);
+
+    // Create an existing-but-bogus revision of doc1:
+    CBL_Revision* rev1 = [[CBL_Revision alloc] initWithProperties:
+                                  @{@"_id": @"doc1", @"_rev": @"1-0000"}];
+    CBLStatus status = [db forceInsert: rev1 revisionHistory: @[] source: nil];
+    CAssertEq(status, kCBLStatusCreated);
+
+    // Start a pull replication with "add_docs" option set to false:
+    CBL_Replicator* repl = [[CBL_Replicator alloc] initWithDB: db remote: remote
+                                                         push: NO continuous: NO];
+    repl.options = @{kCBLReplicatorOption_AddDocs: @NO};
+    repl.authorizer = authorizer();
+    [repl start];
+
+    // Let the replicator run.
+    CAssert(repl.running);
+    Log(@"Waiting for replicator to finish...");
+    while (repl.running || repl.savingCheckpoint) {
+        if (![[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                      beforeDate: [NSDate dateWithTimeIntervalSinceNow: 0.5]])
+            break;
+    }
+    CAssert(!repl.running);
+    CAssert(!repl.savingCheckpoint);
+    CAssertNil(repl.error);
+    Log(@"...replicator finished. lastSequence=%@", repl.lastSequence);
+    Log(@"GOT DOCS: %@", [db getAllDocs:nil]);
+
+    // There should be only one document, because 'doc2' didn't exist locally:
+    CAssertEq(db.documentCount, 1u);
+    CAssertEq(db.lastSequenceNumber, 3);
+
+    // Make sure we pulled the remote revision of doc1:
+    CBL_Revision* doc = [db getDocumentWithID: @"doc1" revisionID: nil];
+    CAssert(doc);
+    CAssert([doc.revID hasPrefix: @"2-"]);
+    CAssertEqual(doc[@"foo"], @1);
+
+    [db _close];
+    [server close];
+}
+
+
 TestCase(CBL_Puller_FromCouchApp) {
     RequireTestCase(CBL_Puller);
     NSURL* remote = RemoteTestDBURL(kCouchAppDBName);

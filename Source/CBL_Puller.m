@@ -273,6 +273,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // Process a bunch of remote revisions from the _changes feed at once
 - (void) processInbox: (CBL_RevisionList*)inbox {
+    CBLDatabase* db = _db;
     if (!_canBulkGet)
         _canBulkGet = [self serverIsSyncGatewayVersion: @"0.81"];
 
@@ -280,8 +281,15 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger originalCount = inbox.count;
-    if (![_db findMissingRevisions: inbox]) {
-        Warn(@"%@ failed to look up local revs", self);
+    if ([_options[kCBLReplicatorOption_AddDocs] isEqual: @NO]) {
+        // Setting the "add_docs" option to false stops new docs from being added locally:
+        if (![db findExistingDocs: inbox]) {
+            self.error = CBLStatusToNSError(db.lastDbError, nil);
+            inbox = nil;
+        }
+    }
+    if (![db findMissingRevisions: inbox]) {
+        self.error = CBLStatusToNSError(db.lastDbError, nil);
         inbox = nil;
     }
     NSUInteger missingCount = inbox.count;

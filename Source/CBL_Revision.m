@@ -310,6 +310,13 @@
     return rev;
 }
 
+- (void) filter: (BOOL(^)(CBL_Revision*))block {
+    for (NSInteger i = _revs.count - 1; i >= 0; i--) {
+        if (!block(_revs[i]))
+            [_revs removeObjectAtIndex: i];
+    }
+}
+
 - (CBL_Revision*) revWithDocID: (NSString*)docID {
     for (CBL_Revision* rev in _revs) {
         if ($equal(rev.docID, docID))
