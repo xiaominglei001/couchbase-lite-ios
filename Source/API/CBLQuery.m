@@ -33,14 +33,6 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
 @end
 
 
-@interface CBLQueryEnumerator ()
-- (instancetype) initWithDatabase: (CBLDatabase*)db
-                             rows: (NSArray*)rows
-                   sequenceNumber: (SequenceNumber)sequenceNumber;
-@end
-
-
-
 @implementation CBLQuery
 {
     CBLDatabase* _database;
@@ -113,7 +105,6 @@ static NSString* keyPathForQueryRow(NSString* keyPath);
         _fullTextRanking = query.fullTextRanking;
         _fullTextSnippets = query.fullTextSnippets;
         _allDocsMode = query.allDocsMode;
-        
     }
     return self;
 }

@@ -111,6 +111,7 @@
 
 @interface CBLQuery ()
 {
+    @protected
     NSString* _fullTextQuery;
     BOOL _fullTextSnippets, _fullTextRanking;
     CBLGeoRect _boundingBox;
@@ -120,6 +121,13 @@
                              view: (CBLView*)view                  __attribute__((nonnull(1)));
 - (instancetype) initWithDatabase: (CBLDatabase*)database
                          mapBlock: (CBLMapBlock)mapBlock            __attribute__((nonnull));
+@end
+
+
+@interface CBLQueryEnumerator ()
+- (instancetype) initWithDatabase: (CBLDatabase*)db
+                             rows: (NSArray*)rows
+                   sequenceNumber: (SequenceNumber)sequenceNumber;
 @end
 
 

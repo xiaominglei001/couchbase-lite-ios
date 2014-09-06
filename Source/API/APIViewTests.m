@@ -14,6 +14,7 @@
 
 #if DEBUG
 #import "APITestUtils.h"
+#import "CBLRemoteQuery.h"
 
 
 TestCase(API_CreateView) {
@@ -490,6 +491,26 @@ TestCase(API_SharedMapBlocks) {
     CAssertEqual(result, @"ok");
     closeTestDB(db);
     [mgr close];
+}
+
+
+TestCase(RemoteQuery) {
+    // PUT :4985/beer/_design/beer views:='{"abv":{"map":"function(doc,meta){if (doc.abv) emit(Number(doc.abv),doc.name)}"}}'
+    CBLDatabase* db = createEmptyDB();
+    NSURL* remoteURL = [NSURL URLWithString: @"http://localhost:4984/beer"];//FIX: Make portable
+    CBLRemoteQuery* q = [[CBLRemoteQuery alloc] initWithDatabase: db
+                                                          remote: remoteURL
+                                                            view: @"beer/abv"];
+    q.startKey = @6.1;
+    q.endKey = @6.2;
+    q.inclusiveEnd = NO;
+    NSError* error;
+    CBLQueryEnumerator* e = [q run: &error];
+    Assert(e, @"Query failed: %@", error);
+    for (CBLQueryRow* row in e) {
+        Log(@"ABV: %g -- %@ (_id = \"%@\")", [row.key doubleValue], row.value, row.documentID);
+    }
+    AssertEq(e.count, 20u);
 }
 
 
