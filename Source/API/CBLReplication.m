@@ -17,6 +17,7 @@
 #import "CBLReplication.h"
 
 #import "CBL_Pusher.h"
+#import "CBLRemoteRequest.h"
 #import "CBLDatabase+Replication.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
@@ -227,7 +228,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
-    [CBL_Replicator setAnchorCerts: certs onlyThese: onlyThese];
+    [CBLRemoteRequest setAnchorCerts: certs onlyThese: onlyThese];
 }
 
 

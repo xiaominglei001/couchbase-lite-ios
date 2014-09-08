@@ -199,7 +199,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                               forHost: (NSString*)host
                                  port: (UInt16)port
 {
-    return [self checkSSLServerTrust: serverTrust forHost: host port: port];
+    return [CBLRemoteRequest checkSSLServerTrust: serverTrust forHost: host port: port];
 }
 
 

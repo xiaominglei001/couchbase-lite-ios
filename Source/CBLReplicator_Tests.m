@@ -393,9 +393,9 @@ TestCase(CBL_Puller_SSL) {
                                 code: NSURLErrorServerCertificateUntrusted userInfo: nil]);
 
     Log(@"Now replicating with root cert installed...");
-    [CBL_Replicator setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
+    [CBLRemoteRequest setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
     id lastSeq = replic8(db, remoteURL, NO, nil, nil, nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    [CBLRemoteRequest setAnchorCerts: nil onlyThese: NO];
     CAssert([lastSeq intValue] >= 2);
 
     CAssertEq(db.documentCount, 2u);
@@ -416,9 +416,9 @@ TestCase(CBL_Puller_SSL_Continuous) {
                                       userInfo: nil]);
 
     Log(@"Now replicating with root cert installed...");
-    [CBL_Replicator setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
+    [CBLRemoteRequest setAnchorCerts: RemoteTestDBAnchorCerts() onlyThese: NO];
     id lastSeq = replic8Continuous(db, remoteURL, NO, nil, nil);
-    [CBL_Replicator setAnchorCerts: nil onlyThese: NO];
+    [CBLRemoteRequest setAnchorCerts: nil onlyThese: NO];
     CAssert([lastSeq intValue] >= 2);
 
     CAssertEq(db.documentCount, 2u);

@@ -229,6 +229,47 @@
 }
 
 
+#pragma mark - SSL SERVER TRUST:
+
+
+static NSArray* sAnchorCerts;
+static BOOL sOnlyTrustAnchorCerts;
+
+
++ (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
+    @synchronized(self) {
+        sAnchorCerts = certs.copy;
+        sOnlyTrustAnchorCerts = onlyThese;
+    }
+}
+
++ (BOOL) checkSSLServerTrust: (SecTrustRef)trust
+                     forHost: (NSString*)host port: (UInt16)port
+{
+    @synchronized(self) {
+        if (sAnchorCerts.count > 0) {
+            SecTrustSetAnchorCertificates(trust, (__bridge CFArrayRef)sAnchorCerts);
+            SecTrustSetAnchorCertificatesOnly(trust, sOnlyTrustAnchorCerts);
+        }
+    }
+    SecTrustResultType result;
+    OSStatus err = SecTrustEvaluate(trust, &result);
+    if (err) {
+        Warn(@"SecTrustEvaluate failed with err %d for host %@:%d", (int)err, host, port);
+        return NO;
+    }
+    return result == kSecTrustResultProceed || result == kSecTrustResultUnspecified;
+}
+
+
+
+- (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace {
+    return [[self class] checkSSLServerTrust: protectionSpace.serverTrust
+                                     forHost: protectionSpace.host
+                                        port: (UInt16)protectionSpace.port];
+}
+
+
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 
@@ -287,14 +328,9 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
         SecTrustRef trust = space.serverTrust;
-        BOOL ok;
-        if (_delegate)
-            ok = [_delegate checkSSLServerTrust: space];
-        else {
-            SecTrustResultType result;
-            ok = (SecTrustEvaluate(trust, &result) == noErr) &&
-                    (result==kSecTrustResultProceed || result==kSecTrustResultUnspecified);
-        }
+        BOOL ok = [[self class] checkSSLServerTrust: space.serverTrust
+                                           forHost: space.host
+                                              port: (UInt16)space.port];
         if (ok) {
             LogTo(RemoteRequest, @"    useCredential for trust: %@", trust);
             [sender useCredential: [NSURLCredential credentialForTrust: trust]

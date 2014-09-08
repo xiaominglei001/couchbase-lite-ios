@@ -67,6 +67,13 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 /** JSON-compatible dictionary with status information, to be returned from _active_tasks API */
 @property (readonly) NSMutableDictionary* statusInfo;
 
+/** Adds to (or replaces) the system list of trusted root certs. */
++ (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese;
++ (BOOL) checkSSLServerTrust: (SecTrustRef)trust
+                     forHost: (NSString*)host port: (UInt16)port;
+- (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace;
+
+
 // protected:
 - (void) setupRequest: (NSMutableURLRequest*)request withBody: (id)body;
 - (void) clearConnection;
@@ -90,7 +97,5 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 
 @protocol CBLRemoteRequestDelegate <NSObject>
-
-- (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace;
-
+// currently empty
 @end
