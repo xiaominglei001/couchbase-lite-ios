@@ -14,4 +14,6 @@
                            remote: (NSURL*)remoteDB
                              view: (NSString*)viewName;
 
+@property CBLReplication* puller;
+
 @end

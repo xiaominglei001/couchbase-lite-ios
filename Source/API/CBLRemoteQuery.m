@@ -14,11 +14,17 @@
 #import "CBLMisc.h"
 
 
+@interface CBLRemoteQuery () <CBLRemoteRequestDelegate>
+@end
+
+
 @implementation CBLRemoteQuery
 {
     NSURL* _remoteDB;
     NSString* _designDocID, *_viewName;
 }
+
+@synthesize puller=_puller;
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -172,6 +178,10 @@ static void addJSONParam(NSMutableString* urlStr, NSString* name, id param) {
         }
         onComplete(e, error);
     }];
+    if (!_puller)
+        _puller = [self.database existingReplicationWithURL: _remoteDB pull: YES];
+    rq.authorizer = (id<CBLAuthorizer>)_puller.authenticator;
+    rq.delegate = self;
     [rq start];
 }
 
