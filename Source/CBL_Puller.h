@@ -30,6 +30,10 @@
     CBLBatcher* _downloadsToInsert;     // Queue of CBLPulledRevisions, with bodies, to insert
 }
 
+/** Request to download a specific document or revision. It will be queued just as if it had
+    been received from the changes feed. */
+- (void) getAdHocRevision: (CBL_Revision*)rev;
+
 @end
 
 

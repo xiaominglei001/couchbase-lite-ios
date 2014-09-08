@@ -130,4 +130,34 @@
 }
 
 
+// Removes items from revs where the document ID does not exist locally.
+- (BOOL) findExistingDocs: (CBL_RevisionList*)revs
+             andNilRevIDs: (BOOL)andNilRevIDs;
+{
+    if (revs.count == 0)
+        return YES;
+    NSString* sql = $sprintf(@"SELECT docid FROM docs WHERE docid IN (%@)",
+                             [CBLDatabase joinQuotedStrings: revs.allDocIDs]);
+    _fmdb.shouldCacheStatements = NO;
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql];
+    _fmdb.shouldCacheStatements = YES;
+    if (!r)
+        return NO;
+    // Collect the doc IDs into a set:
+    NSMutableSet* existingDocIDs = [[NSMutableSet alloc] init];
+    @autoreleasepool {
+        while ([r next]) {
+            [existingDocIDs addObject: [r stringForColumnIndex: 0]];
+        }
+    }
+    [r close];
+
+    // Remove revs whose doc ID isn't in the set:
+    [revs filter: ^BOOL(CBL_Revision* rev) {
+        return [existingDocIDs containsObject: rev.docID] || (andNilRevIDs && rev.revID == nil);
+    }];
+    return YES;
+}
+
+
 @end

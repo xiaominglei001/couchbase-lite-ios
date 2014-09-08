@@ -216,10 +216,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     for (NSString* revID in revIDs) {
         // Push each revision info to the inbox
         CBLPulledRevision* rev = [[CBLPulledRevision alloc] initWithDocID: docID
-                                                                  revID: revID
-                                                                deleted: deleted];
-        // Remember its remote sequence ID (opaque), and make up a numeric sequence
-        // based on the order in which it appeared in the _changes feed:
+                                                                    revID: revID
+                                                                  deleted: deleted];
         rev.remoteSequenceID = remoteSequenceID;
         if (revIDs.count > 1)
             rev.conflicted = true;
@@ -268,20 +266,38 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
+- (void) getAdHocRevision: (CBL_Revision*)rev {
+    LogTo(SyncVerbose, @"%@ getting ad-hoc rev %@", self, rev);
+    self.changesTotal++;
+    CBLPulledRevision* revToPull = [[CBLPulledRevision alloc] initWithDocID: rev.docID
+                                                                      revID: rev.revID
+                                                                    deleted: rev.deleted];
+    [self addToInbox: revToPull];
+}
+
+
 #pragma mark - REVISION CHECKING:
 
 
 // Process a bunch of remote revisions from the _changes feed at once
 - (void) processInbox: (CBL_RevisionList*)inbox {
+    CBLDatabase* db = _db;
     if (!_canBulkGet)
         _canBulkGet = [self serverIsSyncGatewayVersion: @"0.81"];
 
     // Ask the local database which of the revs are not known to it:
-    LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
-    id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
+    LogTo(SyncVerbose, @"%@: Looking up local revs for %@", self, inbox);
+    id lastInboxSequence = lastRemoteSequenceID(inbox.allRevisions);
     NSUInteger originalCount = inbox.count;
-    if (![_db findMissingRevisions: inbox]) {
-        Warn(@"%@ failed to look up local revs", self);
+    if ([_options[kCBLReplicatorOption_AddDocs] isEqual: @NO]) {
+        // Setting the "add_docs" option to false stops new docs from being added locally:
+        if (![db findExistingDocs: inbox andNilRevIDs: YES]) {
+            self.error = CBLStatusToNSError(db.lastDbError, nil);
+            inbox = nil;
+        }
+    }
+    if (![db findMissingRevisions: inbox]) {
+        self.error = CBLStatusToNSError(db.lastDbError, nil);
         inbox = nil;
     }
     NSUInteger missingCount = inbox.count;
@@ -295,9 +311,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         // Instead of adding and immediately removing the revs to _pendingSequences,
         // just do the latest one (equivalent but faster):
         LogTo(SyncVerbose, @"%@: no new remote revisions to fetch", self);
-        SequenceNumber seq = [_pendingSequences addValue: lastInboxSequence];
-        [_pendingSequences removeSequence: seq];
-        self.lastSequence = _pendingSequences.checkpointedValue;
+        if (lastInboxSequence) {
+            SequenceNumber seq = [_pendingSequences addValue: lastInboxSequence];
+            [_pendingSequences removeSequence: seq];
+            self.lastSequence = _pendingSequences.checkpointedValue;
+        }
         return;
     }
     
@@ -315,13 +333,24 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         } else {
             [self queueRemoteRevision: rev];
         }
-        rev.sequence = [_pendingSequences addValue: rev.remoteSequenceID];
+        if (rev.remoteSequenceID)
+            rev.sequence = [_pendingSequences addValue: rev.remoteSequenceID];
     }
     LogTo(Sync, @"%@ queued %u remote revisions from seq=%@ (%u in bulk, %u individually)",
           self, (unsigned)inbox.count, ((CBLPulledRevision*)inbox[0]).remoteSequenceID,
           numBulked, (unsigned)(inbox.count-numBulked));
     
     [self pullRemoteRevisions];
+}
+
+
+static id lastRemoteSequenceID(NSArray* revs) {
+    for (NSInteger i=revs.count-1; i>=0; i--) {
+        id sequence = [revs[i] remoteSequenceID];
+        if (sequence)
+            return sequence;
+    }
+    return nil;
 }
 
 
@@ -384,8 +413,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // Construct a query. We want the revision history, and the bodies of attachments.
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#GET
     // See: http://wiki.apache.org/couchdb/HTTP_Document_API#Getting_Attachments_With_a_Document
-    NSString* path = $sprintf(@"%@?rev=%@&revs=true&attachments=true",
-                              CBLEscapeURLParam(rev.docID), CBLEscapeURLParam(rev.revID));
+    NSMutableString* path = [NSMutableString stringWithFormat: @"%@?revs=true&attachments=true",
+                                     CBLEscapeURLParam(rev.docID)];
+    if (rev.revID)
+        [path appendFormat: @"&rev=%@", CBLEscapeURLParam(rev.revID)];
+
     // If the document has attachments, add an 'atts_since' param with a list of
     // already-known revisions, so the server can skip sending the bodies of any
     // attachments we already have locally:
@@ -395,11 +427,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                       limit: kMaxNumberOfAttsSince
                                               hasAttachment: &hasAttachment];
     if (hasAttachment && knownRevs.count > 0)
-        path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
+        [path appendFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
     
-    // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...
-    // results in compiler error (could be undefined variable)
     __weak CBL_Puller *weakSelf = self;
     __block CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)

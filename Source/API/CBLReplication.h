@@ -77,6 +77,13 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** An optional JSON-compatible dictionary of extra properties for the replicator. */
 @property (nonatomic, copy) NSDictionary* customProperties;
 
+/** Requests that the replicator download the documents with the given IDs from the server
+    (EXPERIMENTAL).
+    This can only be called on a pull replication, obviously.
+    It's OK to call this while the replicator isn't running; the IDs will be remembered until
+    it starts. */
+- (void) pullDocumentIDs: (NSArray*)docIDs;
+
 
 #pragma mark - AUTHENTICATION:
 

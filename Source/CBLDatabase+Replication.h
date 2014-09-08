@@ -18,6 +18,12 @@
 
 - (void) addActiveReplicator: (CBL_Replicator*)repl;
 
+/** Removes from `revs` all the revisions that already exist in this database. */
 - (BOOL) findMissingRevisions: (CBL_RevisionList*)revs;
+
+/** Removes from `revs` all the revisions whose document doesn't exist in this database.
+    If `andNilRevIDs` is YES, it will not remove revisions whose revID is nil. */
+- (BOOL) findExistingDocs: (CBL_RevisionList*)revs
+             andNilRevIDs: (BOOL)andNilRevIDs;
 
 @end
