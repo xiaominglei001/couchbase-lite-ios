@@ -22,6 +22,7 @@
 #import "CBLDatabase+Internal.h"
 #import "CBLManager+Internal.h"
 #import "CBL_Server.h"
+#import "CBLRemoteQuery.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLFacebookAuthorizer.h"
 #import "MYBlockUtils.h"
@@ -135,6 +136,15 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
     [self tellDatabaseManager:^(CBLManager* dbmgr) {
         [self bg_pullDocumentIDs: docIDs];
     }];
+}
+
+
+- (CBLQuery*) createQueryOfRemoteView: (NSString*)viewName {
+    CBLRemoteQuery* query = [[CBLRemoteQuery alloc] initWithDatabase: _database
+                                                              remote: _remoteURL
+                                                                view: viewName];
+    query.puller = self;
+    return query;
 }
 
 

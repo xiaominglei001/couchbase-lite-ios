@@ -77,6 +77,9 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** An optional JSON-compatible dictionary of extra properties for the replicator. */
 @property (nonatomic, copy) NSDictionary* customProperties;
 
+
+#pragma mark - REMOTE DOCUMENTS & QUERIES:
+
 /** Requests that the replicator download the documents with the given IDs from the server
     (EXPERIMENTAL).
     This can only be called on a pull replication, obviously.
@@ -84,6 +87,10 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
     it starts. */
 - (void) pullDocumentIDs: (NSArray*)docIDs;
 
+/** Creates a new query object on a view of the remote database (EXPERIMENTAL).
+    The view name should be prefixed with the design document name and a "/" character;
+    e.g. to query the view "bydate" in the design document "app", use "app/bydate". */
+- (CBLQuery*) createQueryOfRemoteView: (NSString*)viewName;
 
 #pragma mark - AUTHENTICATION:
 

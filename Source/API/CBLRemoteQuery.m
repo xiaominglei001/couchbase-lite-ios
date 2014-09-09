@@ -17,6 +17,13 @@
 @interface CBLRemoteQuery () <CBLRemoteRequestDelegate>
 @end
 
+@interface CBLRemoteQueryRow : CBLQueryRow
+- (instancetype) initWithDictionary: (NSDictionary*)rowDict
+                             source: (CBLReplication*)source;
+@end
+
+
+
 
 @implementation CBLRemoteQuery
 {
@@ -147,6 +154,9 @@ static void addJSONParam(NSMutableString* urlStr, NSString* name, id param) {
     NSPredicate* postFilter = self.postFilter;
     NSArray* sortDescriptors = self.sortDescriptors;
 
+    if (!_puller)
+        _puller = [self.database existingReplicationWithURL: _remoteDB pull: YES];
+
     CBLRemoteJSONRequest* rq;
     rq = [[CBLRemoteJSONRequest alloc] initWithMethod: @"GET"
                                                   URL: self.queryURL
@@ -159,12 +169,8 @@ static void addJSONParam(NSMutableString* urlStr, NSString* name, id param) {
             LogTo(Query, @"%@ failed: %@", self, error);
         } else {
             NSArray* rows = [$castIf(NSArray, result[@"rows"]) my_map: ^id(NSDictionary* rowDict) {
-                NSString* docID = $castIf(NSString, rowDict[@"id"]);
-                CBLQueryRow* row = [[CBLQueryRow alloc] initWithDocID: docID
-                                                             sequence: 0
-                                                                  key: rowDict[@"key"]
-                                                                value: rowDict[@"value"]
-                                                        docProperties: rowDict[@"doc"]];
+                CBLRemoteQueryRow* row = [[CBLRemoteQueryRow alloc] initWithDictionary: rowDict
+                                                                                source: _puller];
                 if (postFilter && ![postFilter evaluateWithObject: row])
                     return nil;
                 return row;
@@ -178,11 +184,50 @@ static void addJSONParam(NSMutableString* urlStr, NSString* name, id param) {
         }
         onComplete(e, error);
     }];
-    if (!_puller)
-        _puller = [self.database existingReplicationWithURL: _remoteDB pull: YES];
     rq.authorizer = (id<CBLAuthorizer>)_puller.authenticator;
     rq.delegate = self;
     [rq start];
+}
+
+
+@end
+
+
+
+
+@implementation CBLRemoteQueryRow
+{
+    CBLReplication* _source;
+    BOOL _pulled;
+}
+
+
+- (instancetype) initWithDictionary: (NSDictionary*)rowDict
+                             source: (CBLReplication*)source
+{
+    self = [super initWithDocID: $castIf(NSString, rowDict[@"id"])
+                       sequence: 0
+                            key: rowDict[@"key"]
+                          value: rowDict[@"value"]
+                  docProperties: rowDict[@"doc"]];
+    if (self) {
+        _source = source;
+    }
+    return self;
+}
+
+
+- (CBLDocument*) document {
+    NSString* docID = self.documentID;
+    if (!docID)
+        return nil;
+    CBLDocument* doc = [self.database documentWithID: docID];
+    if (!_pulled && !doc.currentRevision) {
+        [_source pullDocumentIDs: @[docID]];        //OPT: Coalesce these somehow
+        _pulled = YES;
+    }
+    [doc loadCurrentRevisionFrom: self];
+    return doc;
 }
 
 
