@@ -9,8 +9,8 @@
 #import "CBL_Revision.h"
 #import "CBLStatus.h"
 #import "CBLDatabase.h"
-@class CBL_FMDatabase, CBLView, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase, CBLDatabaseChange, CBL_Shared, CBLModelFactory;
-struct CBLQueryOptions;      // declared in CBLView+Internal.h
+@class CBL_FMDatabase, CBLQueryOptions, CBLView, CBL_BlobStore, CBLDocument, CBLCache;
+@class CBLDatabase, CBLDatabaseChange, CBL_Shared, CBLModelFactory;
 
 
 /** NSNotification posted when one or more documents have been updated.
@@ -64,7 +64,6 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
     CBL_FMDatabase *_fmdb;
     BOOL _readOnly;
     BOOL _isOpen;
-    int _transactionLevel;
     NSThread* _thread;
     dispatch_queue_t _dispatchQueue;    // One and only one of _thread or _dispatchQueue is set
     NSCache* _docIDs;
@@ -212,7 +211,7 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (CBLStatus) deleteViewNamed: (NSString*)name;
 
 /** Returns the value of an _all_docs query, as an array of CBLQueryRow. */
-- (NSArray*) getAllDocs: (const struct CBLQueryOptions*)options;
+- (NSArray*) getAllDocs: (CBLQueryOptions*)options;
 
 - (CBLView*) makeAnonymousView;
 
@@ -235,5 +234,9 @@ extern const CBLChangesOptions kDefaultCBLChangesOptions;
 - (BOOL) runFilter: (CBLFilterBlock)filter
             params: (NSDictionary*)filterParams
         onRevision: (CBL_Revision*)rev;
+
+/** Post an NSNotification. handles if the database is running on a separate dispatch_thread
+ (issue #364). */
+- (void) postNotification: (NSNotification*)notification;
 
 @end

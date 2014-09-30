@@ -18,13 +18,13 @@
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
 #import "CBLCollateJSON.h"
-#import "CBLCanonicalJSON.h"
 #import "CBLMisc.h"
 
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
 #import "FMResultSet.h"
 
+NSString* const kCBLViewChangeNotification = @"CBLViewChange";
 
 @implementation CBLView
 
@@ -119,7 +119,15 @@
                                "WHERE name=? AND version!=?", 
                               version, _name, version])
         return NO;
-    return (fmdb.changes > 0);
+    
+    if (fmdb.changes > 0) {
+        // update any live queries that might be listening to this view, now that it has changed
+        [self postPublicChangeNotification];
+    
+        return YES;
+    } else {
+        return NO;
+    }
 }
 
 
@@ -166,6 +174,13 @@
     return [[CBLQuery alloc] initWithDatabase: self.database view: self];
 }
 
+- (void) postPublicChangeNotification {
+    // Post the public kCBLViewChangeNotification:
+    NSNotification* notification = [NSNotification notificationWithName: kCBLViewChangeNotification
+                                                                 object: self
+                                                               userInfo: nil];
+    [_weakDB postNotification:notification];
+}
 
 + (NSNumber*) totalValues: (NSArray*)values {
     double total = 0;

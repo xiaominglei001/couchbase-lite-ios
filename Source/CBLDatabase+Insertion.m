@@ -19,7 +19,7 @@
 #import "CouchbaseLitePrivate.h"
 #import "CBLDocument.h"
 #import "CBL_Revision.h"
-#import "CBLCanonicalJSON.h"
+#import "CBJSONEncoder.h"
 #import "CBL_Attachment.h"
 #import "CBLDatabaseChange.h"
 #import "CBL_Shared.h"
@@ -194,7 +194,7 @@
     // Create canonical JSON -- this is important, because the JSON data returned here will be used
     // to create the new revision ID, and we need to guarantee that equivalent revision bodies
     // result in equal revision IDs.
-    NSData* json = [CBLCanonicalJSON canonicalData: properties];
+    NSData* json = [CBJSONEncoder canonicalEncoding: properties error: nil];
     return json;
 }
 
@@ -749,6 +749,7 @@
     if (maxDepth == 0)
         maxDepth = self.maxRevTreeDepth;
 
+    Log(@"CBLDatabase: Pruning revisions to max depth %ld...", (unsigned long)maxDepth);
     *outPruned = 0;
     // First find which docs need pruning, and by how much:
     NSMutableDictionary* toPrune = $mdict();

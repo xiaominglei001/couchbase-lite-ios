@@ -29,9 +29,6 @@
 #import "MYURLUtils.h"
 
 
-#define RUN_IN_BACKGROUND 1
-
-
 NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
@@ -133,7 +130,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (void) pullDocumentIDs: (NSArray*)docIDs {
     Assert(self.pull, @"Only available in pull replications");
-    [self tellDatabaseManager:^(CBLManager* dbmgr) {
+    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
         [self bg_pullDocumentIDs: docIDs];
     }];
 }
@@ -290,15 +287,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
-- (void) tellDatabaseManager: (void (^)(CBLManager*))block {
-#if RUN_IN_BACKGROUND
-    [_database.manager.backgroundServer tellDatabaseManager: block];
-#else
-    block(_database.manager);
-#endif
-}
-
-
 - (void) start {
     if (!_database.isOpen)  // Race condition: db closed before replication starts
         return;
@@ -308,7 +296,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
         NSDictionary* properties= self.properties;
         id<CBLAuthorizer> auth = (id<CBLAuthorizer>)_authenticator;
-        [self tellDatabaseManager: ^(CBLManager* bgManager) {
+        [_database.manager.backgroundServer tellDatabaseManager: ^(CBLManager* bgManager) {
             // This runs on the server thread:
             [self bg_startReplicator: bgManager properties: properties auth: auth];
         }];
@@ -322,9 +310,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (void) stop {
-    [self tellDatabaseManager:^(CBLManager* dbmgr) {
+    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
         // This runs on the server thread:
-        [self bg_stopReplicator];
+        [bgReplicator stop];
     }];
     _started = NO;
     [_database forgetReplication: self];
@@ -340,16 +328,16 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 
 - (BOOL) suspended {
-    NSNumber* result = [_database.manager.backgroundServer waitForDatabaseManager: ^(CBLManager* m){
-        return @(_bg_replicator.suspended);
+    NSNumber* result = [self tellReplicatorAndWait: ^(CBL_Replicator* bgReplicator) {
+        return @(bgReplicator.suspended);
     }];
     return result.boolValue;
 }
 
 
 - (void) setSuspended: (BOOL)suspended {
-    [self tellDatabaseManager:^(CBLManager* dbmgr) {
-        _bg_replicator.suspended = suspended;
+    [self tellReplicator: ^(CBL_Replicator* bgReplicator) {
+        bgReplicator.suspended = suspended;
     }];
 }
 
@@ -405,6 +393,19 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 #pragma mark - BACKGROUND OPERATIONS:
 
 
+- (void) tellReplicator: (void (^)(CBL_Replicator*))block {
+    [_database.manager.backgroundServer tellDatabaseManager: ^(CBLManager* _) {
+        block(_bg_replicator);
+    }];
+}
+
+- (id) tellReplicatorAndWait: (id (^)(CBL_Replicator*))block {
+    return [_database.manager.backgroundServer waitForDatabaseManager: ^(CBLManager* _) {
+        return block(_bg_replicator);
+    }];
+}
+
+
 // CAREFUL: This is called on the server's background thread!
 - (void) bg_setReplicator: (CBL_Replicator*)repl {
     if (_bg_replicator) {
@@ -426,7 +427,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
                  properties: (NSDictionary*)properties
                        auth: (id<CBLAuthorizer>)auth
 {
-    // The setup should use properties, not ivars, because the ivars may change on the main thread.
+    // The setup must use properties, not ivars, because the ivars may change on the main thread.
     CBLStatus status;
     CBL_Replicator* repl = [server_dbmgr replicatorWithProperties: properties status: &status];
     if (!repl) {
@@ -467,12 +468,6 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         [self bg_pullDocumentIDsNow: _bg_pullDocIDs];
         _bg_pullDocIDs = nil;
     }
-}
-
-
-// CAREFUL: This is called on the server's background thread!
-- (void) bg_stopReplicator {
-    [_bg_replicator stop];
 }
 
 

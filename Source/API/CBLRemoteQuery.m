@@ -129,10 +129,11 @@ static void addJSONParam(NSMutableString* urlStr, NSString* name, id param) {
 - (CBLQueryEnumerator*) run: (NSError**)outError {
     __block BOOL complete = NO;
     __block CBLQueryEnumerator* result = nil;
+    __block NSError* resultError = nil;
     [self runAsync: ^(CBLQueryEnumerator *e, NSError *error) {
         result = e;
-        if (outError)
-            *outError = error;
+        if (!e)
+            resultError = error;
         complete = YES;
     }];
 
@@ -140,6 +141,8 @@ static void addJSONParam(NSMutableString* urlStr, NSString* name, id param) {
         [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
                                  beforeDate: [NSDate distantFuture]];
     }
+    if (outError)
+        *outError = resultError;
     return result;
 }
 
