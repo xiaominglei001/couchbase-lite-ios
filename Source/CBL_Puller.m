@@ -39,6 +39,13 @@
 // Maximum number of revs to fetch in a single bulk request
 #define kMaxRevsToGetInBulk 50u
 
+// Maximum number of revs we want to be handling at once -- that's all revs that we've heard about
+// from the change tracker but haven't yet inserted into the database. Once we hit this limit we
+// pause the change tracker. The pause doesn't take effect immediately since the change tracker is
+// reading asynchronously, so we'll get some more revs dumped on us, but we won't get a whole lot
+// above this limit.
+#define kMaxPendingDocs 200u
+
 
 @interface CBL_Puller () <CBLChangeTrackerClient>
 @end
@@ -129,7 +136,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 
 - (BOOL) canUseWebSockets {
-    id option = _options[@"websocket"];
+    id option = _options[kCBLReplicatorOption_UseWebSocket];
     if (option)
         return [option boolValue];
     return [self serverIsSyncGatewayVersion: @"0.91"]
@@ -195,6 +202,12 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
+- (void) pauseOrResume {
+    NSUInteger pending = _batcher.count + _pendingSequences.count;
+    _changeTracker.paused = (pending >= kMaxPendingDocs);
+}
+
+
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host
                                  port: (UInt16)port
@@ -224,6 +237,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         LogTo(SyncVerbose, @"%@: Received #%@ %@", self, remoteSequenceID, rev);
         [self addToInbox: rev];
     }
+
+    [self pauseOrResume];
 }
 
 
@@ -316,6 +331,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
             [_pendingSequences removeSequence: seq];
             self.lastSequence = _pendingSequences.checkpointedValue;
         }
+        [self pauseOrResume];
         return;
     }
     
@@ -341,6 +357,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
           numBulked, (unsigned)(inbox.count-numBulked));
     
     [self pullRemoteRevisions];
+    [self pauseOrResume];
 }
 
 
@@ -612,6 +629,7 @@ static id lastRemoteSequenceID(NSArray* revs) {
     else {
         LogTo(SyncVerbose, @"Giving up on %@: %@", rev, error);
         [_pendingSequences removeSequence: rev.sequence];
+        [self pauseOrResume];
     }
     self.changesProcessed++;
 }
@@ -636,6 +654,7 @@ static id lastRemoteSequenceID(NSArray* revs) {
             LogTo(Sync, @"%@: Transformer rejected revision %@", self, rev);
             [_pendingSequences removeSequence: rev.sequence];
             self.lastSequence = _pendingSequences.checkpointedValue;
+            [self pauseOrResume];
             return;
         }
         rev = xformed;
@@ -707,6 +726,7 @@ static id lastRemoteSequenceID(NSArray* revs) {
     
     [self asyncTasksFinished: downloads.count];
     self.changesProcessed += downloads.count;
+    [self pauseOrResume];
 }
 
 
