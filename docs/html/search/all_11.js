@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['readonly',['readOnly',['../structCBLManagerOptions.html#a554d8ad608c1df1c5e8ecc02f406b280',1,'CBLManagerOptions']]],
+  ['redirectlogging_3a',['redirectLogging:',['../interfaceCBLManager.html#ace33cee2fc2c90bdf0be9208a0225270',1,'CBLManager']]],
+  ['reduceblock',['reduceBlock',['../interfaceCBLView.html#a6b68872edd92ff2b57f482c1f61f10b1',1,'CBLView::reduceBlock()'],['../CBLView_8h.html#a6beb92ab10b79689aaeb5ae6117e8600',1,'REDUCEBLOCK():&#160;CBLView.h']]],
+  ['registerclass_3afordocumenttype_3a',['registerClass:forDocumentType:',['../interfaceCBLModelFactory.html#a87bc57a7e6451f503c0e145d3aa98fae',1,'CBLModelFactory']]],
+  ['reject',['reject',['../protocolCBLValidationContext-p.html#a0ca506fe6db09f8df1cc91d8cc70a242',1,'CBLValidationContext-p']]],
+  ['rejectwithmessage_3a',['rejectWithMessage:',['../protocolCBLValidationContext-p.html#ade39d8fcd3bab02ce20a1165bf485d4a',1,'CBLValidationContext-p']]],
+  ['reloadfromquery',['reloadFromQuery',['../interfaceCBLUITableSource.html#ad18ae9ccda092ac69153f4a2e04d542b',1,'CBLUITableSource']]],
+  ['remoteurl',['remoteURL',['../interfaceCBLReplication.html#a4fa63690302188686778c700b08081a8',1,'CBLReplication']]],
+  ['removeattachmentnamed_3a',['removeAttachmentNamed:',['../interfaceCBLModel.html#aba5eefbe5839bd237aa38e371ca48703',1,'CBLModel::removeAttachmentNamed:()'],['../interfaceCBLUnsavedRevision.html#a6e226da099128013756f42644e39baf5',1,'CBLUnsavedRevision::removeAttachmentNamed:()']]],
+  ['replacedatabasenamed_3awithdatabasefile_3awithattachments_3aerror_3a',['replaceDatabaseNamed:withDatabaseFile:withAttachments:error:',['../interfaceCBLManager.html#ac6ac00c66002cf03ee341f8ece5dbb9d',1,'CBLManager']]],
+  ['replaceuuids_3a',['replaceUUIDs:',['../interfaceCBLDatabase.html#af73b6de8ce4fa0175dade135959c2bfc',1,'CBLDatabase']]],
+  ['reset',['reset',['../interfaceCBLQueryEnumerator.html#a19f70dd72e9fb1f65ee55749817acbc6',1,'CBLQueryEnumerator']]],
+  ['restart',['restart',['../interfaceCBLReplication.html#a384b433411def1bd3759c83b1a7d94e0',1,'CBLReplication']]],
+  ['revertchanges',['revertChanges',['../interfaceCBLModel.html#a15b1b14bdc59cab3bcf3861695c6f78c',1,'CBLModel']]],
+  ['revision',['revision',['../interfaceCBLAttachment.html#a014c6ad551e6a6ee85a3dce70b555ac8',1,'CBLAttachment']]],
+  ['revisionid',['revisionID',['../interfaceCBLRevision.html#a1398f5aa4d4d280470d14ec94059d633',1,'CBLRevision']]],
+  ['revisionwithid_3a',['revisionWithID:',['../interfaceCBLDocument.html#a233652cc3f0f9a35fb09a50277ac3994',1,'CBLDocument']]],
+  ['rowatindex_3a',['rowAtIndex:',['../interfaceCBLQueryEnumerator.html#aeed3e6a7d4f497fc0b8acfdeaefc4903',1,'CBLQueryEnumerator::rowAtIndex:()'],['../interfaceCBLUITableSource.html#a4d367d1dca6bd56149f5da489ced583d',1,'CBLUITableSource::rowAtIndex:()']]],
+  ['rowatindexpath_3a',['rowAtIndexPath:',['../interfaceCBLUITableSource.html#a071b1dde0d6bfe22816921496f19168a',1,'CBLUITableSource']]],
+  ['rows',['rows',['../interfaceCBLLiveQuery.html#ab87a80e8251262e02e12fc6b9b12ae56',1,'CBLLiveQuery::rows()'],['../interfaceCBLUITableSource.html#abefe319c0fe87b4fa148d2f56d54c411',1,'CBLUITableSource::rows()']]],
+  ['run_3a',['run:',['../interfaceCBLQuery.html#a6387c3a733c680447c8cd0dc0388af8d',1,'CBLQuery']]],
+  ['runasync_3a',['runAsync:',['../interfaceCBLQuery.html#a5f6cd83a0866fff1e644e72c09a0a983',1,'CBLQuery']]],
+  ['running',['running',['../interfaceCBLReplication.html#a4877c47d457dceddfd49599b000fa578',1,'CBLReplication']]],
+  ['runquerywithcontext_3aerror_3a',['runQueryWithContext:error:',['../interfaceCBLQueryBuilder.html#ad15532a22a0b3dc170b1bb1d74753dbc',1,'CBLQueryBuilder']]]
+];

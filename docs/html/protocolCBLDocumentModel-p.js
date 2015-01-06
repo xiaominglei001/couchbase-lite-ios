@@ -1,4 +1,4 @@
 var protocolCBLDocumentModel_p =
 [
-    [ "CBLDocument:didChange:", "protocolCBLDocumentModel-p.html#a4a41c2f49bee0a3613e94f7624e47ff4", null ]
+    [ "document:didChange:", "protocolCBLDocumentModel-p.html#ab6d990d3c3b3defed8b8fa2b8fe3f326", null ]
 ];

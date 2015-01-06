@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['idfornewdocumentindatabase_3a',['idForNewDocumentInDatabase:',['../interfaceCBLModel.html#ae76c753c91a3c9d0955ecd6527269ba5',1,'CBLModel']]],
+  ['inclusiveend',['inclusiveEnd',['../interfaceCBLQuery.html#a24112dd7a012175c75bc367b0eb138b9',1,'CBLQuery']]],
+  ['inclusivestart',['inclusiveStart',['../interfaceCBLQuery.html#aff3ac1f0d21f13643fedb03e7f2591bd',1,'CBLQuery']]],
+  ['indexpathfordocument_3a',['indexPathForDocument:',['../interfaceCBLUITableSource.html#a76844daa00d65b6fe03ae9ebf8d77054',1,'CBLUITableSource']]],
+  ['indexupdatemode',['indexUpdateMode',['../interfaceCBLQuery.html#a0619872c3af58fe042c0cc4c8a7baea8',1,'CBLQuery']]],
+  ['init',['init',['../interfaceCBLManager.html#a6dbe729f05e5b2e73da4ae92d7ff5703',1,'CBLManager']]],
+  ['initwithdatabase_3aselect_3awhere_3aorderby_3aerror_3a',['initWithDatabase:select:where:orderBy:error:',['../interfaceCBLQueryBuilder.html#a582b4cb2eb155c9ac9fc559d06469bf0',1,'CBLQueryBuilder']]],
+  ['initwithdatabase_3aselect_3awherepredicate_3aorderby_3aerror_3a',['initWithDatabase:select:wherePredicate:orderBy:error:',['../interfaceCBLQueryBuilder.html#a3eb03548c894353ec366786818af6fbc',1,'CBLQueryBuilder']]],
+  ['initwithdirectory_3aoptions_3aerror_3a',['initWithDirectory:options:error:',['../interfaceCBLManager.html#a10bb63803233f418a25ef6b91f08d99e',1,'CBLManager']]],
+  ['initwithjson_3a',['initWithJSON:',['../protocolCBLJSONEncoding-p.html#a00ae3488354734aa0aae2a13c1782ffd',1,'CBLJSONEncoding-p']]],
+  ['initwithmutablearray_3a',['initWithMutableArray:',['../interfaceCBLLazyArrayOfJSON.html#a022fe448cc2c1bfe0b0b0a659ce67423',1,'CBLLazyArrayOfJSON']]],
+  ['initwithowner_3aproperty_3aitemclass_3adocids_3a',['initWithOwner:property:itemClass:docIDs:',['../interfaceCBLModelArray.html#adffcc0ea2dd7943c735fca0211bd81c8',1,'CBLModelArray']]],
+  ['initwithowner_3aproperty_3aitemclass_3amodels_3a',['initWithOwner:property:itemClass:models:',['../interfaceCBLModelArray.html#a92aa277ee42e1d98446ef741c0a69710',1,'CBLModelArray']]],
+  ['initwithview_3aselect_3awherepredicate_3aorderby_3aerror_3a',['initWithView:select:wherePredicate:orderBy:error:',['../interfaceCBLQueryBuilder.html#af46a7dd9b75c2db9230b6c35d47089e4',1,'CBLQueryBuilder']]],
+  ['internalurl',['internalURL',['../interfaceCBLDatabase.html#a78f33f7c7af03c43f4581d43f9883f4a',1,'CBLDatabase::internalURL()'],['../interfaceCBLManager.html#aa949c5be7c40d7c4b062788f17526a5e',1,'CBLManager::internalURL()']]],
+  ['intransaction_3a',['inTransaction:',['../interfaceCBLDatabase.html#a0c427b8d80c8374da1ab52c2adda5223',1,'CBLDatabase']]],
+  ['isdeleted',['isDeleted',['../interfaceCBLDocument.html#a96ef80555a252dceeb73d350c8bd25e7',1,'CBLDocument']]],
+  ['isdeletion',['isDeletion',['../interfaceCBLRevision.html#ae7ca52b3e49a8b7e16c8d5a5ce18ac11',1,'CBLRevision::isDeletion()'],['../interfaceCBLUnsavedRevision.html#a5120c54e0e112f8085f519dadedd825c',1,'CBLUnsavedRevision::isDeletion()']]],
+  ['isdocumentpending_3a',['isDocumentPending:',['../interfaceCBLReplication.html#a524d54ae43d7361d5d8e279b890a5bb1',1,'CBLReplication']]],
+  ['isgone',['isGone',['../interfaceCBLDocument.html#a04fa77032aeb6afab9a3b8fd23684482',1,'CBLDocument::isGone()'],['../interfaceCBLRevision.html#add74bb7494d347507f3ec8b5172a57b6',1,'CBLRevision::isGone()']]],
+  ['isnew',['isNew',['../interfaceCBLModel.html#a569f28df599e6ac07b9aebdd0fc96696',1,'CBLModel']]],
+  ['isvaliddatabasename_3a',['isValidDatabaseName:',['../interfaceCBLManager.html#a324226d5a05df0b54f67217ab255e6e3',1,'CBLManager']]],
+  ['itemclassforarrayproperty_3a',['itemClassForArrayProperty:',['../interfaceCBLModel.html#ae6cd38c150b76aa7aaaaa3747193f237',1,'CBLModel']]]
+];

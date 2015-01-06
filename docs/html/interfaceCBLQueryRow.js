@@ -5,7 +5,7 @@ var interfaceCBLQueryRow =
     [ "value", "interfaceCBLQueryRow.html#afa2ee3e4bc40df3a27d320e9fc940502", null ],
     [ "documentID", "interfaceCBLQueryRow.html#ad728ab8d759fe1d2a8a118b762dd357a", null ],
     [ "sourceDocumentID", "interfaceCBLQueryRow.html#ad26a01bd06d751020c0180163967fd82", null ],
-    [ "documentRevision", "interfaceCBLQueryRow.html#a90e727249c402a4833212ec56a128c41", null ],
+    [ "documentRevisionID", "interfaceCBLQueryRow.html#ab5f670f437dfb9e1468e43e53ccc2c90", null ],
     [ "database", "interfaceCBLQueryRow.html#a0d597147e910541f5c9d5de70ca98b06", null ],
     [ "document", "interfaceCBLQueryRow.html#a6010aefc17f4c0ba18f8e7e611b1253c", null ],
     [ "documentProperties", "interfaceCBLQueryRow.html#a5cbaeaf32ec99222ee9f3ccdcedc4643", null ],

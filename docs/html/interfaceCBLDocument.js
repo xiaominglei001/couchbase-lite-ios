@@ -10,7 +10,7 @@ var interfaceCBLDocument =
     [ "propertyForKey:", "interfaceCBLDocument.html#a9f166b2cde7a3b9b93ecfb12b3a29594", null ],
     [ "objectForKeyedSubscript:", "interfaceCBLDocument.html#ade59fb115bfa4c72e7c335b1b94ce502", null ],
     [ "putProperties:error:", "interfaceCBLDocument.html#a9563caa278342a710bde01c9f4e1b6d8", null ],
-    [ "update:error:", "interfaceCBLDocument.html#a19ff4dc7d070983918f64ae69f167e89", null ],
+    [ "update:error:", "interfaceCBLDocument.html#a650b02bf5a499334ed01a350ccabd973", null ],
     [ "database", "interfaceCBLDocument.html#aa876ef453465544696aa241930aca122", null ],
     [ "documentID", "interfaceCBLDocument.html#a88e1a6119e5ddb64708838373d2db5d2", null ],
     [ "abbreviatedID", "interfaceCBLDocument.html#accc411b07104d09f88989ab3ef8e9302", null ],
