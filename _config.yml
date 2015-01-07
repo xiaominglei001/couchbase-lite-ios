@@ -1,0 +1,15 @@
+# Site settings
+title: Couchbase Lite iOS/Mac Blog
+email: jens@couchbase.com
+timezone: America/Los_Angeles
+description: > # this means to ignore newlines until "baseurl:"
+  Hi! This is an informal development blog for Couchbase Lite, the mobile NoSQL sync-enabled
+  database, mostly focusing on the iOS/Mac (Cocoa) version.
+baseurl: "/couchbase-lite-ios" # the subpath of your site, e.g. /blog/
+url: "http://couchbase.github.io" # the base hostname & protocol for your site
+
+#twitter_username: snej
+github_username:  snej
+
+# Build settings
+markdown: kramdown
