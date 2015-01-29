@@ -56,7 +56,10 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 @synthesize headers=_headers, OAuth=_OAuth, customProperties=_customProperties;
 @synthesize running = _running, completedChangesCount=_completedChangesCount;
 @synthesize changesCount=_changesCount, lastError=_lastError, status=_status;
-@synthesize authenticator=_authenticator, serverCertificate=_serverCertificate;
+@synthesize authenticator=_authenticator;
+#ifndef GNUSTEP
+@synthesize serverCertificate=_serverCertificate;
+#endif
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
@@ -77,7 +80,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 
 - (void) dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver: self];
+#ifndef GNUSTEP
     cfrelease(_serverCertificate);
+#endif
 }
 
 
@@ -224,9 +229,11 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
 }
 
 
+#ifndef GNUSTEP
 + (void) setAnchorCerts: (NSArray*)certs onlyThese: (BOOL)onlyThese {
     [CBL_Replicator setAnchorCerts: certs onlyThese: onlyThese];
 }
+#endif
 
 
 #pragma mark - START/STOP:
@@ -283,7 +290,7 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         }];
 
         // Initialize the status to something other than kCBLReplicationStopped:
-        [self updateStatus: kCBLReplicationOffline error: nil processed: 0 ofTotal: 0
+        [self updateStatus: kCBLReplicationOffline error: NULL processed: 0 ofTotal: 0
                 serverCert: NULL];
 
         [_database addReplication: self];
@@ -364,7 +371,9 @@ NSString* const kCBLReplicationChangeNotification = @"CBLReplicationChange";
         changed = YES;
     }
 
+#ifndef GNUSTEP
     cfSetObj(&_serverCertificate, serverCert);
+#endif
 
     if (changed) {
         static const char* kStatusNames[] = {"stopped", "offline", "idle", "active"};

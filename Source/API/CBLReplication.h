@@ -117,6 +117,7 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** Deletes the named cookie from the shared NSHTTPCookieStorage for the remote server's URL. */
 -(void)deleteCookieNamed:(NSString *)name;
 
+#ifndef GNUSTEP
 /** Adds additional SSL root certificates to be trusted by the replicator, or entirely overrides the
     OS's default list of trusted root certs.
     @param certs  An array of SecCertificateRefs of root certs that should be trusted. Most often
@@ -128,6 +129,8 @@ typedef NS_ENUM(unsigned, CBLReplicationStatus) {
 /** The server's SSL certificate. This will be NULL until the first HTTPS response is received
     from the server. */
 @property (readonly) SecCertificateRef serverCertificate;
+#endif
+
 
 #pragma mark - STATUS:
 

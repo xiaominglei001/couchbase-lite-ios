@@ -11,7 +11,6 @@
 #ifdef GNUSTEP
 typedef uint32_t SCNetworkReachabilityFlags;
 typedef void* SCNetworkReachabilityRef;
-typedef void* CFRunLoopRef;
 #else
 #import <SystemConfiguration/SCNetworkReachability.h>
 #endif

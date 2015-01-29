@@ -225,7 +225,7 @@ static id keyForPrefixMatch(id key, unsigned depth) {
     else if (options->reduceSpecified)
         return options->reduce;
     else
-        return (self.reduceBlock != nil); // Reduce defaults to true iff there's a reduce block
+        return (self.reduceBlock != NULL); // Reduce defaults to true iff there's a reduce block
 }
 
 

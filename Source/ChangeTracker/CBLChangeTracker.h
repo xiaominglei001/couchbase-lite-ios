@@ -19,9 +19,11 @@
 
 
 @protocol CBLChangeTrackerClient <NSObject>
+#ifndef GNUSTEP
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host
                                  port: (UInt16)port;
+#endif
 - (void) changeTrackerReceivedSequence: (id)sequence
                                  docID: (NSString*)docID
                                 revIDs: (NSArray*)revIDs

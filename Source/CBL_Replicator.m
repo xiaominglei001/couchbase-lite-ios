@@ -29,7 +29,9 @@
 #import "CBJSONEncoder.h"
 #import "MYBlockUtils.h"
 #import "MYURLUtils.h"
+#ifndef GNUSTEP
 #import "MYAnonymousIdentity.h"
+#endif
 
 
 #define kProcessDelay 0.5
@@ -761,6 +763,8 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 }
 
 
+#ifndef GNUSTEP
+
 static NSArray* sAnchorCerts; // TODO: Add API to set these
 static BOOL sOnlyTrustAnchorCerts;
 
@@ -822,6 +826,8 @@ static BOOL sOnlyTrustAnchorCerts;
                              forHost: protectionSpace.host
                                 port: (UInt16)protectionSpace.port];
 }
+
+#endif // GNUSTEP
 
 
 #pragma mark - CHECKPOINT STORAGE:

@@ -749,7 +749,7 @@
     dispatch_async(readingQueue, ^{
         Log(@"Reader 1 starting...");
         NSError* error;
-        CBLDatabase* bgdb = [readQueueMgr existingDatabaseNamed: db.name error: nil];
+        CBLDatabase* bgdb = [readQueueMgr existingDatabaseNamed: db.name error: NULL];
         NSAssert(bgdb, @"Couldn't create bgdb: %@", error);
         Log(@"bg reader: %@", bgdb);
         [self lotsaReads: kNTransactions/2 database: bgdb];

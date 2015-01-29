@@ -76,6 +76,9 @@ BOOL CBLIsPermanentError( NSError* error );
 /** Returns YES if this error appears to be due to a creating a file/dir that already exists. */
 BOOL CBLIsFileExistsError( NSError* error );
 
+/** Returns the size/length of a file, or -1 on error. */
+NSInteger CBLGetFileSize(NSURL* fileURL);
+
 /** Removes a file if it exists; does nothing if it doesn't. */
 BOOL CBLRemoveFileIfExists(NSString* path, NSError** outError) __attribute__((nonnull(1)));
 

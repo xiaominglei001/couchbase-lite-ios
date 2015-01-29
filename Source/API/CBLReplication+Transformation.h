@@ -5,7 +5,11 @@
 //  Created by Jens Alfke on 3/14/14.
 //  Copyright (c) 2014 Couchbase, Inc. All rights reserved.
 
+#ifdef GNUSTEP
+#import "CouchbaseLite.h"
+#else
 #import <CouchbaseLite/CouchbaseLite.h>
+#endif
 
 
 /** A callback block for transforming revision bodies during replication.

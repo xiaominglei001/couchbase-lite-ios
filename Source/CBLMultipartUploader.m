@@ -60,6 +60,7 @@
 }
 
 
+#ifndef GNUSTEP //FIX: How do we handle this situation in GNUstep?
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     if ($equal(error.domain, NSURLErrorDomain) && error.code == NSURLErrorRequestBodyStreamExhausted) {
         // The connection is complaining that the body input stream closed prematurely.
@@ -70,5 +71,6 @@
     }
     [super connection: connection didFailWithError: error];
 }
+#endif
 
 @end

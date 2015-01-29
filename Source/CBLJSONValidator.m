@@ -214,7 +214,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
     // not
     NSDictionary* not = schema[@"not"];
     if (not) {
-        if ([self validateJSONObject: object withSchema: not error: nil])
+        if ([self validateJSONObject: object withSchema: not error: NULL])
             return FAIL(outError, @"value matched a schema it shouldn't have"); //FIX: Better message
     }
 
@@ -237,7 +237,7 @@ static bool validateForAll(id objOrArray, bool (^block)(id)) {
             NSString* desc = nil;
             if (outError) // don't bother generating JSON if it's not going into an NSError
                 desc = [CBLJSON stringWithJSONObject: object
-                                             options: CBLJSONWritingAllowFragments error: nil];
+                                             options: CBLJSONWritingAllowFragments error: NULL];
             return FAIL(outError, @"expected %@; got %@", type, desc);
         }
     }

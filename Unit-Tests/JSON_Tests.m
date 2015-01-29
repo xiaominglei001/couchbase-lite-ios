@@ -54,7 +54,7 @@
 
 
 - (void) roundtrip: (id)obj {
-    NSData* json = [CBJSONEncoder canonicalEncoding: obj error: nil];
+    NSData* json = [CBJSONEncoder canonicalEncoding: obj error: NULL];
     Log(@"%@ --> `%@`", [obj description], [json my_UTF8ToString]);
     NSError* error;
     id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
@@ -64,7 +64,7 @@
 }
 
 - (void) roundtripFloat: (double)n {
-    NSData* json = [CBJSONEncoder canonicalEncoding: @(n) error: nil];
+    NSData* json = [CBJSONEncoder canonicalEncoding: @(n) error: NULL];
     NSError* error;
     id reconstituted = [NSJSONSerialization JSONObjectWithData: json options:NSJSONReadingAllowFragments error: &error];
     Assert(reconstituted, @"`%@` was unparseable: %@",
@@ -76,7 +76,7 @@
 }
 
 static NSString* canonicalString(id obj) {
-    return [[NSString alloc] initWithData: [CBJSONEncoder canonicalEncoding: obj error: nil]
+    return [[NSString alloc] initWithData: [CBJSONEncoder canonicalEncoding: obj error: NULL]
                                  encoding: NSUTF8StringEncoding];
 }
 

@@ -236,6 +236,7 @@
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 
+#ifndef GNUSTEP
 void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     Warn(@"CouchbaseLite: SSL server <%@> not trusted; cert chain follows:", host);
 #if TARGET_OS_IPHONE
@@ -258,6 +259,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
     }
 #endif
 }
+#endif
 
 
 - (void)connection:(NSURLConnection *)connection
@@ -289,6 +291,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
         }
         LogTo(RemoteRequest, @"    challenge: continueWithoutCredential");
         [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
+#ifndef GNUSTEP
     } else if ($equal(authMethod, NSURLAuthenticationMethodServerTrust)) {
         SecTrustRef trust = space.serverTrust;
         BOOL ok;
@@ -308,9 +311,14 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
             LogTo(RemoteRequest, @"    challenge: fail (untrusted cert)");
             [sender continueWithoutCredentialForAuthenticationChallenge: challenge];
         }
+#endif
     } else {
         LogTo(RemoteRequest, @"    challenge: performDefaultHandling");
+#ifdef GNUSTEP
+        [sender continueWithoutCredentialForAuthenticationChallenge: challenge]; // ??? Will this work?
+#else
         [sender performDefaultHandlingForAuthenticationChallenge: challenge];
+#endif
     }
 }
 
@@ -386,7 +394,7 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust) {
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     LogTo(RemoteRequest, @"%@: Finished loading", self);
     [self clearConnection];
-    [self respondWithResult: self error: nil];
+    [self respondWithResult: self error: NULL];
 }
 
 

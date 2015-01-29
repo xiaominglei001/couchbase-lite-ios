@@ -19,6 +19,7 @@
 #import "CBLDatabase+Attachments.h"
 #import "CBL_BlobStore.h"
 #import "CBLInternal.h"
+#import "CBLMisc.h"
 
 
 @implementation CBLAttachment
@@ -57,13 +58,13 @@
            @"Invalid attachment body: %@", body);
     self = [super init];
     if (self) {
-        NSNumber* lengthObj = nil;
+        NSUInteger length;
         if ([body isKindOfClass: [NSData class]])
-            lengthObj = @([body length]);
+            length = [body length];
         else
-            [(NSURL*)body getResourceValue: &lengthObj forKey: NSURLFileSizeKey error: NULL];
+            length = CBLGetFileSize((NSURL*)body);
         _metadata = $dict({@"content_type", contentType},
-                          {@"length", lengthObj},
+                          {@"length", @(length)},
                           {@"follows", $true});
         _body = body;
     }
@@ -112,7 +113,7 @@
         else if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL]) {
             return [NSData dataWithContentsOfURL: _body
                                          options: NSDataReadingMappedIfSafe | NSDataReadingUncached
-                                           error: nil];
+                                           error: NULL];
         }
     } else if (_rev.sequence > 0) {
         CBLStatus status;

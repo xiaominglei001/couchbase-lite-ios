@@ -23,7 +23,9 @@
 #import "CBLMisc.h"
 #import "CBLStatus.h"
 #import "MYURLUtils.h"
+#ifndef GNUSTEP
 #import "WebSocket.h"
+#endif
 
 
 #define kDefaultHeartbeat (5 * 60.0)
@@ -62,8 +64,12 @@
     if (self) {
         if([self class] == [CBLChangeTracker class]) {
             // CBLChangeTracker is abstract; instantiate a concrete subclass instead.
+#ifdef GNUSTEP
+            Class klass = [CBLSocketChangeTracker class];
+#else
             Class klass = (mode==kWebSocket) ? [CBLWebSocketChangeTracker class]
                                              : [CBLSocketChangeTracker class];
+#endif
             return [[klass alloc] initWithDatabaseURL: databaseURL
                                                  mode: mode
                                             conflicts: includeConflicts
@@ -102,7 +108,7 @@
     if (seq) {
         // BigCouch is now using arrays as sequence IDs. These need to be sent back JSON-encoded.
         if ([seq isKindOfClass: [NSArray class]] || [seq isKindOfClass: [NSDictionary class]])
-            seq = [CBLJSON stringWithJSONObject: seq options: 0 error: nil];
+            seq = [CBLJSON stringWithJSONObject: seq options: 0 error: NULL];
         [path appendFormat: @"&since=%@", CBLEscapeURLParam([seq description])];
     }
     if (_limit > 0)

@@ -30,7 +30,7 @@ static id loadJSONFile(NSString* dir, NSString* filename) {
     NSString* path = [dir stringByAppendingPathComponent: filename];
     NSData* data = [NSData dataWithContentsOfFile: path];
     CAssert(data, @"Couldn't read file %@", path);
-    id json = [CBLJSON JSONObjectWithData: data options: 0 error: nil];
+    id json = [CBLJSON JSONObjectWithData: data options: 0 error: NULL];
     CAssert(json, @"Couldn't parse JSON file %@", path);
     return json;
 }
@@ -75,7 +75,7 @@ TestCase(CBLJSONValidator) {
 
     // Register some schemas for known URLs, to be used by the tests:
     NSString* remotesDir = [suiteDir stringByAppendingPathComponent: @"remotes"];
-    NSArray* remotes = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath: remotesDir error: nil];
+    NSArray* remotes = [[NSFileManager defaultManager] subpathsOfDirectoryAtPath: remotesDir error: NULL];
     CAssert(remotes != nil, @"No test-suite remotes at %@", remotesDir);
     for (NSString* remoteName in remotes) {
         if ([remoteName hasSuffix: @".json"]) {
@@ -87,7 +87,7 @@ TestCase(CBLJSONValidator) {
 
     // Now load and run each test file:
     NSString* testsDir = [suiteDir stringByAppendingPathComponent: @"tests/draft4"];
-    NSArray* tests = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: testsDir error: nil];
+    NSArray* tests = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: testsDir error: NULL];
     for (NSString* testName in tests) {
         if ([testName hasSuffix: @".json"])
             RunJSONSchemaTestFile(testName, loadJSONFile(testsDir, testName));

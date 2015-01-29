@@ -71,7 +71,7 @@
         _inclusiveStart = _inclusiveEnd = YES;
         _limit = kCBLQueryOptionsDefaultLimit;
         _fullTextRanking = YES;
-        _mapOnly = (view.reduceBlock == nil);
+        _mapOnly = (view.reduceBlock == NULL);
     }
     return self;
 }
@@ -480,10 +480,12 @@
         Assert(newKeyPath, @"Invalid CBLQueryRow key path \"%@\"", keyPath);
         if (newKeyPath == keyPath)
             return desc;
+#ifndef GNUSTEP
         else if (desc.comparator)
             return [[NSSortDescriptor alloc] initWithKey: newKeyPath
                                                ascending: desc.ascending
                                               comparator: desc.comparator];
+#endif
         else
             return [[NSSortDescriptor alloc] initWithKey: newKeyPath
                                                ascending: desc.ascending
@@ -500,7 +502,7 @@
         BOOL ascending = ![desc hasPrefix: @"-"];
         if (!ascending)
             desc = [desc substringFromIndex: 1];
-        desc = [NSSortDescriptor sortDescriptorWithKey: desc ascending: ascending];
+        desc = [[NSSortDescriptor alloc] initWithKey: desc ascending: ascending];
     }
     return desc;
 }
@@ -751,10 +753,10 @@ static inline BOOL isNonMagicValue(id value) {
     NSString* valueStr = @"nil";
     if (self.value)
         valueStr = [CBLJSON stringWithJSONObject: self.value
-                                         options: CBLJSONWritingAllowFragments error: nil];
+                                         options: CBLJSONWritingAllowFragments error: NULL];
     return [NSString stringWithFormat: @"%@[key=%@; value=%@; id=%@]",
             [self class],
-            [CBLJSON stringWithJSONObject: self.key options: CBLJSONWritingAllowFragments error: nil],
+            [CBLJSON stringWithJSONObject: self.key options: CBLJSONWritingAllowFragments error: NULL],
             valueStr,
             self.documentID];
 }

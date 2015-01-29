@@ -194,7 +194,7 @@
     // Create canonical JSON -- this is important, because the JSON data returned here will be used
     // to create the new revision ID, and we need to guarantee that equivalent revision bodies
     // result in equal revision IDs.
-    NSData* json = [CBJSONEncoder canonicalEncoding: properties error: nil];
+    NSData* json = [CBJSONEncoder canonicalEncoding: properties error: NULL];
     return json;
 }
 
@@ -659,7 +659,7 @@
 
     Log(@"Closing and re-opening database...");
     [_fmdb close];
-    if (![self openFMDB: nil])
+    if (![self openFMDB: NULL])
         return self.lastDbError;
 
     Log(@"...Finished database compaction.");

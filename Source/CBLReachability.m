@@ -14,7 +14,6 @@
 //  and limitations under the License.
 
 #import "CBLReachability.h"
-#import <SystemConfiguration/SystemConfiguration.h>
 #include <arpa/inet.h>
 
 

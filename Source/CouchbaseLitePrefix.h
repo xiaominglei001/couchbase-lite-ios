@@ -8,11 +8,12 @@
 
 #ifdef __OBJC__
 
-#ifdef GNUSTEP
-#import "CBLGNUstep.h"
+#ifdef GNUSTEP_BASE_LIBRARY
+#  define GNUSTEP
+#  import "CBLGNUstep.h"
+#else
+  @import Foundation;
 #endif
-
-@import Foundation;
 
 // Workaround for building with older (pre-iOS8/10.10) SDKs that don't define this macro:
 #ifndef NS_DESIGNATED_INITIALIZER

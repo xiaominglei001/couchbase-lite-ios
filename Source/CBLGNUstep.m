@@ -41,28 +41,6 @@ CFAbsoluteTime CFAbsoluteTimeGetCurrent(void) {
 }
 
 
-static NSComparisonResult callComparator(id a, id b, void* context) {
-    return ((NSComparator)context)(a, b);
-}
-
-@implementation NSArray (GNUstep)
-
-- (NSArray *)sortedArrayUsingComparator:(NSComparator)cmptr {
-    return [self sortedArrayUsingFunction: &callComparator context: cmptr];
-}
-
-@end
-
-@implementation NSMutableArray (GNUstep)
-
-- (void)sortUsingComparator:(NSComparator)cmptr {
-    [self sortUsingFunction: &callComparator context: cmptr];
-}
-
-@end
-
-
-
 @implementation NSData (GNUstep)
 
 + (id)dataWithContentsOfFile:(NSString *)path
@@ -104,6 +82,20 @@ static NSComparisonResult callComparator(id a, id b, void* context) {
     return NSMakeRange(start - myBytes, patternLen);
 }
 
+
++ (instancetype)dataWithContentsOfURL:(NSURL *)url
+                              options:(NSDataReadingOptions)readOptionsMask
+                                error:(NSError **)errorPtr
+{
+    if ([url isFileURL]) {
+        return [self dataWithContentsOfFile: url.path options: readOptionsMask error: errorPtr];
+    } else {
+        NSAssert(NO, @"+dataWithContentsOfURL: only handles file URLs right now");
+        return nil;
+    }
+}
+
+
 @end
 
 
@@ -126,11 +118,6 @@ static NSComparisonResult callComparator(id a, id b, void* context) {
     _blockToRun();
 }
 
-- (void) dealloc {
-    [_blockToRun release];
-    [super dealloc];
-}
-
 @end
 
 
@@ -139,7 +126,6 @@ static NSComparisonResult callComparator(id a, id b, void* context) {
 - (void)addOperationWithBlock:(void (^)(void))block {
     NSOperation* op = [[BlockOperation alloc] initWithBlock: block];
     [self addOperation: op];
-    [op release];
 }
 
 @end

@@ -43,7 +43,7 @@ static const CBLManagerOptions kCBLManagerDefaultOptions;
 
 
 #ifdef GNUSTEP
-static double CouchbaseLiteVersionNumber = 0.7;
+static double CouchbaseLiteVersionNumber = CBL_VERSION_NUMBER;  // Defined in GNUmakefile
 #else
 extern double CouchbaseLiteVersionNumber; // Defined in Xcode-generated CouchbaseLite_vers.c
 #endif
@@ -231,7 +231,7 @@ static CBLManager* sInstance;
 }
 
 - (instancetype) copy {
-    return [self copyWithZone: nil];
+    return [self copyWithZone: NULL];
 }
 
 
@@ -282,6 +282,9 @@ static CBLManager* sInstance;
 
 
 - (BOOL) excludedFromBackup {
+#ifdef GNUSTEP
+    return NO;
+#else
     NSNumber* excluded;
     NSError* error;
     if (![[NSURL fileURLWithPath: _dir] getResourceValue: &excluded
@@ -290,15 +293,18 @@ static CBLManager* sInstance;
         Warn(@"%@: -excludedFromBackup failed: %@", self, error);
     }
     return excluded.boolValue;
+#endif
 }
 
 - (void) setExcludedFromBackup: (BOOL)exclude {
+#ifndef GNUSTEP
     NSError* error;
     if (![[NSURL fileURLWithPath: _dir] setResourceValue: @(exclude)
                                                   forKey: NSURLIsExcludedFromBackupKey
                                                    error: &error]) {
         Warn(@"%@: -setExcludedFromBackup:%d failed: %@", self, exclude, error);
     }
+#endif
 }
 
 

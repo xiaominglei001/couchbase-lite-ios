@@ -112,7 +112,7 @@ NSArray* CBL_RunloopModes;
     CBLDatabase *db = [[self alloc] initWithPath: path name: nil manager: nil readOnly: NO];
     if (!CBLRemoveFileIfExists(db.attachmentStorePath, NULL))
         return nil;
-    if (![db open: nil])
+    if (![db open: NULL])
         return nil;
     return db;
 }

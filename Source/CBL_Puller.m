@@ -208,12 +208,14 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 }
 
 
+#ifndef GNUSTEP
 - (BOOL) changeTrackerApproveSSLTrust: (SecTrustRef)serverTrust
                               forHost: (NSString*)host
                                  port: (UInt16)port
 {
     return [self checkSSLServerTrust: serverTrust forHost: host port: port];
 }
+#endif
 
 
 - (void) changeTrackerReceivedSequence: (id)remoteSequenceID

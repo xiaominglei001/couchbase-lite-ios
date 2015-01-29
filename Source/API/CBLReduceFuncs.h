@@ -6,7 +6,7 @@
 //
 //
 
-#import <Couchbaselite/CBLView.h>
+#import "CBLView.h"
 
 void CBLRegisterReduceFunc(NSString* name, CBLReduceBlock block);
 

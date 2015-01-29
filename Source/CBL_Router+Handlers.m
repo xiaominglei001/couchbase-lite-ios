@@ -617,7 +617,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
             _response[@"Location"] = [[NSURL fileURLWithPath: filePath] absoluteString];
         }
         UInt64 size = [[[NSFileManager defaultManager] attributesOfItemAtPath: filePath
-                                                                          error: nil]
+                                                                          error: NULL]
                                     fileSize];
         if (size)
             _response[@"Content-Length"] = $sprintf(@"%llu", size);

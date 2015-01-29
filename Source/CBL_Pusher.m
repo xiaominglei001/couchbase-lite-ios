@@ -265,7 +265,7 @@
                     NSDictionary* properties;
                     {
                         CBLContentOptions options = kCBLIncludeAttachments;
-                        if (!_dontSendMultipart && self.revisionBodyTransformationBlock==nil)
+                        if (!_dontSendMultipart && self.revisionBodyTransformationBlock == NULL)
                             options |= kCBLBigAttachmentsFollow;
                         CBLStatus status;
                         CBL_Revision* loadedRev = [db revisionByLoadingBody: rev options: options

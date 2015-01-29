@@ -1409,6 +1409,10 @@
 		27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		27F273C317039F3600CD2B85 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; name = README.md; path = Extras/README.md; sourceTree = "<group>"; };
 		27F5B175164D74EA00126D0D /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		27F85ECB1A7974AC0052DA1A /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = CBLGNUstep.m; path = Source/CBLGNUstep.m; sourceTree = "<group>"; };
+		27F85ECC1A7974DB0052DA1A /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLGNUstep.h; path = Source/CBLGNUstep.h; sourceTree = "<group>"; };
+		27F85ECD1A7974EF0052DA1A /* GNUmakefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = GNUmakefile; sourceTree = "<group>"; };
+		27F85ECE1A79A4400052DA1A /* strlcat.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = strlcat.c; path = GNUstep/strlcat.c; sourceTree = "<group>"; };
 		27F87BE61558890600F0A416 /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLGNUstep.m; sourceTree = "<group>"; };
 		27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONValidator.h; sourceTree = "<group>"; };
@@ -1622,6 +1626,7 @@
 				2700358C1A44E9270015B9F4 /* Unit Tests */,
 				27C706CA1488679500F0F099 /* Test-Mac */,
 				27B0B8111492C16300A817AD /* Test-iOS */,
+				27F85ECA1A7974950052DA1A /* GNUstep */,
 				27FA59EE179EFD730043460A /* Documentation */,
 				2753154D14ACEF350065964D /* vendor */,
 				27C70696148864BA00F0F099 /* Frameworks */,
@@ -2478,6 +2483,17 @@
 				27F128A7156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m */,
 			);
 			path = Categories;
+			sourceTree = "<group>";
+		};
+		27F85ECA1A7974950052DA1A /* GNUstep */ = {
+			isa = PBXGroup;
+			children = (
+				27F85ECD1A7974EF0052DA1A /* GNUmakefile */,
+				27F85ECE1A79A4400052DA1A /* strlcat.c */,
+				27F85ECC1A7974DB0052DA1A /* CBLGNUstep.h */,
+				27F85ECB1A7974AC0052DA1A /* CBLGNUstep.m */,
+			);
+			name = GNUstep;
 			sourceTree = "<group>";
 		};
 		27FA59EE179EFD730043460A /* Documentation */ = {

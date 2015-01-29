@@ -91,6 +91,8 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 
 @protocol CBLRemoteRequestDelegate <NSObject>
 
+#ifndef GNUSTEP
 - (BOOL) checkSSLServerTrust: (NSURLProtectionSpace*)protectionSpace;
+#endif
 
 @end

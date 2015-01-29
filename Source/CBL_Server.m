@@ -31,7 +31,7 @@
 + (instancetype) createEmptyAtPath: (NSString*)path {
     [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
     NSError* error;
-    CBLManager* manager = [[CBLManager alloc] initWithDirectory: path options: nil error: &error];
+    CBLManager* manager = [[CBLManager alloc] initWithDirectory: path options: NULL error: &error];
     Assert(manager, @"Failed to create server at %@: %@", path, error);
     CBL_Server* server = [[self alloc] initWithManager: manager];
     AssertEqual(server.directory, path);

@@ -72,7 +72,7 @@ BOOL UnprivilegedInstall(NSArray* sourceFiles, NSString* destinationDir, NSError
     for (NSString* sourceFile in sourceFiles) {
         NSString* sourceName = sourceFile.lastPathComponent;
         NSString* destinationFile = [destinationDir stringByAppendingPathComponent: sourceName];
-        [fmgr removeItemAtPath: destinationFile error: nil];
+        [fmgr removeItemAtPath: destinationFile error: NULL];
         if (![fmgr createSymbolicLinkAtPath: destinationFile
                         withDestinationPath: sourceFile
                                       error: outError]) {

@@ -16,6 +16,7 @@
 #import "CBL_Shared.h"
 #import "CBL_Server.h"
 #import "MYReadWriteLock.h"
+#import <unistd.h>
 
 
 @implementation CBL_Shared

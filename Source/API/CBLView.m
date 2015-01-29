@@ -103,7 +103,7 @@ NSString* const kCBLViewChangeNotification = @"CBLViewChange";
     [shared setValue: [reduceBlock copy]
              forType: @"reduce" name: _name inDatabaseNamed: db.name];
 
-    if (![db open: nil])
+    if (![db open: NULL])
         return NO;
 
     // Update the version column in the db. This is a little weird looking because we want to

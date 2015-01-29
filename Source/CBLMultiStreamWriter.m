@@ -14,6 +14,7 @@
 //  and limitations under the License.
 
 #import "CBLMultiStreamWriter.h"
+#import "CBLMisc.h"
 #import "Logging.h"
 #import "Test.h"
 
@@ -78,10 +79,10 @@
 }
 
 - (BOOL) addFileURL: (NSURL*)url {
-    NSNumber* fileSizeObj;
-    if (![url getResourceValue: &fileSizeObj forKey: NSURLFileSizeKey error: nil])
+    NSInteger length = CBLGetFileSize(url);
+    if (length < 0)
         return NO;
-    [self addInput: url length: fileSizeObj.unsignedLongLongValue];
+    [self addInput: url length: length];
     return YES;
 }
 

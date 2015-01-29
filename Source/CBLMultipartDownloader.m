@@ -104,7 +104,7 @@
     }
     
     [self clearConnection];
-    [self respondWithResult: self error: nil];
+    [self respondWithResult: self error: NULL];
 }
 
 

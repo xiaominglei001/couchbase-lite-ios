@@ -17,8 +17,10 @@
 
 #import "CollectionUtils.h"
 
+#include <unistd.h>
 
 #ifdef GNUSTEP
+#import <openssl/hmac.h>
 #import <openssl/sha.h>
 #import <uuid/uuid.h>   // requires installing "uuid-dev" package on Ubuntu
 #else
@@ -49,13 +51,14 @@ NSData* CBLContentsOfTestFile(NSString* name) {
 
 BOOL CBLWithStringBytes(UU NSString* str, void (^block)(const char*, size_t)) {
     // First attempt: Get a C string directly from the CFString if it's in the right format:
-    const char* cstr = CFStringGetCStringPtr((CFStringRef)str, kCFStringEncodingUTF8);
+    const char* cstr = CFStringGetCStringPtr((__bridge CFStringRef)str, kCFStringEncodingUTF8);
     if (cstr) {
         block(cstr, strlen(cstr));
         return YES;
     }
 
     NSUInteger byteCount;
+#ifndef GNUSTEP
     if (str.length < 256) {
         // First try to copy the UTF-8 into a smallish stack-based buffer:
         char stackBuf[256];
@@ -68,6 +71,7 @@ BOOL CBLWithStringBytes(UU NSString* str, void (^block)(const char*, size_t)) {
             return YES;
         }
     }
+#endif
 
     // Otherwise malloc a buffer to copy the UTF-8 into:
     NSUInteger maxByteCount = [str maximumLengthOfBytesUsingEncoding: NSUTF8StringEncoding];
@@ -90,7 +94,7 @@ NSString* CBLCreateUUID() {
     uuid_generate(uuid);
     char cstr[37];
     uuid_unparse_lower(uuid, cstr);
-    return [[[NSString alloc] initWithCString: cstr encoding: NSASCIIStringEncoding] autorelease];
+    return [[NSString alloc] initWithCString: cstr encoding: NSASCIIStringEncoding];
 #else
     
     CFUUIDRef uuid = CFUUIDCreate(NULL);
@@ -155,7 +159,7 @@ NSData* CBLDataFromHex(NSString* hex) {
     NSUInteger bytePos = 0;
     for (NSUInteger i = 0; i < len; i += 2) {
         int d1 = chars[i], d2 = chars[i+1];
-        if (!ishexnumber(d1) || !ishexnumber(d2))
+        if (!isxdigit(d1) || !isxdigit(d2))
             return nil;
         bytes[bytePos++] = (uint8_t)(16 * digittoint(d1) + digittoint(d2));
     }
@@ -165,13 +169,23 @@ NSData* CBLDataFromHex(NSString* hex) {
 
 NSData* CBLHMACSHA1(NSData* key, NSData* data) {
     UInt8 hmac[SHA_DIGEST_LENGTH];
+#ifdef GNUSTEP
+    unsigned hmacLen;
+    HMAC(EVP_sha1(), key.bytes, key.length, data.bytes, data.length, hmac, &hmacLen);
+#else
     CCHmac(kCCHmacAlgSHA1, key.bytes, key.length, data.bytes, data.length, &hmac);
+#endif
     return [NSData dataWithBytes: hmac length: sizeof(hmac)];
 }
 
 NSData* CBLHMACSHA256(NSData* key, NSData* data) {
     UInt8 hmac[SHA256_DIGEST_LENGTH];
+#ifdef GNUSTEP
+    unsigned hmacLen;
+    HMAC(EVP_sha256(), key.bytes, key.length, data.bytes, data.length, hmac, &hmacLen);
+#else
     CCHmac(kCCHmacAlgSHA256, key.bytes, key.length, data.bytes, data.length, &hmac);
+#endif
     return [NSData dataWithBytes: hmac length: sizeof(hmac)];
 }
 
@@ -345,6 +359,20 @@ BOOL CBLIsPermanentError( NSError* error ) {
     } else {
         return NO;
     }
+}
+
+
+NSInteger CBLGetFileSize(NSURL* fileURL) {
+#ifdef GNUSTEP
+    NSDictionary* attrs = [[NSFileManager defaultManager] attributesOfItemAtPath: fileURL.path
+                                                                           error: NULL];
+    return attrs ? attrs.fileSize : -1;
+#else
+    id sizeObj;
+    if ([fileURL getResourceValue: &sizeObj forKey: NSURLFileSizeKey error: NULL])
+        return [sizeObj unsignedIntegerValue];
+    return -1;
+#endif
 }
 
 

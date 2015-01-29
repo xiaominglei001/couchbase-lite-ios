@@ -233,7 +233,7 @@ static NSDateFormatter* getISO8601Formatter() {
     id obj = _array[index];
     if ([obj isKindOfClass: [NSData class]]) {
         obj = [CBLJSON JSONObjectWithData: obj options: CBLJSONReadingAllowFragments
-                                   error: nil];
+                                   error: NULL];
         _array[index] = obj;
     }
     return obj;
