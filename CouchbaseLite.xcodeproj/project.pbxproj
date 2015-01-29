@@ -1413,6 +1413,7 @@
 		27F85ECC1A7974DB0052DA1A /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CBLGNUstep.h; path = Source/CBLGNUstep.h; sourceTree = "<group>"; };
 		27F85ECD1A7974EF0052DA1A /* GNUmakefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = GNUmakefile; sourceTree = "<group>"; };
 		27F85ECE1A79A4400052DA1A /* strlcat.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = strlcat.c; path = GNUstep/strlcat.c; sourceTree = "<group>"; };
+		27F85ECF1A7AA5F30052DA1A /* BUILDING.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = BUILDING.txt; path = GNUstep/BUILDING.txt; sourceTree = "<group>"; };
 		27F87BE61558890600F0A416 /* CBLGNUstep.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLGNUstep.h; sourceTree = "<group>"; };
 		27F87BE71558890700F0A416 /* CBLGNUstep.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLGNUstep.m; sourceTree = "<group>"; };
 		27F9411E176A64BA007BAEBE /* CBLJSONValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONValidator.h; sourceTree = "<group>"; };
@@ -2488,6 +2489,7 @@
 		27F85ECA1A7974950052DA1A /* GNUstep */ = {
 			isa = PBXGroup;
 			children = (
+				27F85ECF1A7AA5F30052DA1A /* BUILDING.txt */,
 				27F85ECD1A7974EF0052DA1A /* GNUmakefile */,
 				27F85ECE1A79A4400052DA1A /* strlcat.c */,
 				27F85ECC1A7974DB0052DA1A /* CBLGNUstep.h */,

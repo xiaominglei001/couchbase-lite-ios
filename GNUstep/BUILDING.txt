@@ -1,3 +1,26 @@
+GNUstep notes
+
+use apt-get to install GNUstep itself
+
+Stuff to prepare the shell:
+
+export CC=clang
+export GNUSTEP_SYSTEM_ROOT=/usr/local/share/GNUstep
+export GNUSTEP_MAKEFILES=/usr/local/share/GNUstep/Makefiles
+. $GNUSTEP_SYSTEM_ROOT/Makefiles/GNUstep.sh
+
+Have to install CoreBase, a CF replacement
+http://wiki.gnustep.org/index.php/CoreBase
+Edited CFBase.h and CFDictionary.h
+
+sudo apt-get install libssl-dev libsqlite3-dev uuid-dev
+
+
+
+
+
+#### OLD NOTES (2012)
+
 If you haven't installed GNUstep yet, first follow the steps in SETUP.txt (which is basically a
 shellscript but you might want to run the lines manually.)
 
