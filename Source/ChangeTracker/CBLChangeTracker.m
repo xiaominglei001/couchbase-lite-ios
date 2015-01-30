@@ -173,6 +173,7 @@
     return [CBLJSON dataWithJSONObject: post options: 0 error: NULL];
 }
 
+#ifndef GNUSTEP
 - (NSDictionary*) TLSSettings {
     if (!_databaseURL.my_isHTTPS)
         return nil;
@@ -200,6 +201,7 @@
     }
     return trusted;
 }
+#endif
 
 
 - (NSString*) description {
@@ -252,12 +254,14 @@
             error = [NSError errorWithDomain: CBLHTTPErrorDomain
                                         code: kCBLStatusUnauthorized
                                     userInfo: error.userInfo];
+#ifndef GNUSTEP
     } else if ($equal(domain, WebSocketErrorDomain)) {
         // Map HTTP errors in WebSocket domain to our HTTP domain:
         if (code >= 300 && code <= 510)
             error = [NSError errorWithDomain: CBLHTTPErrorDomain
                                         code: code
                                     userInfo: error.userInfo];
+#endif
     }
 
     // If the error may be transient (flaky network, server glitch), retry:

@@ -129,6 +129,7 @@ CouchbaseLite_INCLUDE_DIRS = \
     -Ivendor/google-toolbox-for-mac \
     -Ivendor/MYUtilities \
     -Ivendor/sqlite3-unicodesn \
+    -Ivendor/WebSockets-Cocoa/WebSocket \
     -Ivendor/yajl/build/yajl-2.0.5/include
 
 CouchbaseLite_OBJCFLAGS = \
