@@ -23,6 +23,7 @@ using namespace forestdb;
     NSData* _binaryData;
     const dict* _dict;
     NSUInteger _count;
+    NSMapTable* _sharedStrings;
     NSMutableDictionary* _cache;
     BOOL _hasAddedValues;
     BOOL _addToCache;
@@ -73,6 +74,7 @@ static inline NSData* stringToData(const std::string& str) {
 #endif
     return [self initWithBinary: [binary copy]
                            dict: NULL
+                  sharedStrings: nil
                    addingValues: dictToAdd
                     cacheValues: cacheValues];
 }
@@ -80,6 +82,7 @@ static inline NSData* stringToData(const std::string& str) {
 
 - (instancetype) initWithBinary: (UU NSData*)binary
                            dict: (const dict*)dictValue
+                  sharedStrings: (NSMapTable*)sharedStrings
                    addingValues: (UU NSMutableDictionary*)dictToAdd
                     cacheValues: (BOOL)cacheValues
 {
@@ -93,6 +96,7 @@ static inline NSData* stringToData(const std::string& str) {
             if (_dict->type() != kDict)
                 return nil;
         }
+        _sharedStrings = sharedStrings;
         _addToCache = cacheValues;
         if (dictToAdd.count > 0) {
             _hasAddedValues = YES;
@@ -148,6 +152,23 @@ static inline NSData* stringToData(const std::string& str) {
 }
 
 
+- (id) objectForValue: (const value*)v {
+    if (!_sharedStrings && (v->type() == kDict || v->stringToken() != 0))
+        _sharedStrings = value::createSharedStringsTable();
+
+    if (v && v->type() == kDict) {
+        return [[CBLBinaryDictionary alloc] initWithBinary: _binaryData
+                                                      dict: v->asDict()
+                                             sharedStrings: _sharedStrings
+                                              addingValues: nil
+                                               cacheValues: _addToCache];
+    } else {
+        return v->asNSObject(_sharedStrings);
+    }
+
+}
+
+
 - (id) objectForKey: (UU id)key {
     id object = _cache[key];
     if (object)
@@ -156,14 +177,10 @@ static inline NSData* stringToData(const std::string& str) {
         return nil;
 
     const value* v = [self _findValueFor: key];
-    if (v && v->type() == kDict) {
-        object = [[CBLBinaryDictionary alloc] initWithBinary: _binaryData
-                                                        dict: v->asDict()
-                                                addingValues: nil
-                                                 cacheValues: _addToCache];
-    } else {
-        object = v->asNSObject();
-    }
+    if (!v)
+        return nil;
+    object = [self objectForValue: v];
+
     if (_addToCache && object)
         _cache[key] = object;
     return object;
@@ -173,7 +190,7 @@ static inline NSData* stringToData(const std::string& str) {
 - (void) forEachKey: (void(^)(NSString*, const value*, BOOL*))block {
     for (dict::iterator iter(_dict); iter; ++iter) {
         BOOL stop = NO;
-        block(iter.key()->asNSObject(), iter.value(), &stop);
+        block([self objectForValue: iter.key()], iter.value(), &stop);
         if (stop)
             break;
     }
@@ -208,7 +225,7 @@ static inline NSData* stringToData(const std::string& str) {
     [self forEachKey:^(NSString* key, const value* v, BOOL* stop) {
         id object = _cache[key];
         if (!object && v)
-            object = v->asNSObject();
+            object = [self objectForValue: v];
         if (object)
             block(key, object, stop);
     }];
