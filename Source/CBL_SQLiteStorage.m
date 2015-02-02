@@ -1301,15 +1301,10 @@ static NSString* joinQuotedStrings(NSArray* strings) {
            validationBlock: (CBL_StorageValidationBlock)validationBlock
                     status: (CBLStatus*)outStatus
 {
-    __block NSData* json = nil;
-    if (properties) {
-        json = [CBL_Revision asCanonicalJSON: properties error: NULL];
-        if (!json) {
-            *outStatus = kCBLStatusBadJSON;
-            return nil;
-        }
-    } else {
-        json = [NSData dataWithBytes: "{}" length: 2];
+    NSData* binary = [CBL_Revision binaryToSave: properties error: NULL];
+    if (!binary) {
+        *outStatus = kCBLStatusBadJSON;
+        return nil;
     }
 
     __block CBL_MutableRevision* newRev = nil;
@@ -1401,7 +1396,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
         //// PART II: In which we prepare for insertion...
         
         // Bump the revID and update the JSON:
-        NSString* newRevID = [_delegate generateRevIDForJSON: json
+        NSString* newRevID = [_delegate generateRevIDForJSON: binary
                                                      deleted: deleting
                                                    prevRevID: prevRevID];
         if (!newRevID)
@@ -1430,12 +1425,6 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                 return status;
         }
 
-        // Don't store a SQL null in the 'json' column -- I reserve it to mean that the revision data
-        // is missing due to compaction or replication.
-        // Instead, store an empty zero-length blob.
-        if (json == nil)
-            json = [NSData data];
-        
         //// PART III: In which the actual insertion finally takes place:
         
         SequenceNumber sequence = [self insertRevision: newRev
@@ -1443,7 +1432,7 @@ static NSString* joinQuotedStrings(NSArray* strings) {
                                         parentSequence: parentSequence
                                                current: YES
                                         hasAttachments: (properties.cbl_attachments != nil)
-                                                  JSON: json];
+                                                  JSON: binary];
         if (!sequence) {
             // The insert failed. If it was due to a constraint violation, that means a revision
             // already exists with identical contents and the same parent rev. We can ignore this

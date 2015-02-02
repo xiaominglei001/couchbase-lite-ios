@@ -35,16 +35,17 @@ typedef SInt64 SequenceNumber;
 @property (readonly,strong) CBL_Body* body;
 @property (readonly,copy) NSDictionary* properties;
 @property (readonly,copy) NSData* asJSON;
+@property (readonly,copy) NSData* asBinary;
 
 /** Adds "_id", "_rev", "_deleted" properties */
 - (CBL_Revision*) revisionByAddingBasicMetadata;
 
-/** Returns the JSON to be stored into the database.
-    This has all the special keys like "_id" stripped out, and keys in canonical order. */
-@property (readonly) NSData* asCanonicalJSON;
+/** Returns the binary revision data to be stored into the database.
+    This has all the special keys like "_id" stripped out. */
+@property (readonly) NSData* binaryToSave;
 
-+ (NSData*) asCanonicalJSON: (NSDictionary*)properties
-                      error: (NSError**)error;
++ (NSData*) binaryToSave: (NSDictionary*)properties
+                   error: (NSError**)error;
 
 - (id) objectForKeyedSubscript: (NSString*)key;  // enables subscript access in Xcode 4.4+
 
@@ -84,6 +85,7 @@ typedef SInt64 SequenceNumber;
 @property (readwrite, strong) CBL_Body* body;
 @property (readwrite, copy) NSDictionary* properties;
 @property (readwrite, copy) NSData* asJSON;
+@property (readwrite, copy) NSData* asBinary;
 @property (readwrite) bool missing;
 
 - (void) setDocID:(NSString *)docID

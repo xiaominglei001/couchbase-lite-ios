@@ -14,6 +14,7 @@ extern "C" {
 #import "CBL_Attachment.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
+#import "CBLBinaryDictionary.h"
 }
 #import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
@@ -600,8 +601,12 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
                 if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
                     alloc_slice body = (*revNode)->readBody();
                     if (body.size > 0) {
-                        NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
-                                                                options: 0 error: NULL];
+                        NSData* binary = body.uncopiedNSData();
+                        NSDictionary* rev = [[CBLBinaryDictionary alloc] initWithBinary: binary
+                                                                           addingValues: nil
+                                                                            cacheValues: NO];
+                        if (!rev)
+                            Warn(@"findAllAttachmentKeys: Couldn't read rev body");
                         [rev.cbl_attachments enumerateKeysAndObjectsUsingBlock:^(id key, NSDictionary* att, BOOL *stop) {
                             CBLBlobKey blobKey;
                             if ([CBL_Attachment digest: att[@"digest"] toBlobKey: &blobKey]) {
@@ -677,14 +682,6 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 #pragma mark - LOCAL DOCS:
 
 
-static NSDictionary* getDocProperties(const Document& doc) {
-    NSData* bodyData = doc.body().uncopiedNSData();
-    if (!bodyData)
-        return nil;
-    return [CBLJSON JSONObjectWithData: bodyData options: 0 error: NULL];
-}
-
-
 - (CBL_MutableRevision*) getLocalDocumentWithID: (NSString*)docID
                                      revisionID: (NSString*)revID
 {
@@ -697,12 +694,16 @@ static NSDictionary* getDocProperties(const Document& doc) {
     NSString* gotRevID = (NSString*)doc.meta();
     if (revID && !$equal(revID, gotRevID))
         return nil;
-    NSMutableDictionary* properties = [getDocProperties(doc) mutableCopy];
-    if (!properties)
+
+    NSData* bodyData = doc.body().copiedNSData();
+    if (!bodyData)
         return nil;
-    properties[@"_id"] = docID;
-    properties[@"_rev"] = gotRevID;
-    CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID revID: gotRevID
+    NSMutableDictionary* extra = $mdict({@"_id", docID}, {@"_rev", gotRevID});
+    NSDictionary* properties = [[CBLBinaryDictionary alloc] initWithBinary: bodyData
+                                                              addingValues: extra
+                                                               cacheValues: NO];
+    CBL_MutableRevision* result = [[CBL_MutableRevision alloc] initWithDocID: docID
+                                                                       revID: gotRevID
                                                                      deleted: NO];
     result.properties = properties;
     return result;
@@ -731,8 +732,8 @@ static NSDictionary* getDocProperties(const Document& doc) {
         __block CBL_Revision* result = nil;
         *outStatus = [self inTransaction: ^CBLStatus {
             KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
-            NSData* json = revision.asCanonicalJSON;
-            if (!json)
+            NSData* binary = revision.binaryToSave;
+            if (!binary)
                 return kCBLStatusBadJSON;
             forestdb::slice key(docID.UTF8String);
             Document doc = localWriter.get(key);
@@ -749,7 +750,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
                 }
             }
             NSString* newRevID = $sprintf(@"%d-local", ++generation);
-            localWriter.set(key, nsstring_slice(newRevID), forestdb::slice(json));
+            localWriter.set(key, nsstring_slice(newRevID), forestdb::slice(binary));
             result = [revision mutableCopyWithDocID: docID revID: newRevID];
             return kCBLStatusCreated;
         }];
@@ -860,15 +861,10 @@ static void convertRevIDs(NSArray* revIDs,
         return nil;
     }
 
-    __block NSData* json = nil;
-    if (properties) {
-        json = [CBL_Revision asCanonicalJSON: properties error: NULL];
-        if (!json) {
-            *outStatus = kCBLStatusBadJSON;
-            return nil;
-        }
-    } else {
-        json = [NSData dataWithBytes: "{}" length: 2];
+    NSData* binary = [CBL_Revision binaryToSave: properties error: NULL];
+    if (!binary) {
+        *outStatus = kCBLStatusBadJSON;
+        return nil;
     }
 
     __block CBL_MutableRevision* putRev = nil;
@@ -920,7 +916,7 @@ static void convertRevIDs(NSArray* revIDs,
         }
 
         // Compute the new revID. (Can't be done earlier because prevRevID may have changed.)
-        NSString* newRevID = [_delegate generateRevIDForJSON: json
+        NSString* newRevID = [_delegate generateRevIDForJSON: binary
                                                      deleted: deleting
                                                    prevRevID: prevRevID];
         if (!newRevID)
@@ -952,7 +948,7 @@ static void convertRevIDs(NSArray* revIDs,
         int status;
         BOOL isWinner;
         {
-            const Revision* fdbRev = doc.insert(revidBuffer(newRevID), json,
+            const Revision* fdbRev = doc.insert(revidBuffer(newRevID), binary,
                                                 deleting,
                                                 (putRev.attachments != nil),
                                                 revNode, allowConflict, status);
@@ -990,8 +986,8 @@ static void convertRevIDs(NSArray* revIDs,
     if (_forest->isReadOnly())
         return kCBLStatusForbidden;
 
-    NSData* json = inRev.asCanonicalJSON;
-    if (!json)
+    NSData* binary = inRev.binaryToSave;
+    if (!binary)
         return kCBLStatusBadJSON;
 
     __block CBLDatabaseChange* change = nil;
@@ -1005,7 +1001,7 @@ static void convertRevIDs(NSArray* revIDs,
         std::vector<revid> historyVector;
         convertRevIDs(history, historyBuffers, historyVector);
         int common = doc.insertHistory(historyVector,
-                                       forestdb::slice(json),
+                                       forestdb::slice(binary),
                                        inRev.deleted,
                                        (inRev.attachments != nil));
         if (common < 0)

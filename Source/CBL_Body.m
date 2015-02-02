@@ -15,12 +15,14 @@
 
 #import "CBL_Body.h"
 #import "CBLInternal.h"
+#import "CBLBinaryDictionary.h"
 
 
 @implementation CBL_Body
 {
     @private
     NSData* _json;
+    NSData* _binary;
     NSDictionary* _object;
     BOOL _error;
 }
@@ -46,6 +48,14 @@
     return self;
 }
 
+- (instancetype) initWithBinary: (NSData*)binary {
+    self = [super init];
+    if (self) {
+        _binary = binary ? [binary copy] : [[NSData alloc] init];
+    }
+    return self;
+}
+
 + (instancetype) bodyWithProperties: (NSDictionary*)properties {
     return [[self alloc] initWithProperties: properties];
 }
@@ -57,6 +67,7 @@
     CBL_Body* body = [[[self class] allocWithZone: zone] init];
     body->_object = [_object copy];
     body->_json = [_json copy];
+    body->_binary = [_binary copy];
     body->_error = _error;
     return body;
 }
@@ -66,9 +77,15 @@
 - (BOOL) isValidJSON {
     // Yes, this is just like asObject except it doesn't warn.
     if (!_object && !_error) {
-        _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: NULL] copy];
-        if (!_object) {
-            _error = YES;
+        if (_binary) {
+            BOOL result = [CBLBinaryDictionary isValidBinary: _binary];
+            _error = !result;
+            return result;
+        } else {
+            _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: NULL] copy];
+            if (!_object) {
+                _error = YES;
+            }
         }
     }
     return _object != nil;
@@ -76,7 +93,11 @@
 
 - (NSData*) asJSON {
     if (!_json && !_error) {
-        _json = [[CBLJSON dataWithJSONObject: _object options: 0 error: NULL] copy];
+        if (_binary) {
+            _json = [CBLBinaryDictionary binaryToJSON: _binary];
+        } else {
+            _json = [[CBLJSON dataWithJSONObject: _object options: 0 error: NULL] copy];
+        }
         if (!_json) {
             Warn(@"CBL_Body: couldn't convert to JSON");
             _error = YES;
@@ -104,13 +125,32 @@
     return self.asJSON.my_UTF8ToString;
 }
 
+- (NSData*) asBinary {
+    if (_binary)
+        return _binary;
+    else if (_json)
+        return [CBLBinaryDictionary JSONToBinary: _json];
+    else
+        return [CBLBinaryDictionary objectToBinary: _object];
+}
+
 - (id) asObject {
     if (!_object && !_error) {
-        NSError* error = nil;
-        _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: &error] copy];
-        if (!_object) {
-            Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
-            _error = YES;
+        if (_binary) {
+            _object = [[CBLBinaryDictionary alloc] initWithBinary: _binary
+                                                     addingValues: nil
+                                                      cacheValues: NO];
+            if (!_object) {
+                Warn(@"CBL_Body: couldn't parse binary");
+                _error = YES;
+            }
+        } else {
+            NSError* error = nil;
+            _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: &error] copy];
+            if (!_object) {
+                Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
+                _error = YES;
+            }
         }
     }
     return _object;
@@ -129,10 +169,13 @@
 }
 
 - (BOOL) compact {
-    (void)[self asJSON];
-    if (_error)
-        return NO;
+    if (!_binary) {
+        _binary = [self asBinary];
+        if (!_binary)
+            return NO;
+    }
     _object = nil;
+    _json = nil;
     return YES;
 }
 

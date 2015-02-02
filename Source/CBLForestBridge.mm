@@ -7,6 +7,7 @@
 //
 
 #import "CBLForestBridge.h"
+#import "CBLBinaryDictionary.h"
 
 using namespace forestdb;
 
@@ -16,7 +17,7 @@ using namespace forestdb;
 
 static NSData* dataOfNode(const Revision* rev) {
     if (rev->inlineBody().buf)
-        return rev->inlineBody().uncopiedNSData();
+        return rev->inlineBody().copiedNSData();
     try {
         return rev->readBody().copiedNSData();
     } catch (...) {
@@ -80,10 +81,10 @@ static NSData* dataOfNode(const Revision* rev) {
     const Revision* revNode = doc.get(rev.revID);
     if (!revNode)
         return NO;
-    NSData* json = nil;
+    NSData* binary = nil;
     if (!(options & kCBLNoBody)) {
-        json = dataOfNode(revNode);
-        if (!json)
+        binary = dataOfNode(revNode);
+        if (!binary)
             return NO;
     }
 
@@ -91,10 +92,13 @@ static NSData* dataOfNode(const Revision* rev) {
 
     NSMutableDictionary* extra = $mdict();
     [self addContentProperties: options into: extra rev: revNode];
-    if (json.length > 0)
-        rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
-    else
+    if (binary.length > 0) {
+        rev.properties = [[CBLBinaryDictionary alloc] initWithBinary: binary
+                                                        addingValues: extra
+                                                         cacheValues: YES];
+    } else {
         rev.properties = extra;
+    }
     return YES;
 }
 
@@ -106,17 +110,18 @@ static NSData* dataOfNode(const Revision* rev) {
     if (options == kCBLNoBody)
         return @{};
 
-    NSData* json = nil;
+    NSData* binary = nil;
     if (!(options & kCBLNoBody)) {
-        json = dataOfNode(rev);
-        if (!json)
+        binary = dataOfNode(rev);
+        if (!binary)
             return nil;
     }
-    NSMutableDictionary* properties = [CBLJSON JSONObjectWithData: json
-                                                          options: NSJSONReadingMutableContainers
-                                                            error: NULL];
-    Assert(properties, @"Unable to parse doc from db: %@", json.my_UTF8ToString);
-    [self addContentProperties: options into: properties rev: rev];
+    NSMutableDictionary* extra = $mdict();
+    [self addContentProperties: options into: extra rev: rev];
+    NSDictionary* properties = [[CBLBinaryDictionary alloc] initWithBinary: binary
+                                                              addingValues: extra
+                                                               cacheValues: YES];
+    Assert(properties, @"Unable to parse doc from db: %@", binary);
     return properties;
 }
 

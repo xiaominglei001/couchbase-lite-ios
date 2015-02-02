@@ -236,6 +236,9 @@
 		27538F9F17F1D9D6004C3BFD /* PrivilegedInstall.m in Sources */ = {isa = PBXBuildFile; fileRef = 27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */; };
 		27538FA017F1DC98004C3BFD /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315F414ACF1CC0065964D /* Security.framework */; };
 		27538FA317F1ECE8004C3BFD /* LoggingMode.c in Sources */ = {isa = PBXBuildFile; fileRef = 27538FA217F1ECE8004C3BFD /* LoggingMode.c */; };
+		2756498B1A7DA22600A023EF /* CBLBinaryDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 275649891A7DA22600A023EF /* CBLBinaryDictionary.h */; };
+		2756498C1A7DA22600A023EF /* CBLBinaryDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2756498A1A7DA22600A023EF /* CBLBinaryDictionary.mm */; };
+		2756498D1A7DA22600A023EF /* CBLBinaryDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2756498A1A7DA22600A023EF /* CBLBinaryDictionary.mm */; };
 		275A29021649A11900B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29031649A11A00B0D8EE /* CouchbaseLitePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA434D15914F5700F9E7B5 /* CouchbaseLitePrivate.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1159,6 +1162,8 @@
 		27538F9E17F1D9D6004C3BFD /* PrivilegedInstall.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrivilegedInstall.m; sourceTree = "<group>"; };
 		27538FA117F1ECE8004C3BFD /* LoggingMode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoggingMode.h; sourceTree = "<group>"; };
 		27538FA217F1ECE8004C3BFD /* LoggingMode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = LoggingMode.c; sourceTree = "<group>"; };
+		275649891A7DA22600A023EF /* CBLBinaryDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLBinaryDictionary.h; sourceTree = "<group>"; };
+		2756498A1A7DA22600A023EF /* CBLBinaryDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLBinaryDictionary.mm; sourceTree = "<group>"; };
 		2762AB5618D36F1B00649D47 /* CBLReplication+Transformation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLReplication+Transformation.h"; sourceTree = "<group>"; };
 		2762AB5718D36F1B00649D47 /* CBLReplication+Transformation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CBLReplication+Transformation.m"; sourceTree = "<group>"; };
 		2764D2B01A5E240D005AC95A /* JSON_Tests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JSON_Tests.m; sourceTree = "<group>"; };
@@ -1822,6 +1827,8 @@
 				27486F221A606C76008D94F0 /* CBLJSONReader.m */,
 				27486F231A606C76008D94F0 /* CBLJSONValidator.h */,
 				27486F241A606C76008D94F0 /* CBLJSONValidator.m */,
+				275649891A7DA22600A023EF /* CBLBinaryDictionary.h */,
+				2756498A1A7DA22600A023EF /* CBLBinaryDictionary.mm */,
 			);
 			name = JSON;
 			sourceTree = "<group>";
@@ -2504,6 +2511,7 @@
 				279906EE149ABFC2003D4338 /* CBLBatcher.h in Headers */,
 				277B5D3E1821A8380088881E /* yajl_parser.h in Headers */,
 				277B5DCA1821A8B60088881E /* yajl_tree.h in Headers */,
+				2756498B1A7DA22600A023EF /* CBLBinaryDictionary.h in Headers */,
 				2753157214ACEFC90065964D /* DDNumber.h in Headers */,
 				271EC6A5198C53DD009C9E05 /* CBJSONEncoder.h in Headers */,
 				27E2E5A3159383E9005B9234 /* CBLAttachment.h in Headers */,
@@ -3442,6 +3450,7 @@
 				2753160014ACF9330065964D /* Logging.m in Sources */,
 				2753160114ACF9330065964D /* CollectionUtils.m in Sources */,
 				2753160214ACF9330065964D /* Test.m in Sources */,
+				2756498C1A7DA22600A023EF /* CBLBinaryDictionary.mm in Sources */,
 				27E3477119994FDA00076EAC /* Test_Assertions.m in Sources */,
 				279CE3B914D4A885009F3FA6 /* MYBlockUtils.m in Sources */,
 				27D90B1815601C340000735E /* MYErrorUtils.m in Sources */,
@@ -3678,6 +3687,7 @@
 				277B5D421821A8380088881E /* yajl_version.c in Sources */,
 				277B5D3D1821A8380088881E /* yajl_parser.c in Sources */,
 				27726AB11889835F00AE6931 /* CBLJSON.m in Sources */,
+				2756498D1A7DA22600A023EF /* CBLBinaryDictionary.mm in Sources */,
 				272401CD1860D39B0080E082 /* CBLWebSocketChangeTracker.m in Sources */,
 				2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */,
 			);

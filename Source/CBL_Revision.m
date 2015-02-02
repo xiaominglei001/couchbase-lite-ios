@@ -16,7 +16,7 @@
 #import "CBL_Revision.h"
 #import "CBLInternal.h"
 #import "CBL_Body.h"
-#import "CBJSONEncoder.h"
+#import "CBLBinaryDictionary.h"
 #import "CBLMisc.h"
 
 
@@ -155,6 +155,10 @@
     return _body.asJSON;
 }
 
+- (NSData*) asBinary {
+    return _body.asBinary;
+}
+
 - (NSString*) description {
     return $sprintf(@"{%@ #%@%@}", _docID, _revID, (_deleted ?@" DEL" :@""));
 }
@@ -190,13 +194,11 @@
 }
 
 
-- (NSData*) asCanonicalJSON {
-    return [[self class] asCanonicalJSON: self.properties error: NULL];
+- (NSData*) binaryToSave {
+    return [[self class] binaryToSave: self.properties error: NULL];
 }
 
-/** Returns the JSON to be stored into the database.
-    This has all the special keys like "_id" stripped out, and keys in canonical order. */
-+ (NSData*) asCanonicalJSON: (UU NSDictionary*)properties error: (NSError**)outError {
++ (NSData*) binaryToSave: (UU NSDictionary*)properties error: (NSError**)outError {
     static NSSet* sSpecialKeysToRemove, *sSpecialKeysToLeave;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -208,7 +210,7 @@
     });
 
     if (!properties)
-        return nil;
+        return [CBLBinaryDictionary objectToBinary: [NSDictionary dictionary]];
 
     // Don't leave in any "_"-prefixed keys except for the ones in sSpecialKeysToLeave.
     // Keys in sSpecialKeysToRemove (_id, _rev, ...) are left out, any others trigger an error.
@@ -225,11 +227,10 @@
         }
     }
 
-    // Create canonical JSON -- this is important, because the JSON data returned here will be used
-    // to create the new revision ID, and we need to guarantee that equivalent revision bodies
-    // result in equal revision IDs.
-    return [CBJSONEncoder canonicalEncoding: (editedProperties ?: properties)
-                                      error: outError];
+    NSData* binary = [CBLBinaryDictionary objectToBinary: (editedProperties ?: properties)];
+    if (!binary)
+        ReturnNSErrorFromCBLStatus(kCBLStatusBadJSON, outError);
+    return binary;
 }
 
 
@@ -271,6 +272,10 @@
 
 - (void) setAsJSON:(UU NSData *)asJSON {
     self.body = [[CBL_Body alloc] initWithJSON: asJSON];
+}
+
+- (void) setAsBinary:(UU NSData *)binary {
+    self.body = [[CBL_Body alloc] initWithBinary: binary];
 }
 
 - (void) setObject: (UU id)object forKeyedSubscript: (UU NSString*)key {

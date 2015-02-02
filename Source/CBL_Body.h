@@ -15,6 +15,7 @@
 - (instancetype) initWithProperties: (NSDictionary*)properties;
 - (instancetype) initWithArray: (NSArray*)array;
 - (instancetype) initWithJSON: (NSData*)json;
+- (instancetype) initWithBinary: (NSData*)binary;
 
 + (instancetype) bodyWithProperties: (NSDictionary*)properties;
 + (instancetype) bodyWithJSON: (NSData*)json;
@@ -23,6 +24,7 @@
 @property (readonly) NSData* asJSON;
 @property (readonly) NSData* asPrettyJSON;
 @property (readonly) NSString* asJSONString;
+@property (readonly) NSData* asBinary;
 @property (readonly) id asObject;
 @property (readonly) BOOL error;
 
