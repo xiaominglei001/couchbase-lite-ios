@@ -17,12 +17,13 @@
 #import "CBLDatabase.h"
 #import "CBL_Body.h"
 #import "CBL_Server.h"
+#import "CBLJSViewCompiler.h"
 #import "CBLBase64.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
 #import "Test.h"
 #import "CBLJSON.h"
-
+#import "CBLManager+Internal.h"
 
 @interface CBL_Router ()
 - (instancetype) initWithDatabaseManager: (CBLManager*)dbManager request: (NSURLRequest*)request;
@@ -866,6 +867,76 @@ TestCase(CBL_Router_AccessCheck) {
     CAssert(router.response.status == 401);
 }
 
+TestCase(CBL_Router_JSViews) {
+    NSError *error;
+
+    CBLManager* server = createDBManager();
+    Send(server, @"PUT", @"/db", kCBLStatusCreated, nil);
+
+    CBLDatabase *db = [server existingDatabaseNamed:@"db" error:nil];
+    CAssert(db!=nil);
+
+    [CBLView setCompiler: [[CBLJSViewCompiler alloc] init]];
+    [CBLDatabase setFilterCompiler: [[CBLJSFilterCompiler alloc] init]];
+
+    // PUT:
+    SendBody(server, @"PUT", @"/db/doc1", $dict({@"message", @"hello"}), kCBLStatusCreated, nil);
+    SendBody(server, @"PUT", @"/db/doc3", $dict({@"message", @"bonjour"}), kCBLStatusCreated, nil);
+    SendBody(server, @"PUT", @"/db/doc2", $dict({@"message", @"guten tag"}), kCBLStatusCreated, nil);
+
+    SendBody(server, @"PUT", @"/db/_design/design",
+             @{@"views": @{@"view": @{@"map":
+                                          @"function(doc){emit(doc.message, null);}"
+                                      },
+                           @"view2": @{@"map":
+                                           @"function(doc){emit(doc.message.length, doc.message);}"
+                                       }}},
+             kCBLStatusCreated, nil);
+
+    // Query view and check the result:
+    id null = [NSNull null];
+    Send(server, @"GET", @"/db/_design/design/_view/view", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc3"}, {@"key", @"bonjour"}, {@"value", null}),
+                                $dict({@"id", @"doc2"}, {@"key", @"guten tag"}, {@"value", null}),
+                                $dict({@"id", @"doc1"}, {@"key", @"hello"}, {@"value", null}) )},
+               {@"total_rows", @3}));
+
+    // Query view2 and check the result:
+    Send(server, @"GET", @"/db/_design/design/_view/view2", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc1"}, {@"key", @5}, {@"value", @"hello"}),
+                                $dict({@"id", @"doc3"}, {@"key", @7}, {@"value", @"bonjour"}),
+                                $dict({@"id", @"doc2"}, {@"key", @9}, {@"value", @"guten tag"}) )},
+               {@"total_rows", @3}));
+
+
+    // Reopen database:
+    Assert(!db || [db close: &error], @"Couldn't close db: %@", error);
+    [server _forgetDatabase:db];
+    db = [server databaseNamed: @"db" error: &error];
+
+    SendBody(server, @"PUT", @"/db/doc4", $dict({@"message", @"hi"}), kCBLStatusCreated, nil);
+
+    // Query view2 again
+    Send(server, @"GET", @"/db/_design/design/_view/view2", kCBLStatusOK,
+         $dict({@"offset", @0},
+               {@"rows", $array($dict({@"id", @"doc4"}, {@"key", @2}, {@"value", @"hi"}),
+                                $dict({@"id", @"doc1"}, {@"key", @5}, {@"value", @"hello"}),
+                                $dict({@"id", @"doc3"}, {@"key", @7}, {@"value", @"bonjour"}),
+                                $dict({@"id", @"doc2"}, {@"key", @9}, {@"value", @"guten tag"}) )},
+               {@"total_rows", @4}));
+
+    // Check that both views were re-indexed:
+    CAssert(![db viewNamed: @"design/view"].stale);
+    CAssert(![db viewNamed: @"design/view2"].stale);
+
+    [CBLView setCompiler: nil];
+    [CBLDatabase setFilterCompiler: nil];
+
+    Assert(!db || [db close: &error], @"Couldn't close db: %@", error);
+    [server close];
+}
 
 TestCase(CBL_Router) {
     RequireTestCase(CBL_Router_Server);
@@ -878,6 +949,7 @@ TestCase(CBL_Router) {
     RequireTestCase(CBL_Router_GetJSONAttachment);
     RequireTestCase(CBL_Router_RevsDiff);
     RequireTestCase(CBL_Router_AccessCheck);
+    RequireTestCase(CBL_Router_JSViews);
 }
 
 #endif
