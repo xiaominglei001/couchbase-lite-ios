@@ -64,6 +64,12 @@
 		270FE0CA14C5008C005FF647 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F0745C11CD50A600E9A2AB /* Foundation.framework */; };
 		270FE0D514C50134005FF647 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270B3DEA1489359000E0A926 /* CouchbaseLite.framework */; };
 		270FE0D614C50134005FF647 /* CouchbaseLiteListener.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275315D514ACF0A10065964D /* CouchbaseLiteListener.framework */; };
+		270FF0751A9BD4ED0016E50E /* zdelta+blocks.c in Sources */ = {isa = PBXBuildFile; fileRef = 270FF0711A9BD4ED0016E50E /* zdelta+blocks.c */; };
+		270FF0761A9BD4ED0016E50E /* zdelta+blocks.c in Sources */ = {isa = PBXBuildFile; fileRef = 270FF0711A9BD4ED0016E50E /* zdelta+blocks.c */; };
+		270FF0771A9BD4ED0016E50E /* zdelta+blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FF0721A9BD4ED0016E50E /* zdelta+blocks.h */; };
+		270FF0781A9BD4ED0016E50E /* NSData+zdelta.h in Headers */ = {isa = PBXBuildFile; fileRef = 270FF0731A9BD4ED0016E50E /* NSData+zdelta.h */; };
+		270FF0791A9BD4ED0016E50E /* NSData+zdelta.m in Sources */ = {isa = PBXBuildFile; fileRef = 270FF0741A9BD4ED0016E50E /* NSData+zdelta.m */; };
+		270FF07A1A9BD4ED0016E50E /* NSData+zdelta.m in Sources */ = {isa = PBXBuildFile; fileRef = 270FF0741A9BD4ED0016E50E /* NSData+zdelta.m */; };
 		27103F8314E9CE4400DF7209 /* CBLReachability.h in Headers */ = {isa = PBXBuildFile; fileRef = 27103F8114E9CE4400DF7209 /* CBLReachability.h */; };
 		27103F8414E9CE4400DF7209 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* CBLReachability.m */; };
 		27103F8514E9CE4400DF7209 /* CBLReachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 27103F8214E9CE4400DF7209 /* CBLReachability.m */; };
@@ -1060,6 +1066,10 @@
 		270F5703156AE0BF000FEB8F /* CBLAuthorizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLAuthorizer.h; sourceTree = "<group>"; };
 		270F5704156AE0BF000FEB8F /* CBLAuthorizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLAuthorizer.m; sourceTree = "<group>"; };
 		270FE0C814C5008C005FF647 /* LiteServ */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LiteServ; sourceTree = BUILT_PRODUCTS_DIR; };
+		270FF0711A9BD4ED0016E50E /* zdelta+blocks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = "zdelta+blocks.c"; path = "vendor/CBForest/vendor/zdelta/blocks/zdelta+blocks.c"; sourceTree = SOURCE_ROOT; };
+		270FF0721A9BD4ED0016E50E /* zdelta+blocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "zdelta+blocks.h"; path = "vendor/CBForest/vendor/zdelta/blocks/zdelta+blocks.h"; sourceTree = SOURCE_ROOT; };
+		270FF0731A9BD4ED0016E50E /* NSData+zdelta.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+zdelta.h"; path = "vendor/CBForest/vendor/zdelta/Cocoa/NSData+zdelta.h"; sourceTree = SOURCE_ROOT; };
+		270FF0741A9BD4ED0016E50E /* NSData+zdelta.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+zdelta.m"; path = "vendor/CBForest/vendor/zdelta/Cocoa/NSData+zdelta.m"; sourceTree = SOURCE_ROOT; };
 		27103F8114E9CE4400DF7209 /* CBLReachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLReachability.h; sourceTree = "<group>"; };
 		27103F8214E9CE4400DF7209 /* CBLReachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLReachability.m; sourceTree = "<group>"; };
 		27103F8714EA076600DF7209 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -2177,6 +2187,10 @@
 				27A073EB14C0BB6200F52FE7 /* CBLMisc.m */,
 				271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */,
 				271297431A8D597B00F6C5CE /* CBLSymmetricKey.m */,
+				270FF0731A9BD4ED0016E50E /* NSData+zdelta.h */,
+				270FF0741A9BD4ED0016E50E /* NSData+zdelta.m */,
+				270FF0711A9BD4ED0016E50E /* zdelta+blocks.c */,
+				270FF0721A9BD4ED0016E50E /* zdelta+blocks.h */,
 				270B3DEE1489359000E0A926 /* CouchbaseLite-Info.plist */,
 				27821BBD14906FB50099B373 /* CouchbaseLitePrefix.h */,
 				27821BBF149078C70099B373 /* CouchbaseLite.exp */,
@@ -2609,6 +2623,7 @@
 				2753159E14ACEFC90065964D /* HTTPRedirectResponse.h in Headers */,
 				277B5D3B1821A8380088881E /* yajl_lex.h in Headers */,
 				27D2E707199BC06300D09A1D /* CBLQueryBuilder.h in Headers */,
+				270FF0771A9BD4ED0016E50E /* zdelta+blocks.h in Headers */,
 				27BDA81E181973EF00F27A11 /* CBLBulkDownloader.h in Headers */,
 				275315C814ACF0330065964D /* DDLog.h in Headers */,
 				27F94120176A64BA007BAEBE /* CBLJSONValidator.h in Headers */,
@@ -2649,6 +2664,7 @@
 				27DA4345159125B500F9E7B5 /* CBLManager.h in Headers */,
 				27DA434A15912AFD00F9E7B5 /* CBLView.h in Headers */,
 				27DA435015918C0200F9E7B5 /* MYDynamicObject.h in Headers */,
+				270FF0781A9BD4ED0016E50E /* NSData+zdelta.h in Headers */,
 				27DA435715918C8E00F9E7B5 /* CBLModel.h in Headers */,
 				27DA435A15918C8E00F9E7B5 /* CBLModelFactory.h in Headers */,
 				27846FB915D475DF0030122F /* MYRegexUtils.h in Headers */,
@@ -3488,6 +3504,7 @@
 				27DA42F9158E66DD00F9E7B5 /* CBLRevision.m in Sources */,
 				27DA42FE158E7D3500F9E7B5 /* CBLDatabase.m in Sources */,
 				27DA4309158FA35600F9E7B5 /* CBLCache.m in Sources */,
+				270FF0791A9BD4ED0016E50E /* NSData+zdelta.m in Sources */,
 				27DA4313158FB79F00F9E7B5 /* CBLQuery.m in Sources */,
 				27DA4346159125B500F9E7B5 /* CBLManager.m in Sources */,
 				27DA434B15912AFD00F9E7B5 /* CBLView.m in Sources */,
@@ -3552,6 +3569,7 @@
 				27513A4C1A674C9B0055DC40 /* FMResultSet.m in Sources */,
 				274C6C261A3F838500F9BDF7 /* CBLReduceFuncs.m in Sources */,
 				276B231F1A3A2BE400CAF010 /* CBLQueryBuilder.m in Sources */,
+				270FF0751A9BD4ED0016E50E /* zdelta+blocks.c in Sources */,
 				276B231A1A36646000CAF010 /* MYAnonymousIdentity.m in Sources */,
 				2733022B18F8572700A488F7 /* CBLAuthenticator.m in Sources */,
 			);
@@ -3668,6 +3686,7 @@
 				27B0B7DB1492B8A200A817AD /* CBLBase64.m in Sources */,
 				27731F061495335B00815D67 /* CBL_BlobStore.m in Sources */,
 				27513A181A672C760055DC40 /* CBLView.m in Sources */,
+				270FF0761A9BD4ED0016E50E /* zdelta+blocks.c in Sources */,
 				279906E6149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
 				279906F1149ABFC2003D4338 /* CBLBatcher.m in Sources */,
 				27A073EE14C0BB6200F52FE7 /* CBLMisc.m in Sources */,
@@ -3739,6 +3758,7 @@
 				27F12893156ABE24008465C2 /* OAPlaintextSignatureProvider.m in Sources */,
 				2726D14718FDF44000AACC2A /* CBLSpecialKey.m in Sources */,
 				27F12899156ABE24008465C2 /* OARequestParameter.m in Sources */,
+				270FF07A1A9BD4ED0016E50E /* NSData+zdelta.m in Sources */,
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */,
@@ -4294,6 +4314,7 @@
 					vendor/CBForest,
 					vendor/CBForest/vendor/forestdb/include/libforestdb,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
+					vendor/CBForest/vendor/zdelta,
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
@@ -4326,6 +4347,7 @@
 					vendor/CBForest,
 					vendor/CBForest/vendor/forestdb/include/libforestdb,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
+					vendor/CBForest/vendor/zdelta,
 				);
 				INFOPLIST_FILE = "Source/CouchbaseLite-Info.plist";
 				LD_DYLIB_INSTALL_NAME = "@rpath/$(EXECUTABLE_PATH)";
@@ -4666,6 +4688,7 @@
 					vendor/CBForest/,
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
+					vendor/CBForest/vendor/zdelta,
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
@@ -4695,6 +4718,7 @@
 					vendor/CBForest/,
 					vendor/CBForest/vendor/forestdb/include/libforestdb/,
 					"vendor/CBForest/vendor/sqlite3-unicodesn",
+					vendor/CBForest/vendor/zdelta,
 				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = CouchbaseLite;
