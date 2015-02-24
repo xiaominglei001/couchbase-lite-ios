@@ -246,33 +246,27 @@ extern NSString* WhyUnequalObjects(id a, id b); // from Test.m
 }
 
 
+- (id) runRemoteRequest: (CBLRemoteRequest*)request {
+    request.authorizer = self.authorizer;
+    NSError* error;
+    id result = [request runSynchronously: &error];
+    Assert(error == nil, @"%@ failed: %@", request, error);
+    return result;
+}
+
+
 - (void) eraseRemoteDB: (NSURL*)dbURL {
     Log(@"Deleting %@", dbURL);
-    __block NSError* error = nil;
-    __block BOOL finished = NO;
-    
+
     // Post to /db/_flush is supported by Sync Gateway 1.1, but not by CouchDB
     NSURLComponents* comp = [NSURLComponents componentsWithURL: dbURL resolvingAgainstBaseURL: YES];
     comp.port = @4985;
     comp.path = [comp.path stringByAppendingPathComponent: @"_flush"];
-
-    CBLRemoteRequest* request = [[CBLRemoteRequest alloc] initWithMethod: @"POST"
-                                                                     URL: comp.URL
-                                                                    body: nil
-                                                          requestHeaders: nil
-                                                            onCompletion:
-                                 ^(id result, NSError *err) {
-                                     finished = YES;
-                                     error = err;
-                                 }
-                                 ];
-    request.authorizer = self.authorizer;
-    [request start];
-    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
-    while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
-                                                 beforeDate: timeout])
-        ;
-    Assert(error == nil, @"Couldn't delete remote: %@", error);
+    [self runRemoteRequest: [[CBLRemoteRequest alloc] initWithMethod: @"POST"
+                                                                 URL: comp.URL
+                                                                body: nil
+                                                      requestHeaders: nil
+                                                        onCompletion: nil]];
 }
 
 

@@ -69,6 +69,11 @@ typedef struct {
 
 - (instancetype) initWithStore: (CBL_BlobStore*)store;
 
+/** Tells the writer that the incoming data stream is a delta in zdelta format, whose base data is
+    the attachment with the given `sourceKey`. The writer will decode and write the target data
+    incrementally. */
+- (BOOL) decodeZDeltaFrom: (CBLBlobKey)sourceKey;
+
 /** Appends data to the blob. Call this when new data is available. */
 - (void) appendData: (NSData*)data;
 
@@ -90,10 +95,12 @@ typedef struct {
 /** After finishing, this is the key for looking up the blob through the CBL_BlobStore. */
 @property (readonly) CBLBlobKey blobKey;
 
+/** After finishing, this is the SHA-1 digest of the blob, in base64 with a "sha1-" prefix. */
+@property (readonly) NSString* SHA1DigestString;
+
 /** After finishing, this is the MD5 digest of the blob, in base64 with an "md5-" prefix.
     (This is useful for compatibility with CouchDB, which stores MD5 digests of attachments.) */
 @property (readonly) NSString* MD5DigestString;
-@property (readonly) NSString* SHA1DigestString;
 
 /** The location of the temporary file containing the attachment contents.
     Will be nil after -install is called. */

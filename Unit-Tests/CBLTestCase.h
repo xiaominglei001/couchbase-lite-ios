@@ -10,6 +10,7 @@
 #import <CouchbaseLite/CouchbaseLitePrivate.h>
 #import <XCTest/XCTest.h>
 #import "CollectionUtils.h"
+@class CBLRemoteRequest;
 @protocol CBLAuthorizer;
 
 
@@ -104,5 +105,8 @@ void AddTemporaryCredential(NSURL* url, NSString* realm,
 
 /** Deletes a remote database. Works only with CouchDB, not Sync Gateway. */
 - (void) eraseRemoteDB: (NSURL*)url;
+
+/** Runs a remote HTTP request, returning its result */
+- (id) runRemoteRequest: (CBLRemoteRequest*)request;
 
 @end

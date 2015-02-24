@@ -414,7 +414,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                               limit: kMaxNumberOfAttsSince
                                                     onlyAttachments: YES];
     if (knownRevs.count > 0)
-        path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
+        path = [path stringByAppendingFormat: @"&atts_since=%@&deltas=true",
+                                              joinQuotedEscaped(knownRevs)];
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
     
     // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...

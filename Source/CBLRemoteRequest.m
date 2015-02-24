@@ -233,6 +233,34 @@
 }
 
 
+#if DEBUG
+- (id) runSynchronously: (NSError**)outError {
+    __block id result;
+    __block NSError* error = nil;
+    __block BOOL finished = NO;
+    CBLRemoteRequestCompletionBlock origCompletion = _onCompletion;
+    _onCompletion = ^(id rslt, NSError* err) {
+        if (origCompletion)
+            origCompletion(rslt, err);
+        result = rslt;
+        error = err;
+        finished = YES;
+    };
+    [self start];
+    NSDate* timeout = [NSDate dateWithTimeIntervalSinceNow: 10];
+    while (!finished && [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                                 beforeDate: timeout])
+        ;
+    _onCompletion = origCompletion;
+    if (!finished)
+        error = [NSError errorWithDomain: NSURLErrorDomain code: NSURLErrorTimedOut userInfo: nil];
+    if (outError)
+        *outError = error;
+    return result;
+}
+#endif
+
+
 #pragma mark - NSURLCONNECTION DELEGATE:
 
 

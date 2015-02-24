@@ -16,6 +16,7 @@
 #import "CBLDatabase+Insertion.h"
 #import "CBLRevision.h"
 #import "CBLOAuth1Authorizer.h"
+#import "CBLRemoteRequest.h"
 #import "CBLBase64.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
@@ -495,7 +496,7 @@
 }
 
 
-- (void) test_FindCommonAncestor {
+- (void) test16_FindCommonAncestor {
     NSDictionary* revDict = $dict({@"ids", @[@"second", @"first"]}, {@"start", @2});
     CBL_Revision* rev = [CBL_Revision revisionWithProperties: $dict({@"_revisions", revDict})];
     AssertEq(CBLFindCommonAncestor(rev, @[]), 0);
@@ -505,7 +506,7 @@
 }
 
 
-- (void) test_Reachability {
+- (void) test17_Reachability {
     NSArray* hostnames = @[@"couchbase.com", @"localhost", @"127.0.0.1", @"67.221.231.37",
                            @"fsdfsaf.fsdfdaf.fsfddf"];
     for (NSString* hostname in hostnames) {
@@ -540,6 +541,65 @@
         [r stop];
         Log(@"\t...done!");
     }
+}
+
+
+- (void) test18_GetAttachmentDeltas {
+    NSURL* remoteDB = [self remoteTestDBURL: kScratchDBName];
+    if (!remoteDB)
+        return;
+    [self eraseRemoteDB: remoteDB];
+
+    // Initial version of attachment:
+    static const size_t kAttSize = 100000;
+    NSMutableData* attachData = [NSMutableData dataWithLength: kAttSize];
+    SecRandomCopyBytes(kSecRandomDefault, kAttSize, attachData.mutableBytes);
+
+    // Add doc with attachment directly to the remote DB via REST:
+    NSURL* docURL = [remoteDB URLByAppendingPathComponent: @"doc"];
+    NSDictionary* body;
+    body = @{@"_attachments": @{@"random": @{@"data": [CBLBase64 encode: attachData],
+                                             @"content_type": @"application/random"}}};
+    NSDictionary* response;
+    response = [self runRemoteRequest: [[CBLRemoteJSONRequest alloc] initWithMethod: @"PUT"
+                                                                                URL: docURL
+                                                                               body: body
+                                                                     requestHeaders: nil
+                                                                       onCompletion: nil]];
+    NSString* rev1 = response[@"rev"];
+    Assert(rev1, @"No rev in response");
+
+    // Pull:
+    Log(@"--------------- FIRST PULL ---------------");
+    [self replicate: remoteDB push: NO filter: nil docIDs: nil expectError: nil];
+    // Verify the attachment in the local db:
+    CBLAttachment* att = [[db[@"doc"] currentRevision] attachmentNamed: @"random"];
+    Assert(att != nil);
+    AssertEqual(att.content, attachData);
+
+    // Modify the attachment:
+    for (int i = 0; i < 1000; i++) {
+        size_t offset = random() % kAttSize;
+        ((uint8_t*)attachData.mutableBytes)[offset]++;
+    }
+
+    // Update the doc in the remote db with the modified attachment:
+    body = @{@"_rev": rev1,
+             @"_attachments": @{@"random": @{@"data": [CBLBase64 encode: attachData],
+                                             @"content_type": @"application/random"}}};
+    response = [self runRemoteRequest: [[CBLRemoteJSONRequest alloc] initWithMethod: @"PUT"
+                                                                                URL: docURL
+                                                                               body: body
+                                                                     requestHeaders: nil
+                                                                       onCompletion: nil]];
+    // Pull again:
+    Log(@"--------------- SECOND PULL ---------------");
+    [self replicate: remoteDB push: NO filter: nil docIDs: nil expectError: nil];
+
+    // Verify the updated attachment in the local db:
+    att = [[db[@"doc"] currentRevision] attachmentNamed: @"random"];
+    Assert(att != nil);
+    AssertEqual(att.content, attachData);
 }
 
 

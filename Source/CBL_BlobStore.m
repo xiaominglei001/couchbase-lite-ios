@@ -18,6 +18,7 @@
 #import "CBLBase64.h"
 #import "CBLMisc.h"
 #import "CBLStatus.h"
+#import "ZDCodec.h"
 #import <ctype.h>
 
 
@@ -286,15 +287,16 @@
 @implementation CBL_BlobStoreWriter
 {
     @private
-    CBL_BlobStore* _store;
-    NSString* _tempPath;
-    NSFileHandle* _out;
-    UInt64 _length;
-    SHA_CTX _shaCtx;
-    MD5_CTX _md5Ctx;
-    CBLBlobKey _blobKey;
-    CBLMD5Key _MD5Digest;
-    CBLCryptorBlock _encryptor;
+    CBL_BlobStore*  _store;         // The BlobStore I add my attachment to
+    NSString*       _tempPath;      // Location data is written to before download is complete
+    NSFileHandle*   _out;           // File handle that writes to _tempPath
+    UInt64          _length;        // Current (decoded) data length
+    SHA_CTX         _shaCtx;        // Computes SHA-1 digest of data so far
+    MD5_CTX         _md5Ctx;        // Computes MD5 digest of data so far
+    CBLBlobKey      _blobKey;       // Blob key (SHA-1 digest) of final attachment when complete
+    CBLMD5Key       _MD5Digest;     // Running MD5 digest of data read so far
+    ZDCodec*        _zdeltaCodec;   // Decompresses deltas coming in from replicator
+    CBLCryptorBlock _encryptor;     // Encrypts data on its way to disk
 }
 @synthesize length=_length, blobKey=_blobKey;
 
@@ -327,7 +329,16 @@
     return self;
 }
 
-- (void) appendData: (NSData*)data {
+- (BOOL) decodeZDeltaFrom: (CBLBlobKey)sourceKey {
+    // Get source attachment data:
+    NSData* source = [_store blobForKey: sourceKey];
+    if (!source)
+        return NO;
+    _zdeltaCodec = [[ZDCodec alloc] initWithSource: source compressing: NO];
+    return (_zdeltaCodec != nil);
+}
+
+- (void) appendDecodedData: (NSData*)data {
     NSUInteger dataLen = data.length;
     _length += dataLen;
     SHA1_Update(&_shaCtx, data.bytes, dataLen);
@@ -338,7 +349,26 @@
     [_out writeData: data];
 }
 
+- (void) appendData: (NSData*)data {
+    if (_zdeltaCodec) {
+        __unsafe_unretained CBL_BlobStoreWriter* slef = self;  // avoids bogus warning
+        [_zdeltaCodec addBytes: data.bytes length: data.length
+                      onOutput: ^(const void *bytes, size_t length) {
+                          NSData* data = [[NSData alloc] initWithBytesNoCopy: (void*)bytes
+                                                                      length: length
+                                                                freeWhenDone: NO];
+                          [slef appendDecodedData: data];
+                      }];
+    } else {
+        [self appendDecodedData: data];
+    }
+}
+
 - (void) closeFile {
+    if (_zdeltaCodec) {
+        [self appendData: nil];             // flush zdelta decoder, write remaining decoded data
+        _zdeltaCodec = nil;
+    }
     if (_encryptor) {
         [_out writeData: _encryptor(nil)];  // write remaining encrypted data & clean up
         _encryptor = nil;

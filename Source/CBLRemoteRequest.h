@@ -76,6 +76,10 @@ void CBLWarnUntrustedCert(NSString* host, SecTrustRef trust);
 // The value to use for the User-Agent HTTP header.
 + (NSString*) userAgentHeader;
 
+#if DEBUG
+- (id) runSynchronously: (NSError**)error;  // for unit tests only
+#endif
+
 @end
 
 
