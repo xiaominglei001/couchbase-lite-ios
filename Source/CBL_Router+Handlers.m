@@ -864,8 +864,9 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         do {
             bytesRead = [bodyStream read: buffer.mutableBytes maxLength: buffer.length];
             if (bytesRead > 0) {
-                [blob appendData: [NSData dataWithBytesNoCopy: buffer.mutableBytes
-                                                       length: bytesRead freeWhenDone: NO]];
+                if (![blob appendData: [NSData dataWithBytesNoCopy: buffer.mutableBytes
+                                                       length: bytesRead freeWhenDone: NO]])
+                    bytesRead = -1;
             }
         } while (bytesRead > 0);
         if (bytesRead < 0)
@@ -876,7 +877,8 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         if (body)
             [blob appendData: body];
     }
-    [blob finish];
+    if (![blob finish])
+        return kCBLStatusBadAttachment;
 
     return [self updateAttachment: attachment docID: docID body: blob];
 }

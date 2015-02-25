@@ -299,10 +299,8 @@ static int compressionPercent(uint64_t from, uint64_t to) {
     _partRawSize += data.length;
     if (_jsonBuffer)
         return [self appendToJSONBuffer: data];
-    else {
-        [_curAttachment appendData: data];
-        return YES;
-    }
+    else
+        return [_curAttachment appendData: data];
 }
 
 
@@ -313,7 +311,8 @@ static int compressionPercent(uint64_t from, uint64_t to) {
     } else {
         // Finished downloading an attachment. Remember the association from the MD5 digest
         // (which appears in the body's _attachments dict) to the blob-store key of the data.
-        [_curAttachment finish];
+        if (![_curAttachment finish])
+            return NO;
         NSString* md5Str = _curAttachment.MD5DigestString;
 #ifndef MY_DISABLE_LOGGING
         if (WillLogTo(SyncVerbose)) {

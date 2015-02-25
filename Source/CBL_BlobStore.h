@@ -75,10 +75,10 @@ typedef struct {
 - (BOOL) decodeZDeltaFrom: (CBLBlobKey)sourceKey;
 
 /** Appends data to the blob. Call this when new data is available. */
-- (void) appendData: (NSData*)data;
+- (BOOL) appendData: (NSData*)data;
 
 /** Call this after all the data has been added. */
-- (void) finish;
+- (BOOL) finish;
 
 /** Call this to cancel before finishing the data. */
 - (void) cancel;

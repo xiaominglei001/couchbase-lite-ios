@@ -349,24 +349,29 @@
     [_out writeData: data];
 }
 
-- (void) appendData: (NSData*)data {
+- (BOOL) appendData: (NSData*)data {
     if (_zdeltaCodec) {
         __unsafe_unretained CBL_BlobStoreWriter* slef = self;  // avoids bogus warning
-        [_zdeltaCodec addBytes: data.bytes length: data.length
-                      onOutput: ^(const void *bytes, size_t length) {
-                          NSData* data = [[NSData alloc] initWithBytesNoCopy: (void*)bytes
-                                                                      length: length
-                                                                freeWhenDone: NO];
-                          [slef appendDecodedData: data];
-                      }];
+        BOOL ok = [_zdeltaCodec addBytes: data.bytes length: data.length
+                                onOutput: ^(const void *bytes, size_t length) {
+                                    NSData* data = [[NSData alloc] initWithBytesNoCopy: (void*)bytes
+                                                                                length: length
+                                                                          freeWhenDone: NO];
+                                    [slef appendDecodedData: data];
+                                }];
+        if (!ok)
+            Warn(@"%@: ZDelta decoder error %d", self, _zdeltaCodec.status);
+        return ok;
     } else {
         [self appendDecodedData: data];
+        return YES;
     }
 }
 
-- (void) closeFile {
+- (BOOL) closeFile {
+    BOOL ok = YES;
     if (_zdeltaCodec) {
-        [self appendData: nil];             // flush zdelta decoder, write remaining decoded data
+        ok = [self appendData: nil];        // flush zdelta decoder, write remaining decoded data
         _zdeltaCodec = nil;
     }
     if (_encryptor) {
@@ -374,14 +379,17 @@
         _encryptor = nil;
     }
     [_out closeFile];
-    _out = nil;    
+    _out = nil;
+    return ok;
 }
 
-- (void) finish {
+- (BOOL) finish {
     Assert(_out, @"Already finished");
-    [self closeFile];
+    if (![self closeFile])
+        return NO;
     SHA1_Final(_blobKey.bytes, &_shaCtx);
     MD5_Final(_MD5Digest.bytes, &_md5Ctx);
+    return YES;
 }
 
 - (NSString*) MD5DigestString {
