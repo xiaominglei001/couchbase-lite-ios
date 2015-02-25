@@ -72,6 +72,7 @@
     __block BOOL done = NO;
     [[[CBLMultipartDownloader alloc] initWithURL: url
                                         database: db
+                                           docID: @"oneBigAttachment"
                                   requestHeaders: nil
                                     onCompletion: ^(id result, NSError * error)
       {
@@ -104,7 +105,11 @@
     NSData* mime = [self contentsOfTestFile: @"Multipart1.mime"];
     NSDictionary* headers = @{@"Content-Type": @"multipart/mixed; boundary=\"BOUNDARY\""};
     CBLStatus status;
-    NSDictionary* dict = [CBLMultipartDocumentReader readData: mime headers: headers toDatabase: db status: &status];
+    NSDictionary* dict = [CBLMultipartDocumentReader readData: mime
+                                                      headers: headers
+                                                   toDatabase: db
+                                                        docID: @"THX-1138"
+                                                       status: &status];
     Assert(!CBLStatusIsError(status));
     AssertEqual(dict, (@{@"_id": @"THX-1138",
                          @"_rev": @"1-foobar",
@@ -120,7 +125,11 @@
 
     mime = [self contentsOfTestFile: @"MultipartBinary.mime"];
     headers = @{@"Content-Type": @"multipart/mixed; boundary=\"dc0bf3cdc9a6c6e4c46fe2a361c8c5d7\""};
-    dict = [CBLMultipartDocumentReader readData: mime headers: headers toDatabase: db status: &status];
+    dict = [CBLMultipartDocumentReader readData: mime
+                                        headers: headers
+                                     toDatabase: db
+                                          docID: @"038c536dc29ff0f4127705879700062c"
+                                         status: &status];
     Assert(!CBLStatusIsError(status));
     AssertEqual(dict, (@{@"_id": @"038c536dc29ff0f4127705879700062c",
                           @"_rev":@"3-e715bcf1865f8283ab1f0ba76e7a92ba",
@@ -149,7 +158,11 @@
     // Read data that's equivalent to the last one except the JSON is gzipped:
     mime = [self contentsOfTestFile: @"MultipartBinary.mime"];
     headers = @{@"Content-Type": @"multipart/mixed; boundary=\"dc0bf3cdc9a6c6e4c46fe2a361c8c5d7\""};
-    NSDictionary* unzippedDict = [CBLMultipartDocumentReader readData: mime headers: headers toDatabase: db status: &status];
+    NSDictionary* unzippedDict = [CBLMultipartDocumentReader readData: mime
+                                                              headers: headers
+                                                           toDatabase: db
+                                                        docID: @"038c536dc29ff0f4127705879700062c"
+                                                               status: &status];
     AssertEqual(unzippedDict, dict);
 }
 

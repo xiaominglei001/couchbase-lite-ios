@@ -13,14 +13,10 @@
 /** Downloads a remote CouchDB document in multipart format.
     Attachments are added to the database, but the document body isn't. */
 @interface CBLMultipartDownloader : CBLRemoteRequest
-{
-    @private
-    CBLDatabase* _db;
-    CBLMultipartDocumentReader* _reader;
-}
 
 - (instancetype) initWithURL: (NSURL*)url
                     database: (CBLDatabase*)database
+                       docID: (NSString*)docID
               requestHeaders: (NSDictionary *) requestHeaders
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion;
 

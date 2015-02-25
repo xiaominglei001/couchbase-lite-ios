@@ -43,6 +43,7 @@
                       database: (CBLDatabase*)database
                 requestHeaders: (NSDictionary *) requestHeaders
                      revisions: (NSArray*)revs
+                     useDeltas: (BOOL)useDeltas
                     onDocument: (CBLBulkDownloaderDocumentBlock)onDocument
                   onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
@@ -50,7 +51,7 @@
     NSArray* keys = [revs my_map: ^(CBL_Revision* rev) {
         NSArray* attsSince = [_db.storage getPossibleAncestorRevisionIDs: rev
                                                            limit: kMaxNumberOfAttsSince
-                                                 onlyAttachments: YES];
+                                                 onlyAttachments: (!useDeltas)];
         if (!attsSince.count == 0)
             attsSince = nil;
         return $dict({@"id", rev.docID},
@@ -59,8 +60,12 @@
     }];
     NSDictionary* body = @{@"docs": keys};
 
+    NSString* path = @"_bulk_get?revs=true&attachments=true";
+    if (useDeltas)
+        path = [path stringByAppendingString: @"&deltas=true"];
+
     self = [super initWithMethod: @"POST"
-                             URL: CBLAppendToURL(dbURL, @"_bulk_get?revs=true&attachments=true")
+                             URL: CBLAppendToURL(dbURL, path)
                             body: body
                   requestHeaders: requestHeaders
                     onCompletion: onCompletion];
@@ -135,8 +140,9 @@
 /** This method is called when a part's headers have been parsed, before its data is parsed. */
 - (BOOL) startedPart: (NSDictionary*)headers {
     Assert(!_docReader);
-    LogTo(SyncVerbose, @"%@: Starting new document; ID=\"%@\"", self, headers[@"X-Doc-ID"]);
-    _docReader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
+    NSString* docID = headers[@"X-Doc-ID"];
+    LogTo(SyncVerbose, @"%@: Starting new document; ID=\"%@\"", self, docID);
+    _docReader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db docID: docID];
     _docReader.headers = headers;
     return YES;
 }

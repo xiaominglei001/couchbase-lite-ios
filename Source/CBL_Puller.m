@@ -423,9 +423,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     __weak CBL_Puller *weakSelf = self;
     __block CBLMultipartDownloader *dl;
     dl = [[CBLMultipartDownloader alloc] initWithURL: CBLAppendToURL(_remote, path)
-                                           database: db
-                                     requestHeaders: self.requestHeaders
-                                       onCompletion:
+                                            database: db
+                                               docID: rev.docID
+                                      requestHeaders: self.requestHeaders
+                                        onCompletion:
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBL_Puller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
@@ -475,6 +476,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                          database: _db
                                    requestHeaders: self.requestHeaders
                                         revisions: bulkRevs
+                                        useDeltas: [self serverIsSyncGatewayVersion: @"1.1"]
                                        onDocument:
           ^(NSDictionary* props) {
               // Got a revision!

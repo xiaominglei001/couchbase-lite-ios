@@ -20,15 +20,18 @@ typedef void(^CBLMultipartDocumentReaderCompletionBlock)(CBLMultipartDocumentRea
 + (NSDictionary*) readData: (NSData*)data
                    headers: (NSDictionary*)headers
                 toDatabase: (CBLDatabase*)database
+                     docID: (NSString*)docID
                     status: (CBLStatus*)outStatus;
 
 // asynchronous:
 + (CBLStatus) readStream: (NSInputStream*)stream
                  headers: (NSDictionary*)headers
               toDatabase: (CBLDatabase*)database
+                   docID: (NSString*)docID
                     then: (CBLMultipartDocumentReaderCompletionBlock)completionBlock;
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database;
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                            docID: (NSString*)docID;
 
 @property (readonly, nonatomic) CBLStatus status;
 @property (readonly, nonatomic) NSDictionary* document;

@@ -23,6 +23,12 @@
 #import "CollectionUtils.h"
 #import "MYStreamUtils.h"
 #import "GTMNSData+zlib.h"
+#import "ZDCodec.h"
+
+
+static int compressionPercent(uint64_t from, uint64_t to) {
+    return (int)( ((double)to - (double)from) / (double)to * 100.0 );
+}
 
 
 @interface CBLMultipartDocumentReader () <CBLMultipartReaderDelegate, NSStreamDelegate>
@@ -33,10 +39,12 @@
 {
 @private
     CBLDatabase* _database;
+    NSString* _docID;
     CBLStatus _status;
     CBLMultipartReader* _multipartReader;
     NSMutableData* _jsonBuffer;
     BOOL _jsonCompressed;
+    ZDCodec* _jsonDecoder;                        // Decodes delta-compressed JSON
     NSUInteger _partRawSize;
     CBL_BlobStoreWriter* _curAttachment;
     NSMutableDictionary* _attachmentsByName;      // maps attachment name --> CBL_BlobStoreWriter
@@ -50,6 +58,7 @@
 + (NSDictionary*) readData: (NSData*)data
                    headers: (NSDictionary*)headers
                 toDatabase: (CBLDatabase*)database
+                     docID: (NSString*)docID
                     status: (CBLStatus*)outStatus
 {
     if (data.length == 0) {
@@ -57,7 +66,7 @@
         return nil;
     }
     NSDictionary* result = nil;
-    CBLMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];
+    CBLMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database docID: docID];
     if ([reader setHeaders: headers]
             && [reader appendData: data]
             && [reader finish]) {
@@ -70,11 +79,13 @@
 
 
 - (instancetype) initWithDatabase: (CBLDatabase*)database
+                            docID: (NSString*)docID
 {
     Assert(database);
     self = [super init];
     if (self) {
         _database = database;
+        _docID = docID;
     }
     return self;
 }
@@ -86,7 +97,8 @@
 
 
 - (NSString*) description {
-    return [NSString stringWithFormat: @"%@[_id=\"%@\"]", self.class, _document.cbl_id];
+    return [NSString stringWithFormat: @"%@[_id=\"%@\"]",
+            self.class, (_docID ?: _document.cbl_id)];
 }
 
 
@@ -114,19 +126,11 @@
                                   || [contentType hasPrefix: @"text/plain"]) {
         // No multipart, so no attachments. Body is pure JSON. (We allow text/plain because CouchDB
         // sends JSON responses using the wrong content-type.)
-        [self startJSONBufferWithHeaders: headers];
-        return YES;
+        return [self startJSONBufferWithHeaders: headers];
     }
     // Unknown/invalid MIME type:
     _status = kCBLStatusNotAcceptable;
     return NO;
-}
-
-
-- (void) startJSONBufferWithHeaders: (NSDictionary*)headers {
-    _jsonBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
-    NSString* contentEncoding = headers[@"Content-Encoding"];
-    _jsonCompressed = contentEncoding && [contentEncoding rangeOfString: @"gzip"].length > 0;
 }
 
 
@@ -175,9 +179,10 @@
 + (CBLStatus) readStream: (NSInputStream*)stream
                  headers: (NSDictionary*)headers
               toDatabase: (CBLDatabase*)database
+                   docID: (NSString*)docID
                     then: (CBLMultipartDocumentReaderCompletionBlock)onCompletion
 {
-    CBLMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database];
+    CBLMultipartDocumentReader* reader = [[self alloc] initWithDatabase: database docID: docID];
     return [reader readStream: stream headers: headers then: onCompletion];
 }
 
@@ -249,8 +254,9 @@
 /** Callback: A part's headers have been parsed, but not yet its data. */
 - (BOOL) startedPart: (NSDictionary*)headers {
     // First MIME part is the document's JSON body; the rest are attachments.
+    _partRawSize = 0;
     if (!_document) {
-        [self startJSONBufferWithHeaders: headers];
+        return [self startJSONBufferWithHeaders: headers];
     } else {
         _curAttachment = [_database attachmentWriter];
         
@@ -283,27 +289,27 @@
         }
         LogTo(SyncVerbose, @"%@: Starting attachment #%u \"%@\", deltaSrc=%@",
               self, (unsigned)_attachmentsByDigest.count + 1, name, deltaSrc);
+        return YES;
     }
-    _partRawSize = 0;
-    return YES;
 }
 
 
 /** Callback: Append data to a MIME part's body. */
 - (BOOL) appendToPart: (NSData*)data {
-    if (_jsonBuffer)
-        [_jsonBuffer appendData: data];
-    else
-        [_curAttachment appendData: data];
     _partRawSize += data.length;
-    return YES;
+    if (_jsonBuffer)
+        return [self appendToJSONBuffer: data];
+    else {
+        [_curAttachment appendData: data];
+        return YES;
+    }
 }
 
 
 /** Callback: A MIME part is complete. */
 - (BOOL) finishedPart {
     if (_jsonBuffer) {
-        [self parseJSONBuffer];
+        return [self parseJSONBuffer];
     } else {
         // Finished downloading an attachment. Remember the association from the MD5 digest
         // (which appears in the body's _attachments dict) to the blob-store key of the data.
@@ -313,25 +319,76 @@
         if (WillLogTo(SyncVerbose)) {
             CBLBlobKey key = _curAttachment.blobKey;
             NSData* keyData = [NSData dataWithBytes: &key length: sizeof(key)];
-            LogTo(SyncVerbose, @"%@: Finished attachment #%u: len=%uk, digest=%@, SHA1=%@",
-                  self, (unsigned)_attachmentsByDigest.count+1, (unsigned)_curAttachment.length/1024,
+            LogTo(SyncVerbose, @"%@: Finished attachment #%u: len=%uk, %d%% compression, digest=%@, SHA1=%@",
+                  self, (unsigned)_attachmentsByDigest.count+1,
+                  (unsigned)_curAttachment.length/1024,
+                  compressionPercent(_partRawSize, _curAttachment.length),
                   md5Str, keyData);
-            if (_curAttachment.length != _partRawSize)
-                LogTo(SyncVerbose, @"%@:    ... Was compressed to %uk (%.0f%%)",
-                      self, (unsigned)_partRawSize/1024, _partRawSize*100.0/_curAttachment.length);
         }
 #endif
         _attachmentsByDigest[md5Str] = _curAttachment;
         _curAttachment = nil;
+        return YES;
+    }
+}
+
+
+#pragma mark - JSON PARSING:
+
+
+- (BOOL) startJSONBufferWithHeaders: (NSDictionary*)headers {
+    _jsonBuffer = [[NSMutableData alloc] initWithCapacity: 1024];
+    NSString* contentEncoding = headers[@"Content-Encoding"];
+    if ([contentEncoding isEqualToString: @"zdelta"]) {
+        NSString* sourceRevID = headers[@"X-Delta-Source"];
+        if (_docID == nil || sourceRevID == nil) {
+            Warn(@"%@: Can't interpret delta, docID/revID not known", self);
+            _status = kCBLStatusUpstreamError;
+            return NO;
+        }
+        CBLStatus status = 0;
+        CBL_Revision* rev = [_database getDocumentWithID: _docID revisionID: sourceRevID
+                                                 options: kCBLNoIDs status: &status];
+        NSData* sourceJSON = rev.body.asJSON;
+        if (!sourceJSON) {
+            Warn(@"%@: Can't interpret delta, can't get source JSON {%@ #%@} (status=%d)",
+                 self, _docID, sourceRevID, status);
+            _status = kCBLStatusUpstreamError;
+            return NO;
+        }
+        _jsonDecoder = [[ZDCodec alloc] initWithSource: sourceJSON compressing: NO];
+    } else {
+        _jsonCompressed = [contentEncoding isEqualToString: @"gzip"];
     }
     return YES;
 }
 
 
-#pragma mark - INTERNALS:
+- (BOOL) appendToJSONBuffer: (NSData*)data {
+    if (_jsonDecoder) {
+        NSMutableData* jsonBuffer = _jsonBuffer;
+        BOOL ok = [_jsonDecoder addBytes: data.bytes length: data.length
+                                onOutput: ^(const void *bytes, size_t length) {
+                                    [jsonBuffer appendBytes: bytes length: length];
+                                }];
+        if (!ok) {
+            Warn(@"%@: ZDelta decoder error %d", self, _jsonDecoder.status);
+            _status = kCBLStatusUpstreamError;
+        }
+        return ok;
+    } else {
+        [_jsonBuffer appendData: data];
+        return YES;
+    }
+}
 
 
 - (BOOL) parseJSONBuffer {
+    if (_jsonDecoder) {
+        if (![self appendToJSONBuffer: nil]) // flush decoder
+            return NO;
+        _jsonDecoder = nil;
+    }
     NSData* json = _jsonBuffer;
     _jsonBuffer = nil;
     if (_jsonCompressed) {
@@ -342,6 +399,8 @@
             return NO;
         }
     }
+    LogTo(SyncVerbose, @"%@: Received JSON body, %u bytes (%d%% compression)",
+          self, (unsigned)json.length, compressionPercent(_partRawSize, json.length));
     id document = [CBLJSON JSONObjectWithData: json
                                        options: CBLJSONReadingMutableContainers
                                          error: NULL];
@@ -354,6 +413,9 @@
     _document = document;
     return YES;
 }
+
+
+#pragma mark - FINISHING UP:
 
 
 - (BOOL) registerAttachments {

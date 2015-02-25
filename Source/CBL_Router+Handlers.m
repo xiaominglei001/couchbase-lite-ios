@@ -747,7 +747,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) readDocumentBodyThen: (CBLStatus(^)(CBL_Body*))block {
+- (CBLStatus) readDocumentBody: (NSString*)docID then: (CBLStatus(^)(CBL_Body*))block {
     CBLStatus status;
     NSDictionary* headers = _request.allHTTPHeaderFields;
     NSInputStream* bodyStream = _request.HTTPBodyStream;
@@ -756,6 +756,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         status = [CBLMultipartDocumentReader readStream: bodyStream
                                                 headers: headers
                                              toDatabase: _db
+                                                  docID: docID
                                                    then: ^(CBLMultipartDocumentReader* reader) {
             // Called when the reader is done reading/parsing the stream:
             CBLStatus status = reader.status;
@@ -780,6 +781,7 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
         NSDictionary* properties = [CBLMultipartDocumentReader readData: _request.HTTPBody
                                                                 headers: headers
                                                              toDatabase: _db
+                                                                  docID: docID
                                                                  status: &status];
         if (CBLStatusIsError(status))
             return status;
@@ -794,14 +796,14 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     CBLStatus status = [self openDB];
     if (CBLStatusIsError(status))
         return status;
-    return [self readDocumentBodyThen: ^(CBL_Body *body) {
+    return [self readDocumentBody: nil then: ^(CBL_Body *body) {
         return [self update: db docID: nil body: body deleting: NO];
     }];
 }
 
 
 - (CBLStatus) do_PUT: (CBLDatabase*)db docID: (NSString*)docID {
-    return [self readDocumentBodyThen: ^CBLStatus(CBL_Body *body) {
+    return [self readDocumentBody: docID then: ^CBLStatus(CBL_Body *body) {
         if (![self query: @"new_edits"] || [self boolQuery: @"new_edits"]) {
             // Regular PUT:
             return [self update: db docID: docID body: body deleting: NO];

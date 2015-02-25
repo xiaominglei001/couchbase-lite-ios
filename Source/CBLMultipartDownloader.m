@@ -22,10 +22,17 @@
 
 
 @implementation CBLMultipartDownloader
+{
+    @private
+    CBLDatabase* _db;
+    NSString* _docID;
+    CBLMultipartDocumentReader* _reader;
+}
 
 
 - (instancetype) initWithURL: (NSURL*)url
                     database: (CBLDatabase*)database
+                       docID: (NSString*)docID
               requestHeaders: (NSDictionary *) requestHeaders
                 onCompletion: (CBLRemoteRequestCompletionBlock)onCompletion
 {
@@ -36,6 +43,7 @@
                     onCompletion: onCompletion];
     if (self) {
         _db = database;
+        _docID = docID;
     }
     return self;
 }
@@ -65,7 +73,7 @@
 
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db];
+    _reader = [[CBLMultipartDocumentReader alloc] initWithDatabase: _db docID: _docID];
     CBLStatus status = (CBLStatus) ((NSHTTPURLResponse*)response).statusCode;
     if (status < 300) {
         NSDictionary* headers = [(NSHTTPURLResponse*)response allHeaderFields];
