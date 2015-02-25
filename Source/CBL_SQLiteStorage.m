@@ -581,6 +581,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
              intoRevision: (CBL_MutableRevision*)rev
                   options: (CBLContentOptions)options
 {
+    if (options == kCBLNoIDs) {
+        rev.asJSON = json;
+    } else {
     NSMutableDictionary* extra = $mdict();
     [self extraPropertiesForRevision: rev options: options into: extra];
     if (json.length > 0) {
@@ -591,6 +594,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
             rev.missing = true;
     }
 }
+}
 
 
 /** Inserts the _id, _rev, _attachments etc. properties into the dictionary 'dst'.
@@ -599,11 +603,12 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
                             options: (CBLContentOptions)options
                                into: (NSMutableDictionary*)dst
 {
+    if (!(options & kCBLNoIDs)) {
     dst[@"_id"] = rev.docID;
     dst[@"_rev"] = rev.revID;
     if (rev.deleted)
         dst[@"_deleted"] = $true;
-
+    }
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
     if (options & kCBLIncludeLocalSeq)

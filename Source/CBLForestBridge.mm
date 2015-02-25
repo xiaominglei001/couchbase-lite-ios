@@ -96,12 +96,16 @@ static NSData* dataOfNode(const Revision* rev) {
 
     rev.sequence = revNode->sequence;
 
-    NSMutableDictionary* extra = $mdict();
-    [self addContentProperties: options into: extra rev: revNode];
-    if (json.length > 0)
-        rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
-    else
-        rev.properties = extra;
+    if (options == kCBLNoIDs) {
+        rev.asJSON = json;
+    } else {
+        NSMutableDictionary* extra = $mdict();
+        [self addContentProperties: options into: extra rev: revNode];
+        if (json.length > 0)
+            rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
+        else
+            rev.properties = extra;
+    }
     return YES;
 }
 
@@ -135,11 +139,12 @@ static NSData* dataOfNode(const Revision* rev) {
     NSString* revID = (NSString*)rev->revID;
     Assert(revID);
     const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
-    dst[@"_id"] = (NSString*)doc->docID();
-    dst[@"_rev"] = revID;
-
-    if (rev->isDeleted())
-        dst[@"_deleted"] = $true;
+    if (!(options & kCBLNoIDs)) {
+        dst[@"_id"] = (NSString*)doc->docID();
+        dst[@"_rev"] = revID;
+        if (rev->isDeleted())
+            dst[@"_deleted"] = $true;
+    }
 
     // Get more optional stuff to put in the properties:
     if (options & kCBLIncludeLocalSeq)

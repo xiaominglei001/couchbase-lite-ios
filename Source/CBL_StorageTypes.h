@@ -22,7 +22,8 @@ enum {
     kCBLLeaveAttachmentsEncoded = 32,        // i.e. don't decode
     kCBLBigAttachmentsFollow = 64,           // i.e. add 'follows' key instead of data for big ones
     kCBLNoBody = 128,                        // omit regular doc body properties
-    kCBLNoAttachments = 256                  // Omit the _attachments property
+    kCBLNoAttachments = 256,                 // Omit the _attachments property
+    kCBLNoIDs = 512                          // Omit _id, _rev, _deleted
 };
 
 
