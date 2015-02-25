@@ -584,16 +584,16 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (options == kCBLNoIDs) {
         rev.asJSON = json;
     } else {
-    NSMutableDictionary* extra = $mdict();
-    [self extraPropertiesForRevision: rev options: options into: extra];
-    if (json.length > 0) {
-        rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
-    } else {
-        rev.properties = extra;
-        if (json == nil)
-            rev.missing = true;
+        NSMutableDictionary* extra = $mdict();
+        [self extraPropertiesForRevision: rev options: options into: extra];
+        if (json.length > 0) {
+            rev.asJSON = [CBLJSON appendDictionary: extra toJSONDictionaryData: json];
+        } else {
+            rev.properties = extra;
+            if (json == nil)
+                rev.missing = true;
+        }
     }
-}
 }
 
 
@@ -604,10 +604,10 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
                                into: (NSMutableDictionary*)dst
 {
     if (!(options & kCBLNoIDs)) {
-    dst[@"_id"] = rev.docID;
-    dst[@"_rev"] = rev.revID;
-    if (rev.deleted)
-        dst[@"_deleted"] = $true;
+        dst[@"_id"] = rev.docID;
+        dst[@"_rev"] = rev.revID;
+        if (rev.deleted)
+            dst[@"_deleted"] = $true;
     }
     // Get more optional stuff to put in the properties:
     //OPT: This probably ends up making redundant SQL queries if multiple options are enabled.
@@ -871,7 +871,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     If 'onlyAttachments' is true, only revisions with attachments will be returned. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
-                            onlyAttachments: (BOOL)onlyAttachments;
+                            onlyAttachments: (BOOL)onlyAttachments
 {
     int generation = rev.generation;
     if (generation <= 1)
@@ -880,26 +880,21 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     if (docNumericID <= 0)
         return nil;
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
-    CBL_FMResultSet* r = [_fmdb executeQuery:
-                      @"SELECT revid, sequence FROM revs WHERE doc_id=? and revid < ?"
-                       " and deleted=0 and json not null"
-                       " ORDER BY sequence DESC LIMIT ?",
-                      @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
+
+    NSString* sql = $sprintf(@"SELECT revid FROM revs WHERE doc_id=? and revid < ?"
+                              " AND deleted=0 AND json not null %@"
+                              " ORDER BY sequence DESC LIMIT ?",
+                             (onlyAttachments ? @"AND no_attachments=0" : @""));
+    CBL_FMResultSet* r = [_fmdb executeQuery: sql,
+                                    @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];
     if (!r)
         return nil;
     NSMutableArray* revIDs = $marray();
     while ([r next]) {
-        if (onlyAttachments && ![self sequenceHasAttachments: [r longLongIntForColumnIndex: 1]])
-            continue;
         [revIDs addObject: [r stringForColumnIndex: 0]];
     }
     [r close];
     return revIDs;
-}
-
-
-- (BOOL) sequenceHasAttachments: (SequenceNumber)sequence {
-    return [_fmdb boolForQuery: @"SELECT no_attachments=0 FROM revs WHERE sequence=?", @(sequence)];
 }
 
 
