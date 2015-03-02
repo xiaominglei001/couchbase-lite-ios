@@ -17,12 +17,12 @@
 #import "CBL_Body.h"
 #import "CBLRevision.h"
 #import "CBLDatabaseChange.h"
-#import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLBase64.h"
 #import "CBL_Shared.h"
 #import "CBLInternal.h"
+#import "CBLGZip.h"
 #import "CouchbaseLitePrivate.h"
-#import "GTMNSData+zlib.h"
 
 
 @interface DatabaseAttachment_Tests : CBLTestCaseWithDB
@@ -148,7 +148,7 @@
     if (compress) {
         length = @(attachmentData.length);
         encoding = @"gzip";
-        attachmentData = [NSData gtm_dataByGzippingData: attachmentData];
+        attachmentData = [CBLGZip dataByCompressingData: attachmentData];
     }
     NSString* base64 = [CBLBase64 encode: attachmentData];
     NSDictionary* attachmentDict = $dict({@"attach", $dict({@"content_type", @"text/plain"},
@@ -357,7 +357,7 @@
     
     NSData* attach1 = [@"Encoded! Encoded!Encoded! Encoded! Encoded! Encoded! Encoded! Encoded!"
                             dataUsingEncoding: NSUTF8StringEncoding];
-    NSData* encoded = [NSData gtm_dataByGzippingData: attach1];
+    NSData* encoded = [CBLGZip dataByCompressingData: attach1];
     insertAttachment(self, encoded,
                      rev1.sequence,
                      @"attach", @"text/plain",
@@ -457,7 +457,7 @@
 
 static NSDictionary* attachmentsDict(NSData* data, NSString* name, NSString* type, BOOL gzipped) {
     if (gzipped)
-        data = [NSData gtm_dataByGzippingData: data];
+        data = [CBLGZip dataByCompressingData: data];
     NSMutableDictionary* att = $mdict({@"content_type", type}, {@"data", data});
     if (gzipped)
         att[@"encoding"] = @"gzip";

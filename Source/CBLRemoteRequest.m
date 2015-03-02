@@ -20,11 +20,11 @@
 #import "CBL_BlobStore.h"
 #import "CBLDatabase.h"
 #import "CBL_Replicator.h"
+#import "CBLGZip.h"
 #import "CollectionUtils.h"
 #import "Logging.h"
 #import "Test.h"
 #import "MYURLUtils.h"
-#import "GTMNSData+zlib.h"
 
 
 // Max number of retry attempts for a transient failure, and the backoff time formula
@@ -114,7 +114,7 @@
     NSData* body = _request.HTTPBody;
     if (body.length < 100 || [_request valueForHTTPHeaderField: @"Content-Encoding"] != nil)
         return NO;
-    NSData* encoded = [NSData gtm_dataByGzippingData: body];
+    NSData* encoded = [CBLGZip dataByCompressingData: body];
     if (encoded.length >= body.length)
         return NO;
     _request.HTTPBody = encoded;

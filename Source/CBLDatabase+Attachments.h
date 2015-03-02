@@ -8,7 +8,7 @@
 
 #import "CBLDatabase+Internal.h"
 #import "CBL_BlobStore.h"
-@class CBL_Revision, CBLMultipartWriter, CBL_Attachment;
+@class CBL_BlobStoreWriter, CBL_Revision, CBLMultipartWriter, CBL_Attachment;
 
 
 /** Types of encoding/compression of stored attachments. */

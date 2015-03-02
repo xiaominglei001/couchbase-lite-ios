@@ -15,20 +15,24 @@
 
 #import "CBLMultipartDocumentReader.h"
 #import "CBLDatabase+Attachments.h"
-#import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBL_Attachment.h"
 #import "CBLInternal.h"
 #import "CBLBase64.h"
 #import "CBLMisc.h"
+#import "CBLGZip.h"
 #import "CollectionUtils.h"
 #import "MYStreamUtils.h"
-#import "GTMNSData+zlib.h"
 #import "ZDCodec.h"
 
 
 static int compressionPercent(uint64_t from, uint64_t to) {
     return (int)( ((double)to - (double)from) / (double)to * 100.0 );
 }
+
+
+@interface ZDCodec () <CBLCodec>  // Just declare that ZDCodec implements CBLCodec
+@end
 
 
 @interface CBLMultipartDocumentReader () <CBLMultipartReaderDelegate, NSStreamDelegate>
@@ -43,8 +47,7 @@ static int compressionPercent(uint64_t from, uint64_t to) {
     CBLStatus _status;
     CBLMultipartReader* _multipartReader;
     NSMutableData* _jsonBuffer;
-    BOOL _jsonCompressed;
-    ZDCodec* _jsonDecoder;                        // Decodes delta-compressed JSON
+    id<CBLCodec> _jsonDecoder;                    // Decodes compressed JSON
     NSUInteger _partRawSize;
     CBL_BlobStoreWriter* _curAttachment;
     NSMutableDictionary* _attachmentsByName;      // maps attachment name --> CBL_BlobStoreWriter
@@ -270,20 +273,25 @@ static int compressionPercent(uint64_t from, uint64_t to) {
             name = CBLUnquoteString([disposition substringFromIndex: 21]);
             if (name) {
                 _attachmentsByName[name] = _curAttachment;
-                // Is this attachment delta-encoded?
-                NSDictionary* metadata = _document.cbl_attachments[name];
-                if ([metadata[@"encoding"] isEqual: @"zdelta"]) {
-                    deltaSrc = $castIf(NSString, metadata[@"deltasrc"]);
+                // Is this attachment encoded?
+                NSString* encoding = headers[@"Content-Encoding"];
+                if ([encoding isEqualToString: @"gzip"]) {
+                    // GZip-encoded; if this isn't the persistent encoding, decode it now:
+                    NSDictionary* metadata = _document.cbl_attachments[name];
+                    if (![metadata[@"encoding"] isEqualToString: @"gzip"])
+                        [_curAttachment decodeGZip];
+
+                } else if ([encoding isEqualToString: @"zdelta"]) {
+                    // Delta-encoded, so look up source attachment & decode from it:
+                    deltaSrc = headers[@"X-Delta-Source"];
                     CBLBlobKey key;
                     if (![CBL_Attachment digest: deltaSrc toBlobKey: &key]) {
-                        Warn(@"Attachment JSON has invalid deltaSrc: '%@'", deltaSrc);
+                        Warn(@"Attachment part has invalid X-Delta-Source: '%@'", deltaSrc);
                         return NO;
                     } else if (![_curAttachment decodeZDeltaFrom: key]) {
-                        Warn(@"Attachment deltaSrc is unknown attachment '%@'", deltaSrc);
+                        Warn(@"Attachment delta src is unknown attachment '%@'", deltaSrc);
                         return NO;
                     }
-                    [(NSMutableDictionary*)metadata removeObjectForKey: @"encoding"];
-                    [(NSMutableDictionary*)metadata removeObjectForKey: @"deltasrc"];
                 }
             }
         }
@@ -356,8 +364,8 @@ static int compressionPercent(uint64_t from, uint64_t to) {
             return NO;
         }
         _jsonDecoder = [[ZDCodec alloc] initWithSource: sourceJSON compressing: NO];
-    } else {
-        _jsonCompressed = [contentEncoding isEqualToString: @"gzip"];
+    } else if ([contentEncoding isEqualToString: @"gzip"]) {
+        _jsonDecoder = [[CBLGZip alloc] initForCompressing: NO];
     }
     return YES;
 }
@@ -371,7 +379,7 @@ static int compressionPercent(uint64_t from, uint64_t to) {
                                     [jsonBuffer appendBytes: bytes length: length];
                                 }];
         if (!ok) {
-            Warn(@"%@: ZDelta decoder error %d", self, _jsonDecoder.status);
+            Warn(@"%@: GZip/ZDelta decoder error %d", self, _jsonDecoder.status);
             _status = kCBLStatusUpstreamError;
         }
         return ok;
@@ -390,14 +398,6 @@ static int compressionPercent(uint64_t from, uint64_t to) {
     }
     NSData* json = _jsonBuffer;
     _jsonBuffer = nil;
-    if (_jsonCompressed) {
-        json = [NSData gtm_dataByInflatingData: json];
-        if (!json) {
-            Warn(@"%@: received corrupt gzip-encoded JSON part", self);
-            _status = kCBLStatusUpstreamError;
-            return NO;
-        }
-    }
     LogTo(SyncVerbose, @"%@: Received JSON body, %u bytes (%d%% compression)",
           self, (unsigned)json.length, compressionPercent(_partRawSize, json.length));
     id document = [CBLJSON JSONObjectWithData: json

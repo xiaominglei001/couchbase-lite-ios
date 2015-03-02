@@ -19,6 +19,7 @@
 #import "CBLDatabase+Attachments.h"
 #import "CBLDatabase+Insertion.h"
 #import "CBLDatabase+Replication.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLView+Internal.h"
 #import "CBL_Body.h"
 #import "CBLMultipartDocumentReader.h"

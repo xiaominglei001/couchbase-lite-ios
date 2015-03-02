@@ -7,7 +7,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBL_BlobStore.h"
+#import "CBL_BlobStoreWriter.h"
 #import "CBLSymmetricKey.h"
 
 

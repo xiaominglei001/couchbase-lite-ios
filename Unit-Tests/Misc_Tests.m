@@ -12,6 +12,7 @@
 #import "CBLFacebookAuthorizer.h"
 #import "CBLPersonaAuthorizer.h"
 #import "CBLSymmetricKey.h"
+#import "CBLGZip.h"
 
 
 @interface Misc_Tests : CBLTestCase
@@ -284,6 +285,55 @@ static int collateRevs(const char* rev1, const char* rev2) {
         [incrementalOutput appendBytes: buf length: bytesRead];
     } while (bytesRead > 0);
     AssertEqual(incrementalOutput, cleartext);
+}
+
+
+static NSData* randomData(size_t length) {
+    NSMutableData* data = [NSMutableData dataWithLength: length];
+    SecRandomCopyBytes(kSecRandomDefault, data.length, data.mutableBytes);
+    return data;
+}
+
+
+- (void) test_GZip {
+    NSData* src = randomData(10000);
+    NSMutableData* zipped = [NSMutableData dataWithCapacity: src.length];
+
+    CBLGZip* compress = [[CBLGZip alloc] initForCompressing: YES];
+    BOOL ok = [compress addBytes: src.bytes
+                          length: src.length
+                        onOutput: ^(const void * bytes, size_t len) {
+                            Log(@"Compressed %zu bytes", len);
+                            [zipped appendBytes: bytes length: len];
+                        }];
+    Assert(ok, @"Compression failed: status %d", compress.status);
+    ok = [compress addBytes: NULL
+                     length: 0
+                   onOutput: ^(const void * bytes, size_t len) {
+                       Log(@"Compressed %zu bytes", len);
+                       [zipped appendBytes: bytes length: len];
+                   }];
+    Assert(ok, @"Compression failed: status %d", compress.status);
+    AssertEq(compress.status, CBLGZipStatusEOF);
+
+    NSMutableData* unzipped = [NSMutableData dataWithCapacity: src.length];
+    CBLGZip* decompress = [[CBLGZip alloc] initForCompressing: NO];
+    ok = [decompress addBytes: zipped.bytes
+                       length: zipped.length
+                     onOutput: ^(const void * bytes, size_t len) {
+                         Log(@"Decompressed %zu bytes", len);
+                         [unzipped appendBytes: bytes length: len];
+                     }];
+    Assert(ok, @"Decompression failed: status %d", decompress.status);
+    ok = [decompress addBytes: NULL
+                       length: 0
+                     onOutput: ^(const void * bytes, size_t len) {
+                         Log(@"Decompressed %zu bytes", len);
+                         [unzipped appendBytes: bytes length: len];
+                     }];
+    Assert(ok, @"Decompression failed: status %d", decompress.status);
+    AssertEq(decompress.status, CBLGZipStatusEOF);
+    AssertEqual(unzipped, src, @"Comparison failed");
 }
 
 

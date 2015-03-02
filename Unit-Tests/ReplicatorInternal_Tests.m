@@ -544,16 +544,18 @@
 }
 
 
-- (void) test18_GetAttachmentDeltas {
+- (void) testAttachmentDeltasWithAttSize: (size_t)attSize
+                            bytesChanged: (unsigned)bytesChanged
+{
     NSURL* remoteDB = [self remoteTestDBURL: kScratchDBName];
     if (!remoteDB)
         return;
     [self eraseRemoteDB: remoteDB];
 
     // Initial version of attachment:
-    static const size_t kAttSize = 100000;
-    NSMutableData* attachData = [NSMutableData dataWithLength: kAttSize];
-    SecRandomCopyBytes(kSecRandomDefault, kAttSize, attachData.mutableBytes);
+    Log(@"Creating %zu-byte attachment", attSize);
+    NSMutableData* attachData = [NSMutableData dataWithLength: attSize];
+    SecRandomCopyBytes(kSecRandomDefault, attSize, attachData.mutableBytes);
 
     // Add doc with attachment directly to the remote DB via REST:
     NSURL* docURL = [remoteDB URLByAppendingPathComponent: @"doc"];
@@ -578,8 +580,9 @@
     AssertEqual(att.content, attachData);
 
     // Modify the attachment:
-    for (int i = 0; i < 1000; i++) {
-        size_t offset = random() % kAttSize;
+    Log(@"Changing %u bytes of the attachment", bytesChanged);
+    for (unsigned i = 0; i < bytesChanged; i++) {
+        size_t offset = random() % attSize;
         ((uint8_t*)attachData.mutableBytes)[offset]++;
     }
 
@@ -600,6 +603,13 @@
     att = [[db[@"doc"] currentRevision] attachmentNamed: @"random"];
     Assert(att != nil);
     AssertEqual(att.content, attachData);
+}
+
+- (void) test18_GetAttachmentDeltas_Small {
+    [self testAttachmentDeltasWithAttSize:    150 bytesChanged:    2];
+}
+- (void) test19_GetAttachmentDeltas_Large {
+    [self testAttachmentDeltasWithAttSize: 100000 bytesChanged: 1000];
 }
 
 
