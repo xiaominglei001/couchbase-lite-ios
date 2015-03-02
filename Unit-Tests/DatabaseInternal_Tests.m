@@ -654,11 +654,17 @@ static CBLDatabaseChange* announcement(CBL_Revision* rev, CBL_Revision* winner) 
     AssertEqual(revs.allRevisions, (@[revToFind1, revToFind3]));
     
     // Check the possible ancestors:
-    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 0 onlyAttachments: NO],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 0
+                                              onlyWithJSON: NO
+                                           onlyAttachments: NO],
                  (@[doc1r2.revID, doc1r1.revID]));
-    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 1 onlyAttachments: NO],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind1 limit: 1
+                                              onlyWithJSON: NO
+                                           onlyAttachments: NO],
                  (@[doc1r2.revID]));
-    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind3 limit: 0 onlyAttachments: NO],
+    AssertEqual([db.storage getPossibleAncestorRevisionIDs: revToFind3 limit: 0
+                                              onlyWithJSON: NO
+                                           onlyAttachments: NO],
                  nil);
 }
 

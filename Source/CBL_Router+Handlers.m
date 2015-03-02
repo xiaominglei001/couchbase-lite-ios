@@ -340,6 +340,7 @@
         }
         CBL_Revision* rev = [[CBL_Revision alloc] initWithDocID: docID revID: maxRevID deleted: NO];
         NSArray* ancestors = [_db.storage getPossibleAncestorRevisionIDs: rev limit: 0
+                                                            onlyWithJSON: YES
                                                          onlyAttachments: NO];
         if (ancestors.count > 0)
             docInfo[@"possible_ancestors"] = ancestors;

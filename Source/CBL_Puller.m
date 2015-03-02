@@ -410,9 +410,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     // already-known revisions, so the server can skip sending the bodies of any
     // attachments we already have locally:
     CBLDatabase* db = _db;
+    BOOL useDeltas = [self serverIsSyncGatewayVersion: @"1.1"];
     NSArray* knownRevs = [db.storage getPossibleAncestorRevisionIDs: rev
                                                               limit: kMaxNumberOfAttsSince
-                                                    onlyAttachments: YES];
+                                                       onlyWithJSON: useDeltas
+                                                    onlyAttachments: !useDeltas];
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@&deltas=true",
                                               joinQuotedEscaped(knownRevs)];

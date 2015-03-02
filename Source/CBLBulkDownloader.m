@@ -51,6 +51,7 @@
     NSArray* keys = [revs my_map: ^(CBL_Revision* rev) {
         NSArray* attsSince = [_db.storage getPossibleAncestorRevisionIDs: rev
                                                            limit: kMaxNumberOfAttsSince
+                                                    onlyWithJSON: useDeltas
                                                  onlyAttachments: (!useDeltas)];
         if (!attsSince.count == 0)
             attsSince = nil;

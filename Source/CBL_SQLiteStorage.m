@@ -871,6 +871,7 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     If 'onlyAttachments' is true, only revisions with attachments will be returned. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
+                               onlyWithJSON: (BOOL)onlyWithJSON
                             onlyAttachments: (BOOL)onlyAttachments
 {
     int generation = rev.generation;
@@ -882,8 +883,9 @@ static void CBLComputeFTSRank(sqlite3_context *pCtx, int nVal, sqlite3_value **a
     int sqlLimit = limit > 0 ? (int)limit : -1;     // SQL uses -1, not 0, to denote 'no limit'
 
     NSString* sql = $sprintf(@"SELECT revid FROM revs WHERE doc_id=? and revid < ?"
-                              " AND deleted=0 AND json not null %@"
+                              " AND deleted=0 %@ %@"
                               " ORDER BY sequence DESC LIMIT ?",
+                             ((onlyWithJSON && !onlyAttachments) ? @"AND json not null" : @""),
                              (onlyAttachments ? @"AND no_attachments=0" : @""));
     CBL_FMResultSet* r = [_fmdb executeQuery: sql,
                                     @(docNumericID), $sprintf(@"%d-", generation), @(sqlLimit)];

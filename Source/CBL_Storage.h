@@ -123,10 +123,11 @@
                                       onlyCurrent: (BOOL)onlyCurrent;
 
 /** Returns IDs of local revisions of the same document, that have a lower generation number.
-    Does not return revisions whose bodies have been compacted away, or deletion markers.
-    If 'onlyAttachments' is true, only revisions with attachments will be returned. */
+    Does not return deletion markers. If 'onlyWithJSON' is true, only returns revisions with JSON
+    available; if 'onlyAttachments' is also true, only returns revisions with attachments. */
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
+                               onlyWithJSON: (BOOL)onlyWithJSON
                             onlyAttachments: (BOOL)onlyAttachments;
 
 /** Returns the most recent member of revIDs that appears in rev's ancestry.

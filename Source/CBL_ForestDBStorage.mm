@@ -354,6 +354,7 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
 
 - (NSArray*) getPossibleAncestorRevisionIDs: (CBL_Revision*)rev
                                       limit: (unsigned)limit
+                               onlyWithJSON: (BOOL)onlyWithJSON
                             onlyAttachments: (BOOL)onlyAttachments
 {
     unsigned generation = [CBL_Revision generationFromRevID: rev.revID];
@@ -365,7 +366,8 @@ static void FDBLogCallback(forestdb::logLevel level, const char *message) {
         auto allRevisions = doc.allRevisions();
         for (auto rev = allRevisions.begin(); rev != allRevisions.end(); ++rev) {
             if (rev->revID.generation() < generation
-                    && !rev->isDeleted() && rev->isBodyAvailable()
+                    && !rev->isDeleted()
+                    && !(onlyWithJSON && !rev->isBodyAvailable())
                     && !(onlyAttachments && !rev->hasAttachments())) {
                 [revIDs addObject: (NSString*)rev->revID];
                 if (limit && revIDs.count >= limit)
