@@ -834,18 +834,21 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) updateAttachment: (NSString*)attachment
-                        docID: (NSString*)docID
-                         body: (CBL_BlobStoreWriter*)body
+- (CBLStatus) updateAttachment: (NSString*)name
+                         docID: (NSString*)docID
+                      metadata: (NSDictionary*)meta
+                          body: (CBL_BlobStoreWriter*)body
 {
+    CBLAttachmentEncoding encoding = meta[@"encoding"] ? kCBLAttachmentEncodingGZIP
+                                                       : kCBLAttachmentEncodingNone;
     CBLStatus status;
-    CBL_Revision* rev = [_db updateAttachment: attachment 
-                                       body: body
-                                       type: [_request valueForHTTPHeaderField: @"Content-Type"]
-                                   encoding: kCBLAttachmentEncodingNone
-                                    ofDocID: docID
-                                      revID: ([self query: @"rev"] ?: self.ifMatch)
-                                     status: &status];
+    CBL_Revision* rev = [_db updateAttachment: name
+                                         body: body
+                                         type: meta[@"content_type"]
+                                     encoding: encoding
+                                      ofDocID: docID
+                                        revID: ([self query: @"rev"] ?: self.ifMatch)
+                                       status: &status];
     if (status < 300) {
         _response.bodyObject = $dict({@"ok", $true}, {@"id", rev.docID}, {@"rev", rev.revID});
         [self cacheWithEtag: rev.revID];
@@ -856,8 +859,14 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
 }
 
 
-- (CBLStatus) do_PUT: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
+- (CBLStatus) do_PUT: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)name {
+    NSMutableDictionary* meta = $mdict({@"content_type",
+                                        [_request valueForHTTPHeaderField: @"Content-Type"]});
     CBL_BlobStoreWriter* blob = db.attachmentWriter;
+    if ([CBL_Attachment shouldCompressName: name metadata: meta]) {
+        [blob encodeGZip];
+        meta[@"encoding"] = @"gzip";
+    }
     NSInputStream* bodyStream = _request.HTTPBodyStream;
     if (bodyStream) {
         // OPT: Should read this asynchronously
@@ -882,12 +891,12 @@ static NSArray* parseJSONRevArrayQuery(NSString* queryStr) {
     if (![blob finish])
         return kCBLStatusBadAttachment;
 
-    return [self updateAttachment: attachment docID: docID body: blob];
+    return [self updateAttachment: name docID: docID metadata: meta body: blob];
 }
 
 
-- (CBLStatus) do_DELETE: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)attachment {
-    return [self updateAttachment: attachment docID: docID body: nil];
+- (CBLStatus) do_DELETE: (CBLDatabase*)db docID: (NSString*)docID attachment: (NSString*)name {
+    return [self updateAttachment: name docID: docID metadata: nil body: nil];
 }
 
 

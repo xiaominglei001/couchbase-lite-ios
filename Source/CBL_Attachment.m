@@ -20,6 +20,9 @@
 #import "CBL_BlobStore.h"
 
 
+#define kMinLengthToCompress 200
+
+
 static NSString* blobKeyToDigest(CBLBlobKey key) {
     return [@"sha1-" stringByAppendingString: [CBLBase64 encode: &key length: sizeof(key)]];
 }
@@ -229,6 +232,61 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 - (NSURL*) contentURL {
     NSString* path = [_database.attachmentStore blobPathForKey: _blobKey];
     return path ? [NSURL fileURLWithPath: path] : nil;
+}
+
+
+- (BOOL) compressContent {
+    @autoreleasepool {
+        if (_data == nil || encoding != kCBLAttachmentEncodingNone)
+            return NO;
+        NSData* gzippedContent = [CBLGZip dataByCompressingData: _data];
+        if (!gzippedContent || gzippedContent.length >= _data.length)
+            return NO;
+        _data = gzippedContent;
+        encoding = kCBLAttachmentEncodingGZIP;
+        encodedLength = gzippedContent.length;
+        return YES;
+    }
+}
+
+- (BOOL) shouldCompressContent {
+    return encoding == kCBLAttachmentEncodingNone
+        && length >= kMinLengthToCompress
+        && [[self class] shouldCompressName: _name contentType: _contentType];
+}
+
++ (BOOL) shouldCompressName: (NSString*)name metadata: (NSDictionary*)metadata {
+    if (metadata[@"encoding"] != nil)
+        return NO;
+    NSNumber* length = $castIf(NSNumber, metadata[@"length"]);
+    if (length && length.unsignedLongLongValue < kMinLengthToCompress)
+        return NO;
+    return [self shouldCompressName: name contentType: metadata[@"content_type"]];
+}
+
++ (BOOL) shouldCompressName: (NSString*)name contentType: (NSString*)contentType {
+    static NSSet* sCompressibleExtensions;
+    static NSArray* sCompressibleSubtypes;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sCompressibleExtensions = [NSSet setWithObjects: @"txt", @"rtf", @"html", @"htm", @"xml",
+                                   @"json", @"yaml", @"yml", @"csv", @"tex", @"svg", @"plist", @"pdf", nil];
+        sCompressibleSubtypes = @[@"json", @"xml", @"html", @"yaml", @"pdf"];
+    });
+
+    // Filename extensions that indicate compressible data:
+    if ([sCompressibleExtensions containsObject: name.pathExtension.lowercaseString])
+        return YES;
+    // Any textual MIME type is compressible:
+    if ([contentType hasPrefix: @"text/"])
+        return YES;
+    // Look for types like "application/json" or "application/rss+xml":
+    if ([contentType hasPrefix: @"application/"])
+        for (NSString* subtype in sCompressibleSubtypes)
+            if ([contentType rangeOfString: subtype].length > 0)
+                return YES;
+
+    return NO; // Be conservative, default to storing as-is
 }
 
 

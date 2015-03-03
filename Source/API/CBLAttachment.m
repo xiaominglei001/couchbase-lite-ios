@@ -133,8 +133,10 @@
         if ([_body isKindOfClass: [NSURL class]] && [_body isFileURL])
             return _body;
         return nil;
-    } else {
+    } else if (_metadata[@"encoding"] == nil) {
         return self._internalAttachment.contentURL;
+    } else {
+        return nil;
     }
 }
 
@@ -154,38 +156,50 @@
 }
 
 
-static CBL_BlobStoreWriter* blobStoreWriterForBody(CBLDatabase* tddb, NSData* body) {
-    CBL_BlobStoreWriter* writer = tddb.attachmentWriter;
+#pragma mark - SAVING:
+
+
+// Returns updated metadata for saving a new attachment to a document.
+// Saves the body to the persistent store, and sets the metadata 'digest' and 'follows' properties.
+- (NSDictionary*) metadataForAddingToDatabase: (CBLDatabase*)database {
+    NSData* body = self.bodyIfNew;
+    if (!body)
+        return _metadata; // already added
+
+    // Copy attachment body into the database's blob store:
+    CBL_BlobStoreWriter* writer = database.attachmentWriter;
+    BOOL encode = [CBL_Attachment shouldCompressName: _name metadata: _metadata];
+    if (encode)
+        [writer encodeGZip];
     [writer appendData: body];
     [writer finish];
-    return writer;
+
+    // Update the metadata:
+    NSMutableDictionary* metadata = [_metadata mutableCopy];
+    metadata[@"length"] = @(body.length);
+    if (encode) {
+        metadata[@"encoding"] = @"gzip";
+        metadata[@"encoded_length"] = @(writer.length);
+    }
+    metadata[@"digest"] = writer.MD5DigestString;
+    metadata[@"follows"] = $true;
+    [database rememberAttachmentWriter: writer];
+
+    _metadata = metadata;
+    _body = nil;
+    return metadata;
 }
 
 
 // Goes through an _attachments dictionary and replaces any values that are CBLAttachment objects
-// with proper JSON metadata dicts. It registers the attachment bodies with the blob store and sets
-// the metadata 'digest' and 'follows' properties accordingly.
+// with proper JSON metadata dicts.
 + (NSDictionary*) installAttachmentBodies: (NSDictionary*)attachments
                              intoDatabase: (CBLDatabase*)database
 {
-    CBLDatabase* tddb = database;
     return [attachments my_dictionaryByUpdatingValues: ^id(NSString* name, id value) {
         CBLAttachment* attachment = $castIf(CBLAttachment, value);
-        if (attachment) {
-            // Replace the attachment object with a metadata dictionary:
-            NSMutableDictionary* metadata = [attachment.metadata mutableCopy];
-            value = metadata;
-            NSData* body = attachment.bodyIfNew;
-            if (body) {
-                // Copy attachment body into the database's blob store:
-                // OPT: If _body is an NSURL, could just copy the file without reading into RAM
-                CBL_BlobStoreWriter* writer = blobStoreWriterForBody(tddb, body);
-                metadata[@"length"] = $object(body.length);
-                metadata[@"digest"] = writer.MD5DigestString;
-                metadata[@"follows"] = $true;
-                [tddb rememberAttachmentWriter: writer];
-            }
-        }
+        if (attachment)
+            value = [attachment metadataForAddingToDatabase: database];
         return value;
     }];
 }

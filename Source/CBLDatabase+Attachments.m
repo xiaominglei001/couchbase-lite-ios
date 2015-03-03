@@ -303,6 +303,8 @@
             return nil;
         } else if (attachment.encodedContent) {
             // If there's inline attachment data, decode and store it:
+            if (attachment.shouldCompressContent)
+                [attachment compressContent];
             CBLBlobKey blobKey;
             if (![_attachments storeBlob: attachment.encodedContent creatingKey: &blobKey]) {
                 *outStatus = kCBLStatusAttachmentError;

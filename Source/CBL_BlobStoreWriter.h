@@ -18,6 +18,9 @@
     target data incrementally. */
 - (void) decodeGZip;
 
+/** Tells the writer that the incoming data stream should be gzip-compressed as it's written. */
+- (void) encodeGZip;
+
 /** Tells the writer that the incoming data stream is a delta in zdelta format, whose base data is
     the attachment with the given `sourceKey`. The writer will decode and write the target data
     incrementally. */

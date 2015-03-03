@@ -50,4 +50,14 @@
 /** Sets encodedLength if there is an encoding, else length. */
 - (void) setPossiblyEncodedLength: (UInt64)len;
 
+/** Heuristic to guess (conservatively) whether this attachment is likely to shrink much with gzip */
+@property (readonly) BOOL shouldCompressContent;
+
+/** Compresses content if possible, else returns NO */
+- (BOOL) compressContent;
+
+/** Heuristic to guess (conservatively) whether an attachment is likely to shrink much with gzip */
++ (BOOL) shouldCompressName: (NSString*)name
+                   metadata: (NSDictionary*)metadata;
+
 @end

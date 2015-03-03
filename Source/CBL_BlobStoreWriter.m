@@ -93,6 +93,11 @@ typedef struct {
     _decompressor = [[CBLGZip alloc] initForCompressing: NO];
 }
 
+- (void) encodeGZip {
+    Assert(!_decompressor);
+    _decompressor = [[CBLGZip alloc] initForCompressing: YES];
+}
+
 - (void) appendDecodedData: (NSData*)data {
     NSUInteger dataLen = data.length;
     _length += dataLen;

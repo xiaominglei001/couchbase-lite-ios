@@ -7,6 +7,7 @@
 //
 
 #import "CBLTestCase.h"
+#import "CBLGZip.h"
 
 
 @interface Database_Tests : CBLTestCaseWithDB
@@ -653,7 +654,11 @@
 #pragma mark - ATTACHMENTS
 
 
-- (void) test18_Attachments {
+- (void) _testAttachmentsWithCompression: (BOOL)compression {
+    NSString* attName = (compression ? @"index.html" : @"O_HAI.jpg");
+    NSString* contentType = (compression ? @"text/html" : @"image/jpeg");
+    Log(@"-------- %@ --------", contentType);
+
     NSDictionary* properties = [NSDictionary dictionaryWithObjectsAndKeys:
                                 @"testAttachments", @"testName",
                                 nil];
@@ -662,18 +667,21 @@
     
     AssertEq(rev.attachments.count, (NSUInteger)0);
     AssertEq(rev.attachmentNames.count, (NSUInteger)0);
-    AssertNil([rev attachmentNamed: @"index.html"]);
-    
-    NSData* body = [@"This is a test attachment!" dataUsingEncoding: NSUTF8StringEncoding];
+    AssertNil([rev attachmentNamed: attName]);
+
+    NSMutableString* str = [@"This is a test attachment! " mutableCopy];
+    for (int i=0; i<8; i++)
+        [str appendString: str];
+    NSData* body = [str dataUsingEncoding: NSUTF8StringEncoding];
     CBLUnsavedRevision *rev2 = [doc newRevision];
-    [rev2 setAttachmentNamed: @"index.html" withContentType: @"text/plain; charset=utf-8" content:body];
+    [rev2 setAttachmentNamed: attName withContentType: contentType content:body];
 
     AssertEq(rev2.attachments.count, (NSUInteger)1);
-    AssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
-    CBLAttachment* attach = [rev2 attachmentNamed:@"index.html"];
+    AssertEqual(rev2.attachmentNames, [NSArray arrayWithObject: attName]);
+    CBLAttachment* attach = [rev2 attachmentNamed:attName];
     AssertEq(attach.document, doc);
-    AssertEqual(attach.name, @"index.html");
-    AssertEqual(attach.contentType, @"text/plain; charset=utf-8");
+    AssertEqual(attach.name, attName);
+    AssertEqual(attach.contentType, contentType);
     AssertEqual(attach.content, body);
     AssertEq(attach.length, (UInt64)body.length);
 
@@ -685,19 +693,19 @@
     AssertEq(rev3.attachments.count, (NSUInteger)1);
     AssertEq(rev3.attachmentNames.count, (NSUInteger)1);
 
-    attach = [rev3 attachmentNamed:@"index.html"];
+    attach = [rev3 attachmentNamed:attName];
     Assert(attach);
     AssertEq(attach.document, doc);
-    AssertEqual(attach.name, @"index.html");
-    AssertEqual(rev3.attachmentNames, [NSArray arrayWithObject: @"index.html"]);
+    AssertEqual(attach.name, attName);
+    AssertEqual(rev3.attachmentNames, [NSArray arrayWithObject: attName]);
 
-    AssertEqual(attach.contentType, @"text/plain; charset=utf-8");
+    AssertEqual(attach.contentType, contentType);
     AssertEqual(attach.content, body);
     AssertEq(attach.length, (UInt64)body.length);
 
     // Look at the attachment's file:
     NSURL* bodyURL = attach.contentURL;
-    if (self.encryptedAttachmentStore) {
+    if (compression || self.encryptedAttachmentStore) {
         AssertNil(bodyURL);
     } else {
         Assert(bodyURL.isFileURL);
@@ -723,9 +731,15 @@
 }
 
 
+- (void) test18_Attachments {
+    [self _testAttachmentsWithCompression: NO];
+    [self _testAttachmentsWithCompression: YES];
+}
+
 - (void) test18a_EncryptedAttachments {
     self.encryptedAttachmentStore = YES;
-    [self test18_Attachments];
+    [self _testAttachmentsWithCompression: NO];
+    [self _testAttachmentsWithCompression: YES];
 }
 
 
