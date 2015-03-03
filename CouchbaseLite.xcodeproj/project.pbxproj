@@ -150,6 +150,7 @@
 		2733022F18F86C9800A488F7 /* CBLTokenAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2733022D18F86C9800A488F7 /* CBLTokenAuthorizer.h */; };
 		2733023018F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
 		2733023118F86C9800A488F7 /* CBLTokenAuthorizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 2733022E18F86C9800A488F7 /* CBLTokenAuthorizer.m */; };
+		273D85281AA671D90022DE0F /* libzdelta-iOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 273D85271AA671D90022DE0F /* libzdelta-iOS.a */; };
 		273FA2BB1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
 		273FA2BC1A92683C002B413B /* DatabaseEncryption_Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 273FA2BA1A92683C002B413B /* DatabaseEncryption_Tests.m */; };
 		2740D8531A8C240500809EE0 /* Collatable_Test.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2740D84B1A8C240500809EE0 /* Collatable_Test.mm */; };
@@ -716,6 +717,27 @@
 			proxyType = 1;
 			remoteGlobalIDString = 270B3DE91489359000E0A926;
 			remoteInfo = "CBL Mac";
+		};
+		273D85241AA671D90022DE0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 273D84CF1AA670900022DE0F;
+			remoteInfo = zdelta;
+		};
+		273D85261AA671D90022DE0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 273D85181AA671420022DE0F;
+			remoteInfo = "zdelta iOS";
+		};
+		273D85291AA671E30022DE0F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 273D84D31AA671420022DE0F;
+			remoteInfo = "zdelta iOS";
 		};
 		275315FD14ACF87F0065964D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1592,6 +1614,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				273D85281AA671D90022DE0F /* libzdelta-iOS.a in Frameworks */,
 				27F1B0041A8416010056DA1E /* libCBLSQLiteStorage.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2275,6 +2298,8 @@
 				27571E0C18F9060100141BDD /* libforestdb.a */,
 				27FA99F21917FFD000912F96 /* libTokenizer.a */,
 				27FA9A441918A7C700912F96 /* libTokenizer-iOS.a */,
+				273D85251AA671D90022DE0F /* libzdelta.a */,
+				273D85271AA671D90022DE0F /* libzdelta-iOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2906,6 +2931,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				273D852A1AA671E30022DE0F /* PBXTargetDependency */,
 				27F1B0061A84160E0056DA1E /* PBXTargetDependency */,
 				275A7CEB1901AE0900729933 /* PBXTargetDependency */,
 			);
@@ -3140,6 +3166,20 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		273D85251AA671D90022DE0F /* libzdelta.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libzdelta.a;
+			remoteRef = 273D85241AA671D90022DE0F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		273D85271AA671D90022DE0F /* libzdelta-iOS.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libzdelta-iOS.a";
+			remoteRef = 273D85261AA671D90022DE0F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		27571E0618F9060100141BDD /* libCBForest-iOS.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -3907,6 +3947,11 @@
 			isa = PBXTargetDependency;
 			target = 270B3DE91489359000E0A926 /* CBL Mac */;
 			targetProxy = 272AA8461A48D835004B8D55 /* PBXContainerItemProxy */;
+		};
+		273D852A1AA671E30022DE0F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "zdelta iOS";
+			targetProxy = 273D85291AA671E30022DE0F /* PBXContainerItemProxy */;
 		};
 		275315FE14ACF87F0065964D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
