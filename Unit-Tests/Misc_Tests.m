@@ -267,8 +267,7 @@ static int collateRevs(const char* rev1, const char* rev2) {
     NSMutableData* incrementalCleartext = [NSMutableData data];
     NSMutableData* incrementalCiphertext = [NSMutableData data];
     for (int i = 0; i < 100; i++) {
-        NSMutableData* data = [NSMutableData dataWithLength: 5555];
-        SecRandomCopyBytes(kSecRandomDefault, 555, data.mutableBytes);
+        NSData* data = randomData(5555);
         [incrementalCleartext appendData: data];
         [incrementalCiphertext appendData: encryptor(data)];
     }
@@ -290,13 +289,6 @@ static int collateRevs(const char* rev1, const char* rev2) {
         [incrementalOutput appendBytes: buf length: bytesRead];
     } while (bytesRead > 0);
     AssertEqual(incrementalOutput, incrementalCleartext);
-}
-
-
-static NSData* randomData(size_t length) {
-    NSMutableData* data = [NSMutableData dataWithLength: length];
-    SecRandomCopyBytes(kSecRandomDefault, data.length, data.mutableBytes);
-    return data;
 }
 
 
@@ -339,6 +331,13 @@ static NSData* randomData(size_t length) {
     Assert(ok, @"Decompression failed: status %d", decompress.status);
     AssertEq(decompress.status, CBLGZipStatusEOF);
     AssertEqual(unzipped, src, @"Comparison failed");
+}
+
+
+static NSData* randomData(size_t length) {
+    NSMutableData* data = [NSMutableData dataWithLength: length];
+    SecRandomCopyBytes(kSecRandomDefault, data.length, data.mutableBytes);
+    return data;
 }
 
 
