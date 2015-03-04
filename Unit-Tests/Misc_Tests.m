@@ -13,6 +13,7 @@
 #import "CBLPersonaAuthorizer.h"
 #import "CBLSymmetricKey.h"
 #import "CBLGZip.h"
+#import "ZDCodec.h"
 
 
 @interface Misc_Tests : CBLTestCase
@@ -293,45 +294,109 @@ static int collateRevs(const char* rev1, const char* rev2) {
 
 
 - (void) test_GZip {
-    NSData* src = randomData(10000);
-    NSMutableData* zipped = [NSMutableData dataWithCapacity: src.length];
+    NSData* source = [self contentsOfTestFile: @"stats1.json"];
+    __block NSMutableData* zipped;
 
-    CBLGZip* compress = [[CBLGZip alloc] initForCompressing: YES];
-    BOOL ok = [compress addBytes: src.bytes
-                          length: src.length
-                        onOutput: ^(const void * bytes, size_t len) {
-                            Log(@"Compressed %zu bytes", len);
-                            [zipped appendBytes: bytes length: len];
-                        }];
-    Assert(ok, @"Compression failed: status %d", compress.status);
-    ok = [compress addBytes: NULL
-                     length: 0
-                   onOutput: ^(const void * bytes, size_t len) {
-                       Log(@"Compressed %zu bytes", len);
-                       [zipped appendBytes: bytes length: len];
-                   }];
-    Assert(ok, @"Compression failed: status %d", compress.status);
-    AssertEq(compress.status, CBLGZipStatusEOF);
+    [self measureBlock:^{
+        zipped = [NSMutableData dataWithCapacity: source.length / 4];
+        CBLGZip* compress = [[CBLGZip alloc] initForCompressing: YES];
+        BOOL ok = [compress addBytes: source.bytes
+                              length: source.length
+                            onOutput: ^(const void * bytes, size_t len) {
+                                //Log(@"Compressed %zu bytes", len);
+                                [zipped appendBytes: bytes length: len];
+                            }];
+        Assert(ok, @"Compression failed: status %d", compress.status);
+        ok = [compress addBytes: NULL
+                         length: 0
+                       onOutput: ^(const void * bytes, size_t len) {
+                           //Log(@"Compressed %zu bytes", len);
+                           [zipped appendBytes: bytes length: len];
+                       }];
+        Assert(ok, @"Compression failed: status %d", compress.status);
+        AssertEq(compress.status, CBLGZipStatusEOF);
+    }];
 
-    NSMutableData* unzipped = [NSMutableData dataWithCapacity: src.length];
+    NSLog(@"Compressed length = %u bytes, from %u bytes source",
+          (unsigned)zipped.length, (unsigned)source.length);
+
+    NSMutableData* unzipped = [NSMutableData dataWithCapacity: source.length];
     CBLGZip* decompress = [[CBLGZip alloc] initForCompressing: NO];
-    ok = [decompress addBytes: zipped.bytes
-                       length: zipped.length
-                     onOutput: ^(const void * bytes, size_t len) {
-                         Log(@"Decompressed %zu bytes", len);
-                         [unzipped appendBytes: bytes length: len];
-                     }];
+    BOOL ok = [decompress addBytes: zipped.bytes
+                            length: zipped.length
+                          onOutput: ^(const void * bytes, size_t len) {
+                              //Log(@"Decompressed %zu bytes", len);
+                              [unzipped appendBytes: bytes length: len];
+                          }];
     Assert(ok, @"Decompression failed: status %d", decompress.status);
     ok = [decompress addBytes: NULL
                        length: 0
                      onOutput: ^(const void * bytes, size_t len) {
-                         Log(@"Decompressed %zu bytes", len);
+                         //Log(@"Decompressed %zu bytes", len);
                          [unzipped appendBytes: bytes length: len];
                      }];
     Assert(ok, @"Decompression failed: status %d", decompress.status);
     AssertEq(decompress.status, CBLGZipStatusEOF);
-    AssertEqual(unzipped, src, @"Comparison failed");
+    AssertEqual(unzipped, source, @"Comparison failed");
 }
+
+
+// Adapted from zdelta_Tests.m in the zdelta repo
+- (void) testZDCodec {
+    const ssize_t chunkSize = 35433; // I just made this up
+    NSData* source = [self contentsOfTestFile: @"stats0.json"];
+    NSData* target = [self contentsOfTestFile: @"stats1.json"];
+
+    NSLog(@"Compressing ...");
+    __block ZDCodec* codec;
+    __block NSMutableData* delta;
+    [self measureBlock:^{
+        codec = [[ZDCodec alloc] initWithSource: source compressing: YES];
+        XCTAssertNotNil(codec);
+        const char* targetBytes = target.bytes;
+        delta = [NSMutableData dataWithCapacity: target.length / 4];
+
+        for (size_t offset=0; YES; offset += chunkSize) {
+            size_t outLength = MIN(chunkSize, MAX(0, (ssize_t)target.length-(ssize_t)offset));
+            //NSLog(@"Adding %lu bytes to codec...", outLength);
+            BOOL ok = [codec addBytes: targetBytes+offset
+                               length: outLength
+                             onOutput: ^(const void *out, size_t outLength) {
+                                 //NSLog(@"Codec produced %lu bytes", outLength);
+                                 [delta appendBytes: out length: outLength];
+                             }];
+            XCTAssertTrue(ok, @"ZDCodec write failed; status=%d", codec.status);
+            if (outLength == 0)
+                break;
+        }
+        XCTAssertEqual(codec.status, ZDStatusEOF);
+    }];
+
+    NSLog(@"Delta length = %u bytes, from %u bytes source, %u bytes target",
+          (unsigned)delta.length, (unsigned)source.length, (unsigned)target.length);
+
+    NSLog(@"Decompressing ...");
+    //[self measureBlock:^{
+        codec = [[ZDCodec alloc] initWithSource: source compressing: NO];
+        XCTAssertNotNil(codec);
+        const char* deltaBytes = delta.bytes;
+        NSMutableData* target2 = [NSMutableData data];
+        for (size_t offset=0; offset < delta.length; offset += chunkSize) {
+            size_t outLength = MIN(chunkSize, delta.length-offset);
+            //NSLog(@"Adding %lu bytes to codec...", outLength);
+            BOOL ok = [codec addBytes: deltaBytes+offset
+                               length: outLength
+                             onOutput: ^(const void *out, size_t outLength) {
+                                 //NSLog(@"Codec produced %lu bytes", outLength);
+                                 [target2 appendBytes: out length: outLength];
+                             }];
+            XCTAssertTrue(ok, @"ZDCodec decompress failed; status=%d", codec.status);
+        }
+        //NSLog(@"Recreated target length = %u bytes", (unsigned)target2.length);
+        XCTAssertEqualObjects(target2, target);
+    //}];
+}
+
 
 
 static NSData* randomData(size_t length) {
