@@ -518,7 +518,7 @@ static NSString* viewNames(NSArray* views) {
                 }
 
                 if (!value)
-                    value = e.value().data().copiedNSData();
+                    value = e.rawValue().copiedNSData();
 
                 LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, CBLJSONString(key), value, CBLJSONString(docID));

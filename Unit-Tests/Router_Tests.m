@@ -989,40 +989,42 @@ static void CheckCacheable(Router_Tests* self, NSString* path) {
                                     {@"possible_ancestors", @[doc3r1ID]})},
                    {@"99999", $dict({@"missing", @[@"6-666666"]})}
                    ));
-    
-    // Compact the database -- this will null out the JSON of doc1r1 & doc1r2,
-    // and they won't be returned as possible ancestors anymore.
-    Send(self, @"POST", @"/db/_compact", kCBLStatusAccepted, nil);
-    
-    SendBody(self, @"POST", @"/db/_revs_diff",
-             $dict({@"11111", @[doc1r2ID, @"4-f000"]},
-                   {@"22222", @[doc2r1ID]},
-                   {@"33333", @[@"10-badbad"]},
-                   {@"99999", @[@"6-666666"]}),
-             kCBLStatusOK,
-             $dict({@"11111", $dict({@"missing", @[@"4-f000"]},
-                                    {@"possible_ancestors", @[doc1r3ID]})},
-                   {@"33333", $dict({@"missing", @[@"10-badbad"]},
-                                    {@"possible_ancestors", @[doc3r1ID]})},
-                   {@"99999", $dict({@"missing", @[@"6-666666"]})}
-                   ));
 
-    // Check the revision history using _revs_info:
-    Send(self, @"GET", @"/db/11111?revs_info=true", 200,
-          @{ @"_id" : @"11111", @"_rev": doc1r3ID,
-             @"_revs_info": @[ @{ @"rev" : doc1r3ID, @"status": @"available" },
-                               @{ @"rev" : doc1r2ID, @"status": @"missing" },
-                               @{ @"rev" : doc1r1ID, @"status": @"missing" }
-         ]});
+    if (self. isSQLiteDB) {     // ForestDB compaction doesn't remove old rev bodies
+        // Compact the database -- this will null out the JSON of doc1r1 & doc1r2,
+        // and they won't be returned as possible ancestors anymore.
+        Send(self, @"POST", @"/db/_compact", kCBLStatusAccepted, nil);
 
-    // Check the revision history using _revs:
-    Send(self, @"GET", @"/db/11111?revs=true", 200,
-         @{ @"_id" : @"11111", @"_rev": doc1r3ID,
-            @"_revisions": @{
-                @"start": @3,
-                @"ids": @[ [doc1r3ID substringFromIndex: 2], [doc1r2ID substringFromIndex: 2],
-                           [doc1r1ID substringFromIndex: 2] ]
-         } } );
+        SendBody(self, @"POST", @"/db/_revs_diff",
+                 $dict({@"11111", @[doc1r2ID, @"4-f000"]},
+                       {@"22222", @[doc2r1ID]},
+                       {@"33333", @[@"10-badbad"]},
+                       {@"99999", @[@"6-666666"]}),
+                 kCBLStatusOK,
+                 $dict({@"11111", $dict({@"missing", @[@"4-f000"]},
+                                        {@"possible_ancestors", @[doc1r3ID]})},
+                       {@"33333", $dict({@"missing", @[@"10-badbad"]},
+                                        {@"possible_ancestors", @[doc3r1ID]})},
+                       {@"99999", $dict({@"missing", @[@"6-666666"]})}
+                       ));
+
+        // Check the revision history using _revs_info:
+        Send(self, @"GET", @"/db/11111?revs_info=true", 200,
+             @{ @"_id" : @"11111", @"_rev": doc1r3ID,
+                @"_revs_info": @[ @{ @"rev" : doc1r3ID, @"status": @"available" },
+                                  @{ @"rev" : doc1r2ID, @"status": @"missing" },
+                                  @{ @"rev" : doc1r1ID, @"status": @"missing" }
+                                  ]});
+
+        // Check the revision history using _revs:
+        Send(self, @"GET", @"/db/11111?revs=true", 200,
+             @{ @"_id" : @"11111", @"_rev": doc1r3ID,
+                @"_revisions": @{
+                        @"start": @3,
+                        @"ids": @[ [doc1r3ID substringFromIndex: 2], [doc1r2ID substringFromIndex: 2],
+                                   [doc1r1ID substringFromIndex: 2] ]
+                        } } );
+    }
 }
 
 

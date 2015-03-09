@@ -194,7 +194,9 @@ static NSDictionary* userProperties(NSDictionary* dict) {
     Assert([db compact: &error]);
 
     // Make sure old rev is missing:
-    AssertNil([db getDocumentWithID: rev1.docID revisionID: rev1.revID]);
+    if (self.isSQLiteDB) {      // ForestDB is using deltas to keep old revs compactly
+        AssertNil([db getDocumentWithID: rev1.docID revisionID: rev1.revID]);
+    }
 
     [[NSNotificationCenter defaultCenter] removeObserver: observer];
 }

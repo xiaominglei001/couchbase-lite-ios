@@ -21,12 +21,14 @@ using namespace forestdb;
 @implementation CBLForestBridge
 
 
-static NSData* dataOfNode(const Revision* rev) {
-    if (rev->inlineBody().buf)
-        return rev->inlineBody().uncopiedNSData();
+static NSData* dataOfNode(const Revision* rev, bool temporary) {
+    if (temporary && rev->inlineBody().buf) {
+        return rev->inlineBody().uncopiedNSData();  // watch out: only lasts as long as rev does!
+    }
     try {
-        return rev->readBody().copiedNSData();
+        return rev->readBody().uncopiedNSData();    // safer because readBody() returns alloc_slice
     } catch (...) {
+        Warn(@"Exception reading data of revision!");
         return nil;
     }
 }
@@ -89,7 +91,7 @@ static NSData* dataOfNode(const Revision* rev) {
         return NO;
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = dataOfNode(revNode);
+        json = dataOfNode(revNode, (options != kCBLNoIDs));
         if (!json)
             return NO;
     }
@@ -119,7 +121,7 @@ static NSData* dataOfNode(const Revision* rev) {
 
     NSData* json = nil;
     if (!(options & kCBLNoBody)) {
-        json = dataOfNode(rev);
+        json = dataOfNode(rev, true);
         if (!json)
             return nil;
     }
