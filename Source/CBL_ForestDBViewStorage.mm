@@ -302,7 +302,7 @@ static inline NSString* viewNameToFileName(NSString* viewName) {
         config.buffercache_size = kViewBufferCacheSize;
         config.wal_threshold = 8192;
         config.wal_flush_before_commit = true;
-        config.seqtree_opt = YES;
+        config.seqtree_opt = false; // indexes don't need their own sequence trees
         config.compaction_threshold = 50;
         try {
             _indexDB = new Database(_path.fileSystemRepresentation, config);
