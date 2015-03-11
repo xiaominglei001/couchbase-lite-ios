@@ -295,11 +295,12 @@
                     // If the lastSequence has been reset to 0, make sure to remove all map results:
                     ok = [fmdb executeUpdate: [view queryString: @"DELETE FROM 'maps_#'"]];
                 } else {
+                    [dbStorage optimizeSQLIndexes]; // ensures query will use the right indexes
                     // Delete all obsolete map results (ones from since-replaced revisions):
                     ok = [fmdb executeUpdate:
                           [view queryString: @"DELETE FROM 'maps_#' WHERE sequence IN ("
                                                 "SELECT parent FROM revs WHERE sequence>? "
-                                                    "AND parent>0 AND parent<=?)"],
+                                                    "AND +parent>0 AND +parent<=?)"],
                           @(last), @(last)];
                 }
                 if (!ok)
@@ -834,10 +835,11 @@ typedef CBLStatus (^QueryRowBlock)(NSData* keyData, NSData* valueData, NSString*
             NSString* docID = [r stringForColumnIndex: 0];
             SequenceNumber sequence = [r longLongIntForColumnIndex: 1];
             UInt64 fulltextID = [r longLongIntForColumnIndex: 2];
-//            NSData* valueData = [r dataForColumnIndex: 3];
+            NSData* valueData = [r dataForColumnIndex: 3];
             CBLFullTextQueryRow* row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
                                                                          sequence: sequence
                                                                        fullTextID: fulltextID
+                                                                            value: valueData
                                                                           storage: self];
             // Parse the offsets as a space-delimited list of numbers, into an NSArray.
             // (See http://sqlite.org/fts3.html#section_4_1 )

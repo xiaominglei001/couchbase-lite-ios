@@ -185,6 +185,8 @@ static BOOL sAutoCompact = YES;
         [_storage setInfo: CBLCreateUUID() forKey: @"publicUUID"];
     }
 
+    _storage.maxRevTreeDepth = [[_storage infoForKey: @"max_revs"] intValue] ?: kDefaultMaxRevs;
+
     // Open attachment store:
     NSString* attachmentsPath = self.attachmentStorePath;
     _attachments = [[CBL_BlobStore alloc] initWithPath: attachmentsPath error: outError];
@@ -575,17 +577,35 @@ static BOOL sAutoCompact = YES;
     }];
 }
 
+- (BOOL) saveLocalUUIDInLocalCheckpointDocument: (NSError**)outError {
+    return [self putLocalCheckpointDocumentWithKey: kCBLDatabaseLocalCheckpoint_LocalUUID
+                                             value: self.privateUUID
+                                          outError: outError];
+}
 
-    - (BOOL) createLocalCheckpointDocument: (NSError**)outError {
-    NSDictionary* document = @{ kCBLDatabaseLocalCheckpoint_LocalUUID : self.privateUUID };
+- (BOOL) putLocalCheckpointDocumentWithKey: (NSString*)key
+                                     value:(id)value
+                                  outError: (NSError**)outError {
+    if (key == nil || value == nil)
+        return NO;
+
+    NSMutableDictionary* document = [NSMutableDictionary dictionaryWithDictionary:
+                                        [self getLocalCheckpointDocument]];
+    document[key] = value;
     BOOL result = [self putLocalDocument: document withID: kLocalCheckpointDocId error: outError];
     if (!result)
         Warn(@"CBLDatabase: Could not create a local checkpoint document with an error: %@", *outError);
     return result;
 }
 
+
 - (NSDictionary*) getLocalCheckpointDocument {
-    return [self existingLocalDocumentWithID:kLocalCheckpointDocId];
+    return [self existingLocalDocumentWithID: kLocalCheckpointDocId];
+}
+
+
+- (id) getLocalCheckpointDocumentPropertyValueForKey: (NSString*)key {
+    return [[self getLocalCheckpointDocument] objectForKey: key];
 }
 
 

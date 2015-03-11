@@ -12,6 +12,9 @@
        CBLDatabaseChange, CBL_Shared, CBLModelFactory;
 
 
+// Default value for maxRevTreeDepth, the max rev depth to preserve in a prune operation
+#define kDefaultMaxRevs 20
+
 /** NSNotification posted when one or more documents have been updated.
     The userInfo key "changes" contains an array of CBLDatabaseChange objects. */
 extern NSString* const CBL_DatabaseChangesNotification;
@@ -149,12 +152,19 @@ extern NSArray* CBL_RunloopModes;
  (issue #364). */
 - (void) postNotification: (NSNotification*)notification;
 
-/** Create a local checkpoint document. This method is called only when importing or
-    replacing the database. The local checkpoint contains the old localUUID of the database 
-    before importing. The old localUUID is used by replicators to get the local checkpoint 
-    from the imported database in order to start replicating from from the current local 
-    checkpoint of the imported database after importing. */
-- (BOOL) createLocalCheckpointDocument: (NSError**)outError;
+/** Save current local uuid into the local checkpoint document. This method is called only
+    when importing or replacing the database. The old localUUID is used by replicators 
+    to get the local checkpoint from the imported database in order to start replicating 
+    from from the current local checkpoint of the imported database after importing. */
+- (BOOL) saveLocalUUIDInLocalCheckpointDocument: (NSError**)outError;
+
+/** Put a property with a given key and value into the local checkpoint document. */
+- (BOOL) putLocalCheckpointDocumentWithKey: (NSString*)key
+                                     value:(id)value
+                                  outError: (NSError**)outError;
+
+/** Returns a property value specifiec by the key from the local checkpoint document. */
+- (id) getLocalCheckpointDocumentPropertyValueForKey: (NSString*)key;
 
 /** Returns local checkpoint document if it exists. Otherwise returns nil. */
 - (NSDictionary*) getLocalCheckpointDocument;
