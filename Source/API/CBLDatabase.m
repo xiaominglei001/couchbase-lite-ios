@@ -110,6 +110,7 @@ static id<CBLFilterCompiler> sFilterCompiler;
         [[self _cachedDocumentWithID: change.documentID] revisionAdded: change notify: YES];
         if (change.source != nil)
             external = YES;
+        [self _revisionAdded: change notify: YES];
     }
 
     // Post the public kCBLDatabaseChangeNotification:

@@ -9,7 +9,7 @@
 #import "CBL_Storage.h"
 #import "CBLDatabase.h"
 @class CBLQueryOptions, CBLView, CBLQueryRow, CBL_BlobStore, CBLDocument, CBLCache, CBLDatabase,
-       CBLDatabaseChange, CBL_Shared, CBLModelFactory, CBLDatabaseOptions;
+       CBLDatabaseChange, CBL_Shared, CBLModelFactory, CBLDatabaseOptions, CBLNuModelFactory;
 
 
 UsingLogDomain(Database);
@@ -56,6 +56,7 @@ extern NSArray* CBL_RunloopModes;
     bool _postingChangeNotifications;
     NSDate* _startTime;
     CBLModelFactory* _modelFactory;
+    CBLNuModelFactory* _nuFactory;
     NSMutableSet* _unsavedModelsMutable;   // All CBLModels that have unsaved changes
 #if DEBUG
     CBL_Shared* _debug_shared;
@@ -156,4 +157,8 @@ extern NSArray* CBL_RunloopModes;
 
 - (void) setExpirationDate: (NSDate*)date ofDocument: (NSString*)documentID;
 
+@end
+
+@interface CBLDatabase (HookForCBLNuModelFactory)
+- (void) _revisionAdded: (CBLDatabaseChange*)change notify:(BOOL)notify;
 @end
