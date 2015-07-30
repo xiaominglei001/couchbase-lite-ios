@@ -4,3 +4,5 @@
 
 #import "CBLTestCase.h"
 #import "CouchbaseLite.h"
+
+#import "CBLNuModel.h"

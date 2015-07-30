@@ -91,6 +91,7 @@ static NSMutableDictionary* sPropertyInfo;      // Maps class name -> NSDictiona
 #pragma mark - MAGIC CLASS SYNTHESIS:
 
 
+// Creates a new subclass implementing the given Protocol.
 + (Class) createClass: (Protocol*)protocol {
     // Class's superclass will be based on protocol's parent protocol; specifically, the first
     // parent protocol that inherits from CBLInterface:
@@ -131,15 +132,19 @@ static NSMutableDictionary* sPropertyInfo;      // Maps class name -> NSDictiona
 
 // Copies properties of `protocol` into `klass`, including properties introduced in parent
 // protocols that descend from CBLInterface. Ignores protocols found in the array `skip`.
-static BOOL copyProperties(Class klass, Protocol* protocol, NSMutableArray* skip,
-                           NSMutableDictionary* propertyInfo) {
+// Every property is added to `propertyInfo`, mapping its name to its attributes.
+static BOOL copyProperties(Class klass,
+                           Protocol* protocol,
+                           NSMutableArray* skip,
+                           NSMutableDictionary* propertyInfo)
+{
     if (protocol == @protocol(CBLInterface) || [skip containsObject: protocol])
         return YES; // no-op
 
     // First copy parent-defined properties:
     __block BOOL inheritsFromCBLInterface = NO;
     forEachParent(protocol, ^(Protocol *parent) {
-            if (copyProperties(klass, parent, skip, propertyInfo))
+            if (copyProperties(klass, parent, skip, propertyInfo))  // recurse into parent protocol
                 inheritsFromCBLInterface = YES;
         return YES;
     });
@@ -191,7 +196,7 @@ static void forEachParent(Protocol* protocol, BOOL (^block)(Protocol* parent)) {
 + (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     id (^impBlock)(CBLInterface*) = nil;
     
-    if (propertyClass == Nil) {
+    if (propertyClass == Nil || propertyClass == [NSObject class]) {
         // Untyped
         return [super impForGetterOfProperty: property ofClass: propertyClass];
     } else if (propertyClass == [NSString class]

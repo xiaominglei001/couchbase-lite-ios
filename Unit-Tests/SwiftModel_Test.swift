@@ -21,6 +21,15 @@ class SwiftModelWithRelation : CBLModel {
 }
 
 
+class SwiftNuModel : CBLNuModel {
+    var intsy: Int = 0
+    var biggy: Int {
+        get {return intsy * 2}
+        set {intsy = newValue / 2}
+    }
+}
+
+
 class SwiftModel_Test: CBLTestCaseWithDB {
 
     func testSwiftModel() {
@@ -33,6 +42,11 @@ class SwiftModel_Test: CBLTestCaseWithDB {
         let model = SwiftModel(forNewDocumentInDatabase: db);
         let relator = SwiftModelWithRelation(forNewDocumentInDatabase: db)
         relator.moddy = model
+    }
+
+    func testSwiftNuModel() {
+        let model = SwiftNuModel();
+        model.intsy = 42;
     }
 
 }

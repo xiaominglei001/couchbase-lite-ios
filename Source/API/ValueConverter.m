@@ -94,21 +94,23 @@ ValueConverter CBLValueConverterFromClass(Class fromClass) {
 id CBLToJSONCompatible(id value) {
     if ([value isKindOfClass: [NSData class]])
         value = [CBLBase64 encode: value];
-        else if ([value isKindOfClass: [NSDate class]])
-            value = [CBLJSON JSONObjectWithDate: value];
-        else if ([value isKindOfClass: [NSDecimalNumber class]])
-            value = [value stringValue];
-        else if ([value isKindOfClass: [CBLNuModel class]])
-            value = ((CBLNuModel*)value).documentID;
-        else if ([value isKindOfClass: [CBLFault class]])
-            value = [CBLNuModel documentIDFromFault: value];
-        else if ([value isKindOfClass: [NSArray class]]) {
-            if ([value isKindOfClass: [CBLModelArray class]])
-                value = [value docIDs];
-            else
-                value = [value my_map:^id(id obj) { return CBLToJSONCompatible(obj); }];
-        } else if ([value conformsToProtocol: @protocol(CBLJSONEncoding)]) {
-            value = [(id<CBLJSONEncoding>)value encodeAsJSON];
-        }
+    else if ([value isKindOfClass: [NSDate class]])
+        value = [CBLJSON JSONObjectWithDate: value];
+    else if ([value isKindOfClass: [NSDecimalNumber class]])
+        value = [value stringValue];
+    else if ([value isKindOfClass: [CBLNuModel class]])
+        value = ((CBLNuModel*)value).documentID;
+    else if ([value isKindOfClass: [CBLFault class]])
+        value = [CBLNuModel documentIDFromFault: value];
+    else if ([value isKindOfClass: [NSArray class]]) {
+        if ([value isKindOfClass: [CBLModelArray class]])
+            value = [value docIDs];
+        else
+            value = [value my_map:^id(id obj) { return CBLToJSONCompatible(obj); }];
+    } else if ([value conformsToProtocol: @protocol(CBLJSONEncoding)]) {
+        value = [(id<CBLJSONEncoding>)value encodeAsJSON];
+    } else if ([value conformsToProtocol: @protocol(CBLInterface)]) {
+        value = ((id<CBLInterface>)value).$allProperties;
+    }
     return value;
 }
