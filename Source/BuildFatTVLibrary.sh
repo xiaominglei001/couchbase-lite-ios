@@ -5,13 +5,15 @@
 #
 #  Added by Jens Alfke on 5/16/12.
 
+# Copied from BuildFatLibrary.sh and customized for tvOS (AppleTV). --jpa 9/21/15
+
 # Version 2.0 (updated for Xcode 4, with some fixes)
 # Changes:
 #    - Works with xcode 4, even when running xcode 3 projects (Workarounds for apple bugs)
 #    - Faster / better: only runs lipo once, instead of once per recursion
 #    - Added some debugging statemetns that can be switched on/off by changing the DEBUG_THIS_SCRIPT variable to "true"
 #    - Fixed some typos
-# 
+#
 # Purpose:
 #   Create a static library for iPhone from within XCode
 #   Because Apple staff DELIBERATELY broke Xcode to make this impossible from the GUI (Xcode 3.2.3 specifically states this in the Release notes!)

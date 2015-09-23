@@ -423,7 +423,6 @@
 		276B34461BB09F930074D7E5 /* CBLForestBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27EF7F9A1912EB5200A327B9 /* CBLForestBridge.mm */; };
 		276B34521BB09FD50074D7E5 /* libCBL_tvOS_SQLiteStorage.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B343F1BB09F6B0074D7E5 /* libCBL_tvOS_SQLiteStorage.a */; };
 		276B34A41BB0A10D0074D7E5 /* libTokenizer-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B34A11BB0A0FE0074D7E5 /* libTokenizer-tvOS.a */; };
-		276B35131BB0A5E30074D7E5 /* libCBForest-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B35101BB0A5DE0074D7E5 /* libCBForest-tvOS.a */; };
 		276B352E1BB0AAE80074D7E5 /* CBLModel_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 27B945B017692E2000B2DF2D /* CBLModel_Internal.h */; };
 		276B352F1BB0AAE80074D7E5 /* CBLAttachment.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E2E5A1159383E9005B9234 /* CBLAttachment.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		276B35301BB0AAE80074D7E5 /* CouchbaseLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E1F148938D800E0A926 /* CouchbaseLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -466,6 +465,12 @@
 		276B35551BB0AAE80074D7E5 /* CBL_Pusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 270B3E3C148D7F0000E0A926 /* CBL_Pusher.h */; };
 		276B35561BB0AAE80074D7E5 /* CBLPersonaAuthorizer.h in Headers */ = {isa = PBXBuildFile; fileRef = 2776A58F16A0C3A6006FF199 /* CBLPersonaAuthorizer.h */; };
 		276B35711BB0E6320074D7E5 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B34281BB09E970074D7E5 /* libCouchbaseLite.a */; };
+		276B36221BB0EDE20074D7E5 /* libCBForest-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B35101BB0A5DE0074D7E5 /* libCBForest-tvOS.a */; };
+		276B362D1BB1E6F80074D7E5 /* EmptyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 274C3918149E6B0900A5E89B /* EmptyAppDelegate.m */; };
+		276B363A1BB1E6F80074D7E5 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 27B0B8141492C16300A817AD /* InfoPlist.strings */; };
+		276B36421BB1E7650074D7E5 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B34281BB09E970074D7E5 /* libCouchbaseLite.a */; };
+		276B366D1BB216B70074D7E5 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B366C1BB216B70074D7E5 /* libsqlite3.tbd */; };
+		276B366F1BB216BC0074D7E5 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 276B366E1BB216BC0074D7E5 /* libz.tbd */; };
 		276BA0AD17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276BA0AE17DD13FA00D367CB /* CBLParseDate.c in Sources */ = {isa = PBXBuildFile; fileRef = 276BA0AC17DD13FA00D367CB /* CBLParseDate.c */; };
 		276F25FB18A3386100A70679 /* DDData.h in Headers */ = {isa = PBXBuildFile; fileRef = 276F25F918A3386100A70679 /* DDData.h */; };
@@ -1076,7 +1081,7 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 276B34531BB0A0D90074D7E5;
+			remoteGlobalIDString = 276B35731BB0ECD00074D7E5;
 			remoteInfo = "Tokenizer-tvOS";
 		};
 		276B350F1BB0A5DE0074D7E5 /* PBXContainerItemProxy */ = {
@@ -1092,13 +1097,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 276B35061BB0A5840074D7E5;
 			remoteInfo = "forestdb tvOS";
-		};
-		276B35141BB0A5EB0074D7E5 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 276B34A61BB0A5540074D7E5;
-			remoteInfo = "CBForest-tvOS";
 		};
 		276B35211BB0A6690074D7E5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1127,6 +1125,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 276B34401BB09F930074D7E5;
 			remoteInfo = "CBL tvOS ForestDB Storage";
+		};
+		276B36201BB0EDCF0074D7E5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27B7E0FA18F8FE2800044EBA /* CBForest.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 276B35FE1BB0ED200074D7E5;
+			remoteInfo = "CBForest-tvOS";
+		};
+		276B36401BB1E70A0074D7E5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 276B35241BB0AAE80074D7E5;
+			remoteInfo = "CBL tvOS";
 		};
 		27A754FF1A8559B6008BCD4D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1529,7 +1541,10 @@
 		276B34A51BB0A4650074D7E5 /* BuildFatTVLibrary.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = BuildFatTVLibrary.sh; sourceTree = "<group>"; };
 		276B35201BB0A6560074D7E5 /* libCouchbaseLiteFat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteFat.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		276B35651BB0AAE80074D7E5 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		276B35661BB0AAE80074D7E5 /* CBL iOS copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "CBL iOS copy-Info.plist"; path = "/Couchbase/CouchbaseLite/CBL iOS copy-Info.plist"; sourceTree = "<absolute>"; };
+		276B363E1BB1E6F80074D7E5 /* CBL tvOS Empty App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBL tvOS Empty App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		276B366C1BB216B70074D7E5 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/usr/lib/libsqlite3.tbd; sourceTree = DEVELOPER_DIR; };
+		276B366E1BB216BC0074D7E5 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
+		276B36701BB312630074D7E5 /* tvOS Empty App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "tvOS Empty App-Info.plist"; sourceTree = "<group>"; };
 		276BA0AC17DD13FA00D367CB /* CBLParseDate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CBLParseDate.c; sourceTree = "<group>"; };
 		276BA0AF17DD222400D367CB /* CBLParseDate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLParseDate.h; sourceTree = "<group>"; };
 		276E68331A5C4511006D6EEB /* Server */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Server; sourceTree = "<group>"; };
@@ -1542,7 +1557,7 @@
 		27731EFD1493FA3100815D67 /* CBL_BlobStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_BlobStore.h; sourceTree = "<group>"; };
 		27731EFE1493FA3100815D67 /* CBL_BlobStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBL_BlobStore.m; sourceTree = "<group>"; };
 		27731F2A1495CFEF00815D67 /* Couchbase Lite Empty App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Couchbase Lite Empty App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		27731F2C1495CFF000815D67 /* iOS Empty App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "iOS Empty App-Info.plist"; path = "/Volumes/HardDisk/Couchbase/TouchDB/Demo-iOS/iOS Empty App-Info.plist"; sourceTree = "<absolute>"; };
+		27731F2C1495CFF000815D67 /* iOS Empty App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "iOS Empty App-Info.plist"; sourceTree = "<group>"; };
 		27731F3314967A5F00815D67 /* RootViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RootViewController.h; sourceTree = "<group>"; };
 		27731F3414967A5F00815D67 /* RootViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RootViewController.m; sourceTree = "<group>"; };
 		27731F3514967A5F00815D67 /* ConfigViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigViewController.h; sourceTree = "<group>"; };
@@ -1935,7 +1950,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				276B35131BB0A5E30074D7E5 /* libCBForest-tvOS.a in Frameworks */,
+				276B36221BB0EDE20074D7E5 /* libCBForest-tvOS.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1951,6 +1966,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		276B362E1BB1E6F80074D7E5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				276B366F1BB216BC0074D7E5 /* libz.tbd in Frameworks */,
+				276B366D1BB216B70074D7E5 /* libsqlite3.tbd in Frameworks */,
+				276B36421BB1E7650074D7E5 /* libCouchbaseLite.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2078,7 +2103,6 @@
 				2753154D14ACEF350065964D /* vendor */,
 				27C70696148864BA00F0F099 /* Frameworks */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
-				276B35661BB0AAE80074D7E5 /* CBL iOS copy-Info.plist */,
 			);
 			name = CouchLite;
 			sourceTree = "<group>";
@@ -2124,6 +2148,7 @@
 				276B344D1BB09F930074D7E5 /* libCBL tvOS ForestDB Storage.a */,
 				276B35201BB0A6560074D7E5 /* libCouchbaseLiteFat.a */,
 				276B35651BB0AAE80074D7E5 /* CouchbaseLite.framework */,
+				276B363E1BB1E6F80074D7E5 /* CBL tvOS Empty App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2648,6 +2673,7 @@
 				27FAEEFF164C8A8400A3C0C2 /* Default~ipad.png */,
 				27B0B8131492C16300A817AD /* iOS Demo-Info.plist */,
 				27731F2C1495CFF000815D67 /* iOS Empty App-Info.plist */,
+				276B36701BB312630074D7E5 /* tvOS Empty App-Info.plist */,
 				27B0B8141492C16300A817AD /* InfoPlist.strings */,
 				2714CF511496AE5B00E03341 /* Entitlements.plist */,
 				27B0B8171492C16300A817AD /* main.m */,
@@ -2677,6 +2703,8 @@
 		27C70696148864BA00F0F099 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				276B366E1BB216BC0074D7E5 /* libz.tbd */,
+				276B366C1BB216B70074D7E5 /* libsqlite3.tbd */,
 				93C605561B698E5000ED9891 /* Foundation.framework */,
 				27452C201AB1F6C100327776 /* libz.dylib */,
 				27452BF11AB11A0500327776 /* UIKit.framework */,
@@ -3462,7 +3490,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				276B35151BB0A5EB0074D7E5 /* PBXTargetDependency */,
+				276B36211BB0EDCF0074D7E5 /* PBXTargetDependency */,
 			);
 			name = "CBL tvOS ForestDB Storage";
 			productName = TouchDBiOS;
@@ -3508,6 +3536,24 @@
 			productName = iTouchDB;
 			productReference = 276B35651BB0AAE80074D7E5 /* CouchbaseLite.framework */;
 			productType = "com.apple.product-type.bundle";
+		};
+		276B36291BB1E6F80074D7E5 /* CBL tvOS Empty App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 276B363B1BB1E6F80074D7E5 /* Build configuration list for PBXNativeTarget "CBL tvOS Empty App" */;
+			buildPhases = (
+				276B362C1BB1E6F80074D7E5 /* Sources */,
+				276B362E1BB1E6F80074D7E5 /* Frameworks */,
+				276B36391BB1E6F80074D7E5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				276B36411BB1E70A0074D7E5 /* PBXTargetDependency */,
+			);
+			name = "CBL tvOS Empty App";
+			productName = "iOS Demo";
+			productReference = 276B363E1BB1E6F80074D7E5 /* CBL tvOS Empty App.app */;
+			productType = "com.apple.product-type.application";
 		};
 		27731F131495CFEF00815D67 /* CBL iOS Empty App */ = {
 			isa = PBXNativeTarget;
@@ -3726,6 +3772,9 @@
 					27538F4F17F13B03004C3BFD = {
 						DevelopmentTeam = N2Q372V7W2;
 					};
+					276B36291BB1E6F80074D7E5 = {
+						DevelopmentTeam = N2Q372V7W2;
+					};
 					27731F131495CFEF00815D67 = {
 						DevelopmentTeam = N2Q372V7W2;
 					};
@@ -3780,6 +3829,7 @@
 				276B33B51BB09E970074D7E5 /* CBL tvOS library */,
 				276B342F1BB09F6B0074D7E5 /* CBL tvOS SQLite Storage */,
 				276B34401BB09F930074D7E5 /* CBL tvOS ForestDB Storage */,
+				276B36291BB1E6F80074D7E5 /* CBL tvOS Empty App */,
 			);
 		};
 /* End PBXProject section */
@@ -3913,6 +3963,14 @@
 				27538F5D17F13B03004C3BFD /* Credits.rtf in Resources */,
 				27538F8917F148C2004C3BFD /* LiteServ.icns in Resources */,
 				27538F6317F13B03004C3BFD /* MainMenu.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		276B36391BB1E6F80074D7E5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				276B363A1BB1E6F80074D7E5 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4568,6 +4626,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		276B362C1BB1E6F80074D7E5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				276B362D1BB1E6F80074D7E5 /* EmptyAppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		27731F141495CFEF00815D67 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -4914,11 +4980,6 @@
 			name = "Tokenizer-tvOS";
 			targetProxy = 276B34A21BB0A1040074D7E5 /* PBXContainerItemProxy */;
 		};
-		276B35151BB0A5EB0074D7E5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "CBForest-tvOS";
-			targetProxy = 276B35141BB0A5EB0074D7E5 /* PBXContainerItemProxy */;
-		};
 		276B35221BB0A6690074D7E5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 276B33B51BB09E970074D7E5 /* CBL tvOS library */;
@@ -4938,6 +4999,16 @@
 			isa = PBXTargetDependency;
 			target = 276B34401BB09F930074D7E5 /* CBL tvOS ForestDB Storage */;
 			targetProxy = 276B356B1BB0AB030074D7E5 /* PBXContainerItemProxy */;
+		};
+		276B36211BB0EDCF0074D7E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "CBForest-tvOS";
+			targetProxy = 276B36201BB0EDCF0074D7E5 /* PBXContainerItemProxy */;
+		};
+		276B36411BB1E70A0074D7E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 276B35241BB0AAE80074D7E5 /* CBL tvOS */;
+			targetProxy = 276B36401BB1E70A0074D7E5 /* PBXContainerItemProxy */;
 		};
 		27A755001A8559B6008BCD4D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -5963,6 +6034,72 @@
 			};
 			name = Release;
 		};
+		276B363C1BB1E6F80074D7E5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Test-iOS/tvOS Empty App-Info.plist";
+				LD_GENERATE_MAP_FILE = YES;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		276B363D1BB1E6F80074D7E5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(DEVELOPER_FRAMEWORKS_DIR)\"",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Test-iOS/iOS Demo-Prefix.pch";
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				INFOPLIST_FILE = "Test-iOS/tvOS Empty App-Info.plist";
+				LD_GENERATE_MAP_FILE = YES;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TVOS_DEPLOYMENT_TARGET = 9.0;
+				VALIDATE_PRODUCT = YES;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
 		27731F281495CFEF00815D67 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -6719,6 +6856,15 @@
 			buildConfigurations = (
 				276B35631BB0AAE80074D7E5 /* Debug */,
 				276B35641BB0AAE80074D7E5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		276B363B1BB1E6F80074D7E5 /* Build configuration list for PBXNativeTarget "CBL tvOS Empty App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				276B363C1BB1E6F80074D7E5 /* Debug */,
+				276B363D1BB1E6F80074D7E5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
