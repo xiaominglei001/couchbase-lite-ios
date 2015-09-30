@@ -24,7 +24,7 @@
 #import "Logging.h"
 #import "Test.h"
 #import "MYURLUtils.h"
-#import "GTMNSData+zlib.h"
+#import "CBLGZip.h"
 #import "CBLCookieStorage.h"
 
 
@@ -129,7 +129,7 @@
     NSData* body = _request.HTTPBody;
     if (body.length < 100 || [_request valueForHTTPHeaderField: @"Content-Encoding"] != nil)
         return NO;
-    NSData* encoded = [NSData gtm_dataByGzippingData: body];
+    NSData* encoded = [CBLGZip dataByCompressingData: body];
     if (encoded.length >= body.length)
         return NO;
     _request.HTTPBody = encoded;

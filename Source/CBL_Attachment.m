@@ -17,7 +17,7 @@
 #import "CBLBase64.h"
 #import "CBLDatabase+Internal.h"
 #import "CBL_BlobStore.h"
-#import "GTMNSData+zlib.h"
+#import "CBLGZip.h"
 
 
 static NSString* blobKeyToDigest(CBLBlobKey key) {
@@ -216,14 +216,16 @@ static NSString* blobKeyToDigest(CBLBlobKey key) {
 
 - (NSData*) content {
     NSData* data = self.encodedContent;
-    switch (encoding) {
-        case kCBLAttachmentEncodingNone:
-            break;
-        case kCBLAttachmentEncodingGZIP:
-            data = [NSData gtm_dataByInflatingData: data];
+    if (data) {
+        switch (encoding) {
+            case kCBLAttachmentEncodingNone:
+                break;
+            case kCBLAttachmentEncodingGZIP:
+                data = [CBLGZip dataByDecompressingData: data];
+                if (!data)
+                    Warn(@"Unable to decode attachment!");
+        }
     }
-    if (!data)
-        Warn(@"Unable to decode attachment!");
     return data;
 }
 

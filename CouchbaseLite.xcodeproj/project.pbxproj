@@ -549,10 +549,6 @@
 		27DA43691592387400F9E7B5 /* CBLModelFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DA435515918C8D00F9E7B5 /* CBLModelFactory.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		27DADE431A659FCC0075313A /* CBL_Storage.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DADE411A659FCC0075313A /* CBL_Storage.h */; };
 		27DADE441A659FCC0075313A /* CBL_ForestDBStorage.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */; };
-		27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */; };
-		27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 27DB90DA14DB24E800FC7118 /* GTMDefines.h */; };
 		27DB90DD14DB250500FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DC14DB250500FC7118 /* libz.dylib */; };
 		27DB90DF14DB4B0100FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
 		27DB90E014DB4B0A00FC7118 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 27DB90DE14DB4B0100FC7118 /* libz.dylib */; };
@@ -562,6 +558,9 @@
 		27DF57B319C782DE00FFB075 /* MYReadWriteLock.m in Sources */ = {isa = PBXBuildFile; fileRef = 27DF57B019C782DE00FFB075 /* MYReadWriteLock.m */; };
 		27E00C8E14EC2C74004BCBA9 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E00C8D14EC2C74004BCBA9 /* SystemConfiguration.framework */; };
 		27E00C8F14EC2CAB004BCBA9 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27E00C8D14EC2C74004BCBA9 /* SystemConfiguration.framework */; };
+		27E055CD1BCC39220095E45D /* CBLGZip.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E055CB1BCC39220095E45D /* CBLGZip.h */; };
+		27E055CE1BCC39220095E45D /* CBLGZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E055CC1BCC39220095E45D /* CBLGZip.m */; };
+		27E055D51BCC39770095E45D /* CBLGZip.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E055CC1BCC39220095E45D /* CBLGZip.m */; };
 		27E11F0D14ACFFC60006B340 /* CBLHTTPServer.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E11F0C14ACFFC60006B340 /* CBLHTTPServer.h */; };
 		27E11F1014AD15940006B340 /* CBLHTTPResponse.h in Headers */ = {isa = PBXBuildFile; fileRef = 27E11F0E14AD15940006B340 /* CBLHTTPResponse.h */; };
 		27E11F1114AD15940006B340 /* CBLHTTPResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E11F0F14AD15940006B340 /* CBLHTTPResponse.m */; };
@@ -1466,9 +1465,6 @@
 		27DA435615918C8E00F9E7B5 /* CBLModelFactory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLModelFactory.m; sourceTree = "<group>"; };
 		27DADE411A659FCC0075313A /* CBL_Storage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBL_Storage.h; sourceTree = "<group>"; };
 		27DADE421A659FCC0075313A /* CBL_ForestDBStorage.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBL_ForestDBStorage.mm; sourceTree = "<group>"; };
-		27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSData+zlib.h"; sourceTree = "<group>"; };
-		27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GTMNSData+zlib.m"; sourceTree = "<group>"; };
-		27DB90DA14DB24E800FC7118 /* GTMDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GTMDefines.h; sourceTree = "<group>"; };
 		27DB90DC14DB250500FC7118 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		27DB90DE14DB4B0100FC7118 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/usr/lib/libz.dylib; sourceTree = DEVELOPER_DIR; };
 		27DD150319354AF7009A367D /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
@@ -1477,6 +1473,8 @@
 		27DF57AF19C782DE00FFB075 /* MYReadWriteLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MYReadWriteLock.h; sourceTree = "<group>"; };
 		27DF57B019C782DE00FFB075 /* MYReadWriteLock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MYReadWriteLock.m; sourceTree = "<group>"; };
 		27E00C8D14EC2C74004BCBA9 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.0.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		27E055CB1BCC39220095E45D /* CBLGZip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLGZip.h; sourceTree = "<group>"; };
+		27E055CC1BCC39220095E45D /* CBLGZip.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLGZip.m; sourceTree = "<group>"; };
 		27E11F0C14ACFFC60006B340 /* CBLHTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLHTTPServer.h; sourceTree = "<group>"; };
 		27E11F0E14AD15940006B340 /* CBLHTTPResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLHTTPResponse.h; sourceTree = "<group>"; };
 		27E11F0F14AD15940006B340 /* CBLHTTPResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLHTTPResponse.m; sourceTree = "<group>"; };
@@ -2047,7 +2045,6 @@
 				277B5C5E1821A8370088881E /* yajl */,
 				27F0749A11CD5B1200E9A2AB /* MYUtilities */,
 				2753154E14ACEF5C0065964D /* CocoaHTTPServer */,
-				27DB90D414DB249700FC7118 /* google-toolbox-for-mac */,
 				27F12842156ABE23008465C2 /* oauthconsumer */,
 				272401AD1860CB260080E082 /* WebSockets-Cocoa */,
 			);
@@ -2299,6 +2296,8 @@
 				279C7E2D14F424090004A1E8 /* CBLSequenceMap.m */,
 				27DA4306158FA35600F9E7B5 /* CBLCache.h */,
 				27DA4307158FA35600F9E7B5 /* CBLCache.m */,
+				27E055CB1BCC39220095E45D /* CBLGZip.h */,
+				27E055CC1BCC39220095E45D /* CBLGZip.m */,
 				27A073EA14C0BB6200F52FE7 /* CBLMisc.h */,
 				27A073EB14C0BB6200F52FE7 /* CBLMisc.m */,
 				271297421A8D597B00F6C5CE /* CBLSymmetricKey.h */,
@@ -2509,16 +2508,6 @@
 				27B945A81768E63200B2DF2D /* CBLModelArray.m */,
 			);
 			name = Model;
-			sourceTree = "<group>";
-		};
-		27DB90D414DB249700FC7118 /* google-toolbox-for-mac */ = {
-			isa = PBXGroup;
-			children = (
-				27DB90DA14DB24E800FC7118 /* GTMDefines.h */,
-				27DB90D514DB249700FC7118 /* GTMNSData+zlib.h */,
-				27DB90D614DB249700FC7118 /* GTMNSData+zlib.m */,
-			);
-			path = "google-toolbox-for-mac";
 			sourceTree = "<group>";
 		};
 		27E2E62E159A26A1005B9234 /* Networking */ = {
@@ -2753,9 +2742,8 @@
 				274C6C281A3F838500F9BDF7 /* CBLReduceFuncs.h in Headers */,
 				27B945A91768E63200B2DF2D /* CBLModelArray.h in Headers */,
 				279CE40A14D8AA23009F3FA6 /* CBLMultipartDownloader.h in Headers */,
-				27DB90D714DB249700FC7118 /* GTMNSData+zlib.h in Headers */,
 				2733022A18F8572700A488F7 /* CBLAuthenticator.h in Headers */,
-				27DB90DB14DB24E800FC7118 /* GTMDefines.h in Headers */,
+				27E055CD1BCC39220095E45D /* CBLGZip.h in Headers */,
 				2766EFF814DB7F9F009ECCA8 /* CBLMultipartWriter.h in Headers */,
 				2766EFFD14DC7B37009ECCA8 /* CBLMultiStreamWriter.h in Headers */,
 				27C5305414DF3A050078F886 /* CBLMultipartUploader.h in Headers */,
@@ -3704,6 +3692,7 @@
 				27FFE20A17BD28080040AE60 /* CBL_Replicator+Backgrounding.m in Sources */,
 				27513A611A697CC80055DC40 /* CBL_SQLiteViewStorage.m in Sources */,
 				27F128B2156AC1CA008465C2 /* CBLOAuth1Authorizer.m in Sources */,
+				27E055CE1BCC39220095E45D /* CBLGZip.m in Sources */,
 				270F5706156AE0BF000FEB8F /* CBLAuthorizer.m in Sources */,
 				27ED8631157D0FC600712B33 /* CBLDocument.m in Sources */,
 				27D8C34A195A28100073A51C /* CBLDatabaseUpgrade.m in Sources */,
@@ -3749,7 +3738,6 @@
 				27F128A8156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27208F8A184D1D5C006ADBEF /* NSString+URLEncoding.m in Sources */,
 				27208F8F184D1D83006ADBEF /* NSURL+Base.m in Sources */,
-				27DB90D814DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				272401BF1860CBE00080E082 /* GCDAsyncSocket.m in Sources */,
 				27726AAD1889835F00AE6931 /* CBLGeometry.m in Sources */,
 				272401B51860CB4B0080E082 /* WebSocket.m in Sources */,
@@ -3969,7 +3957,6 @@
 				27DA435215918C0200F9E7B5 /* MYDynamicObject.m in Sources */,
 				27846FBB15D475DF0030122F /* MYRegexUtils.m in Sources */,
 				27846FBE15D475DF0030122F /* MYStreamUtils.m in Sources */,
-				27DB90D914DB249700FC7118 /* GTMNSData+zlib.m in Sources */,
 				276B23201A3A2BE500CAF010 /* CBLQueryBuilder.m in Sources */,
 				27F12887156ABE24008465C2 /* OAConsumer.m in Sources */,
 				27513A1B1A672C830055DC40 /* CBLDatabase+Insertion.m in Sources */,
@@ -3983,6 +3970,7 @@
 				27F128A1156ABE24008465C2 /* OAToken.m in Sources */,
 				27F128A9156ABFE0008465C2 /* NSMutableURLRequest+Parameters.m in Sources */,
 				27208F8B184D1D5D006ADBEF /* NSString+URLEncoding.m in Sources */,
+				27E055D51BCC39770095E45D /* CBLGZip.m in Sources */,
 				272401C81860D0850080E082 /* WebSocketHTTPLogic.m in Sources */,
 				27A755321A8BD797008BCD4D /* CBLQueryRow.m in Sources */,
 				272401B91860CB4B0080E082 /* WebSocketClient.m in Sources */,

@@ -21,7 +21,7 @@
 #import "CBLMisc.h"
 #import "CollectionUtils.h"
 #import "MYStreamUtils.h"
-#import "GTMNSData+zlib.h"
+#import "CBLGZip.h"
 
 
 @interface CBLMultipartDocumentReader () <CBLMultipartReaderDelegate, NSStreamDelegate>
@@ -319,7 +319,7 @@
     NSData* json = _jsonBuffer;
     _jsonBuffer = nil;
     if (_jsonCompressed) {
-        json = [NSData gtm_dataByInflatingData: json];
+        json = [CBLGZip dataByDecompressingData: json];
         if (!json) {
             Warn(@"%@: received corrupt gzip-encoded JSON part", self);
             _status = kCBLStatusUpstreamError;

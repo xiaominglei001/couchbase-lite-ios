@@ -12,7 +12,7 @@
 #import "CBLMultipartWriter.h"
 #import "CBLInternal.h"
 #import "CBL_BlobStore.h"
-#import "GTMNSData+zlib.h"
+#import "CBLGZip.h"
 
 
 // Another hardcoded DB that needs to exist on the remote test server.
@@ -361,7 +361,7 @@
                                    @"Content-Length": @"24",
                                    @"Content-Type": @"star-bellies"}]));
 
-    NSData* stars = [NSData gtm_dataByInflatingData: _partList[0]];
+    NSData* stars = [CBLGZip dataByDecompressingData: _partList[0]];
     AssertEq(stars.length, 100u);
     for (int i=0; i<100; i++)
         AssertEq(((char*)stars.bytes)[i], '*');
