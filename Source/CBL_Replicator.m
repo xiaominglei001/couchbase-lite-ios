@@ -962,13 +962,18 @@ static BOOL makeTrusted(SecTrustRef trust) {
 }
 
 
+// If the local database has been copied from one pre-packaged in the app, this method returns
+// a pre-existing checkpointed sequence to start from. This allows first-time replication to be
+// fast and avoid starting over from sequence zero.
 - (NSString*) getLastSequenceFromLocalCheckpointDocument {
     CBLDatabase* strongDb = _db;
     NSDictionary* doc = [strongDb getLocalCheckpointDocument];
     if (doc) {
-        NSString* checkpointID = [self remoteCheckpointDocIDForLocalUUID:
-                                  doc[kCBLDatabaseLocalCheckpoint_LocalUUID]];
-        return [strongDb lastSequenceWithCheckpointID: checkpointID];
+        NSString* localUUID = doc[kCBLDatabaseLocalCheckpoint_LocalUUID];
+        if (localUUID) {
+            NSString* checkpointID = [self remoteCheckpointDocIDForLocalUUID: localUUID];
+            return [strongDb lastSequenceWithCheckpointID: checkpointID];
+        }
     }
     return nil;
 }
@@ -978,6 +983,13 @@ static BOOL makeTrusted(SecTrustRef trust) {
     _lastSequenceChanged = NO;
     NSString* checkpointID = self.remoteCheckpointDocID;
     NSString* localLastSequence = [_db lastSequenceWithCheckpointID: checkpointID];
+
+    if (!localLastSequence && ![self getLastSequenceFromLocalCheckpointDocument]) {
+        LogTo(Sync, @"%@: No local checkpoint; not getting remote one", self);
+        [self maybeCreateRemoteDB];
+        [self beginReplicating];
+        return;
+    }
     
     [self asyncTaskStarted];
     CBLRemoteJSONRequest* request = 
