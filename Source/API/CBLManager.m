@@ -245,11 +245,15 @@ static CBLManager* sInstance;
 #if DEBUG
 + (instancetype) createEmptyAtPath: (NSString*)path {
     [CBLDatabase setAutoCompact: NO]; // unit tests don't want autocompact
-    [[NSFileManager defaultManager] removeItemAtPath: path error: NULL];
-    NSError* error;
-    CBLManager* dbm = [[self alloc] initWithDirectory: path
-                                              options: NULL
-                                                error: &error];
+    CBLManager* dbm = nil;
+    NSError *error;
+    Log(@"CBLManager: Deleting %@", path);
+    if ([[NSFileManager defaultManager] removeItemAtPath: path error: &error]
+            || CBLIsFileNotFoundError(error)) {
+        dbm = [[self alloc] initWithDirectory: path
+                                      options: NULL
+                                        error: &error];
+    }
     Assert(dbm, @"Failed to create db manager at %@: %@", path, error);
     AssertEqual(dbm.directory, path);
 #if MY_ENABLE_TESTS
