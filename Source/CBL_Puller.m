@@ -307,6 +307,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         _canBulkGet = [self serverIsSyncGatewayVersion: @"0.81"];
 
     // Ask the local database which of the revs are not known to it:
+    LogTo(SyncPerf, @"%@: Processing %u changes", self, (unsigned)inbox.count);
     LogTo(SyncVerbose, @"%@: Looking up %@", self, inbox);
     id lastInboxSequence = [inbox.allRevisions.lastObject remoteSequenceID];
     NSUInteger originalCount = inbox.count;
@@ -333,6 +334,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         return;
     }
     
+    LogTo(SyncPerf, @"%@: Queuing download requests for %u revisions", self, (unsigned)inbox.count);
     LogTo(SyncVerbose, @"%@ queuing remote revisions %@", self, inbox.allRevisions);
     
     // Dump the revs into the queues of revs to pull from the remote db:
@@ -430,8 +432,9 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                                     onlyAttachments: YES];
     if (knownRevs.count > 0)
         path = [path stringByAppendingFormat: @"&atts_since=%@", joinQuotedEscaped(knownRevs)];
+    LogTo(SyncPerf, @"%@: Getting %@", self, rev);
     LogTo(SyncVerbose, @"%@: GET %@", self, path);
-    
+
     // Under ARC, using variable dl directly in the block given as an argument to initWithURL:...
     // results in compiler error (could be undefined variable)
     __weak CBL_Puller *weakSelf = self;
@@ -443,6 +446,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         ^(CBLMultipartDownloader* result, NSError *error) {
             __strong CBL_Puller *strongSelf = weakSelf;
             // OK, now we've got the response revision:
+            LogTo(SyncPerf, @"%@: Got %@", strongSelf, rev);
             if (error) {
                 [strongSelf revision: rev failedWithError: error];
             } else {
@@ -479,12 +483,15 @@ static NSString* joinQuotedEscaped(NSArray* strings);
         return;
     }
 
+    LogTo(SyncPerf, @"%@: bulk-getting %u remote revisions...", self, (unsigned)nRevs);
     LogTo(SyncVerbose, @"%@: POST _bulk_get", self);
     NSMutableArray* remainingRevs = [bulkRevs mutableCopy];
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     __weak CBL_Puller *weakSelf = self;
     __block CBLBulkDownloader *dl;
+    __block BOOL first = YES;
+    CFAbsoluteTime start = CFAbsoluteTimeGetCurrent();
     dl = [[CBLBulkDownloader alloc] initWithDbURL: _remote
                                          database: _db
                                    requestHeaders: self.requestHeaders
@@ -493,6 +500,11 @@ static NSString* joinQuotedEscaped(NSArray* strings);
           ^(NSDictionary* props) {
               // Got a revision!
               __strong CBL_Puller *strongSelf = weakSelf;
+              if (first) {
+                  first = NO;
+                  LogTo(SyncPerf, @"%@: Received first revision from bulk-get (%.3f sec)",
+                        self, CFAbsoluteTimeGetCurrent()-start);
+              }
               // Find the matching revision in 'remainingRevs' and get its sequence:
               CBL_Revision* rev;
               if (props.cbl_id)
@@ -520,6 +532,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
           ^(CBLBulkDownloader* result, NSError *error) {
               // The entire _bulk_get is finished:
               __strong CBL_Puller *strongSelf = weakSelf;
+              LogTo(SyncPerf, @"%@: finished bulk-getting %u remote revisions (%.3f sec)",
+                    self, (unsigned)nRevs, CFAbsoluteTimeGetCurrent()-start);
 
               // Remove the remote request first to prevent the request from cancellation
               // when setting the error (a permanent error). If that happens, this block
@@ -557,6 +571,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 // This is compatible with CouchDB, but it only works for revs of generation 1 without attachments.
 - (void) pullBulkWithAllDocs: (NSArray*)bulkRevs {
     // http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
+    LogTo(SyncPerf, @"%@: Using _all_docs to get %u remote revisions...",
+          self, (unsigned)bulkRevs.count);
     [self asyncTaskStarted];
     ++_httpConnectionCount;
     CBL_RevisionList* remainingRevs = [[CBL_RevisionList alloc] initWithArray: bulkRevs];
@@ -573,6 +589,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                       // We only add a document if it doesn't have attachments, and if its
                       // revID matches the one we asked for.
                       NSArray* rows = $castIf(NSArray, result[@"rows"]);
+                      LogTo(SyncPerf, @"%@: Got %u remote revisions with _all_docs",
+                            self, (unsigned)rows.count);
                       LogTo(Sync, @"%@ checking %u bulk-fetched remote revisions",
                             self, (unsigned)rows.count);
                       for (NSDictionary* row in rows) {
@@ -665,6 +683,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
 
 // This will be called when _downloadsToInsert fills up:
 - (void) insertDownloads:(NSArray *)downloads {
+    LogTo(SyncPerf, @"%@: inserting %u revisions into db...", self, (unsigned)downloads.count);
     LogTo(SyncVerbose, @"%@ inserting %u revisions...", self, (unsigned)downloads.count);
     CFAbsoluteTime time = CFAbsoluteTimeGetCurrent();
         
@@ -717,6 +736,8 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     self.lastSequence = _pendingSequences.checkpointedValue;
 
     time = CFAbsoluteTimeGetCurrent() - time;
+    LogTo(SyncPerf, @"%@: inserted %u revs in %.3f sec (%.1f/sec)",
+          self, (unsigned)downloads.count, time, downloads.count/time);
     LogTo(Sync, @"%@ inserted %u revs in %.3f sec (%.1f/sec)",
           self, (unsigned)downloads.count, time, downloads.count/time);
     

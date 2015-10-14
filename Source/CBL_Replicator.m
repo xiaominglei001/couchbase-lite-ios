@@ -159,7 +159,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 
 - (NSString*) description {
-    return $sprintf(@"%@[%@]", [self class], _remote.my_sanitizedString);
+    return $sprintf(@"%@[%@]", [self class], _remote.path.lastPathComponent);
 }
 
 
@@ -308,6 +308,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
     CBLDatabase* db = _db;
     Assert(db, @"Can't restart an already stopped CBL_Replicator");
     LogTo(Sync, @"%@ STARTING ...", self);
+    LogTo(SyncPerf, @"%@ STARTING ...", self);
 
     [db addActiveReplicator: self];
 
@@ -396,6 +397,7 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 
 - (void) stopped {
     LogTo(Sync, @"%@ STOPPED", self);
+    LogTo(SyncPerf, @"%@ STOPPED", self);
     Log(@"Replication: %@ took %.3f sec; error=%@",
         self, CFAbsoluteTimeGetCurrent()-_startTime, _error);
 #if TARGET_OS_IPHONE
@@ -577,14 +579,17 @@ NSString* CBL_ReplicatorStoppedNotification = @"CBL_ReplicatorStopped";
 #endif
             if (!_continuous) {
                 [self stopped];
-            } else if (_error) /*(_revisionsFailed > 0)*/ {
-                LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
-                      self, _revisionsFailed, kRetryDelay);
-                [NSObject cancelPreviousPerformRequestsWithTarget: self
-                                                         selector: @selector(retryIfReady)
-                                                           object: nil];
-                [self performSelector: @selector(retryIfReady)
-                           withObject: nil afterDelay: kRetryDelay];
+            } else {
+                LogTo(SyncPerf, @"%@ is now inactive", self);
+                if (_error) /*(_revisionsFailed > 0)*/ {
+                    LogTo(Sync, @"%@: Failed to xfer %u revisions; will retry in %g sec",
+                          self, _revisionsFailed, kRetryDelay);
+                    [NSObject cancelPreviousPerformRequestsWithTarget: self
+                                                             selector: @selector(retryIfReady)
+                                                               object: nil];
+                    [self performSelector: @selector(retryIfReady)
+                               withObject: nil afterDelay: kRetryDelay];
+                }
             }
         }
     }
@@ -993,6 +998,7 @@ static BOOL makeTrusted(SecTrustRef trust) {
         return;
     }
     
+    LogTo(SyncPerf, @"%@ Getting remote checkpoint", self);
     [self asyncTaskStarted];
     CBLRemoteJSONRequest* request = 
         [self sendAsyncRequest: @"GET"
@@ -1000,6 +1006,7 @@ static BOOL makeTrusted(SecTrustRef trust) {
                           body: nil
                   onCompletion: ^(id response, NSError* error) {
                   // Got the response:
+                  LogTo(SyncPerf, @"%@ Got remote checkpoint", self);
                   if (error && error.code != kCBLStatusNotFound) {
                       LogTo(Sync, @"%@: Error fetching last sequence: %@",
                             self, error.localizedDescription);
