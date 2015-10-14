@@ -166,19 +166,20 @@
     response = (CFHTTPMessageRef) CFReadStreamCopyProperty((CFReadStreamRef)_trackingInput,
                                                            kCFStreamPropertyHTTPResponseHeader);
     Assert(response);
+    CFAutorelease(response);
     _gotResponseHeaders = true;
     [_http receivedResponse: response];
     NSString* encoding = CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(response,
                                                                     CFSTR("Content-Encoding")));
     BOOL compressed = [encoding isEqualToString: @"gzip"];
 
-    CFRelease(response);
-
     if (_http.shouldContinue) {
         _retryCount = 0;
         _http = nil;
         if (compressed)
             _gzip = [[CBLGZip alloc] initForCompressing: NO];
+        NSDictionary* headers = CFBridgingRelease(CFHTTPMessageCopyAllHeaderFields(response));
+        [_client changeTrackerReceivedHTTPHeaders: headers];
         return YES;
     } else if (_http.shouldRetry) {
         [self clearConnection];
