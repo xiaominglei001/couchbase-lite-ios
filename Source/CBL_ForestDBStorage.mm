@@ -26,6 +26,7 @@ extern "C" {
 #import "ExceptionUtils.h"
 #import "MYAction.h"
 #import "MYBackgroundMonitor.h"
+#import "CBL_Body+Fleece.h"
 }
 #import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
@@ -733,8 +734,7 @@ static void onCompactCallback(Database *db, bool compacting) {
                 if ((*revNode)->isActive() && (*revNode)->hasAttachments()) {
                     alloc_slice body = (*revNode)->readBody();
                     if (body.size > 0) {
-                        NSDictionary* rev = [CBLJSON JSONObjectWithData: body.uncopiedNSData()
-                                                                options: 0 error: NULL];
+                        NSDictionary* rev = [CBL_Body objectWithFleeceData: body.convertToNSData()];
                         [rev.cbl_attachments enumerateKeysAndObjectsUsingBlock:^(id key, NSDictionary* att, BOOL *stop) {
                             CBLBlobKey blobKey;
                             if ([CBL_Attachment digest: att[@"digest"] toBlobKey: &blobKey]) {
@@ -810,11 +810,8 @@ static void onCompactCallback(Database *db, bool compacting) {
 #pragma mark - LOCAL DOCS:
 
 
-static NSDictionary* getDocProperties(const Document& doc) {
-    NSData* bodyData = doc.body().uncopiedNSData();
-    if (!bodyData)
-        return nil;
-    return [CBLJSON JSONObjectWithData: bodyData options: 0 error: NULL];
+static inline NSDictionary* getDocProperties(const Document& doc) {
+    return [CBL_Body objectWithFleeceData: doc.body().copiedNSData()];
 }
 
 
@@ -864,8 +861,8 @@ static NSDictionary* getDocProperties(const Document& doc) {
         __block CBL_Revision* result = nil;
         *outStatus = [self inTransaction: ^CBLStatus {
             KeyStoreWriter localWriter = (*_forestTransaction)(localDocs);
-            NSData* json = revision.asCanonicalJSON;
-            if (!json)
+            NSData* data = revision.asFleece;
+            if (!data)
                 return kCBLStatusBadJSON;
             forestdb::slice key(docID.UTF8String);
             Document doc = localWriter.get(key);
@@ -882,7 +879,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
                 }
             }
             NSString* newRevID = $sprintf(@"%d-local", ++generation);
-            localWriter.set(key, nsstring_slice(newRevID), forestdb::slice(json));
+            localWriter.set(key, nsstring_slice(newRevID), forestdb::slice(data));
             result = [revision mutableCopyWithDocID: docID revID: newRevID];
             return kCBLStatusCreated;
         }];
@@ -1050,6 +1047,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
         if (!newRevID)
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
 
+        NSData* fleece = [CBL_Body encodeRevAsFleece: properties];
         putRev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                       revID: newRevID
                                                     deleted: deleting];
@@ -1077,7 +1075,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
         int status;
         revidBuffer newrevid(newRevID);
         {
-            const Revision* fdbRev = doc.insert(newrevid, json,
+            const Revision* fdbRev = doc.insert(newrevid, fleece,
                                                 deleting,
                                                 (putRev.attachments != nil),
                                                 revNode, allowConflict, status);
@@ -1123,8 +1121,8 @@ static NSDictionary* getDocProperties(const Document& doc) {
         return kCBLStatusForbidden;
     }
 
-    NSData* json = inRev.asCanonicalJSON;
-    if (!json) {
+    NSData* fleeceData = inRev.asFleece;
+    if (!fleeceData) {
         CBLStatusToOutNSError(kCBLStatusBadJSON, outError);
         return kCBLStatusBadJSON;
     }
@@ -1141,7 +1139,7 @@ static NSDictionary* getDocProperties(const Document& doc) {
         for (NSString* revID in history)
             historyVector.push_back(revidBuffer(revID));
         int common = doc.insertHistory(historyVector,
-                                       forestdb::slice(json),
+                                       forestdb::slice(fleeceData),
                                        inRev.deleted,
                                        (inRev.attachments != nil));
         if (common < 0)

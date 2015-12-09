@@ -1,4 +1,4 @@
-//
+ //
 //  CBLForestBridge.mm
 //  CouchbaseLite
 //
@@ -14,9 +14,12 @@
 //  and limitations under the License.
 
 #import "CBLForestBridge.h"
+#import "Encoder.hh"
 extern "C" {
 #import "ExceptionUtils.h"
 #import "CBLSymmetricKey.h"
+#import "CBL_Body+Fleece.h"
+#import "CBLRevDictionary.h"
 }
 
 using namespace forestdb;
@@ -28,9 +31,9 @@ using namespace couchbase_lite;
 
 static NSData* dataOfNode(const Revision* rev) {
     if (rev->inlineBody().buf)
-        return rev->inlineBody().uncopiedNSData();
+        return rev->inlineBody().copiedNSData();    // part of larger block so have to copy it
     try {
-        return rev->readBody().copiedNSData();
+        return rev->readBody().convertToNSData();
     } catch (...) {
         return nil;
     }
@@ -118,32 +121,29 @@ static NSData* dataOfNode(const Revision* rev) {
     const Revision* revNode = doc.get(rev.revID);
     if (!revNode)
         return NO;
-    NSData* json = dataOfNode(revNode);
-    if (!json)
+    NSData* fleece = dataOfNode(revNode);
+    if (!fleece)
         return NO;
     rev.sequence = revNode->sequence;
-    rev.asJSON = json;
+    rev.asFleece = fleece;
     return YES;
 }
 
 
-+ (NSMutableDictionary*) bodyOfNode: (const Revision*)rev {
-    NSData* json = dataOfNode(rev);
-    if (!json)
++ (NSDictionary*) bodyOfNode: (const Revision*)rev {
+    NSData* fleece = dataOfNode(rev);
+    if (!fleece)
         return nil;
-    NSMutableDictionary* properties = [CBLJSON JSONObjectWithData: json
-                                                          options: NSJSONReadingMutableContainers
-                                                            error: NULL];
-    Assert(properties, @"Unable to parse doc from db: %@", json.my_UTF8ToString);
+    NSDictionary* properties = [CBL_Body objectWithFleeceData: fleece];
+    Assert(properties, @"Unable to parse doc from db");
     NSString* revID = (NSString*)rev->revID;
     Assert(revID);
 
     const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
-    properties[@"_id"] = (NSString*)doc->docID();
-    properties[@"_rev"] = revID;
-    if (rev->isDeleted())
-        properties[@"_deleted"] = $true;
-    return properties;
+    return [[CBLRevDictionary alloc] initWithDictionary: properties
+                                                  docID: (NSString*)doc->docID()
+                                                  revID: revID
+                                                deleted: rev->isDeleted()];
 }
 
 
@@ -240,3 +240,36 @@ namespace couchbase_lite {
     }
 
 }
+
+
+
+#pragma mark - LAZY ARRAY:
+
+
+@implementation CBLLazyArrayOfFleece
+{
+    NSMutableArray* _array;
+}
+
+- (instancetype) initWithMutableArray: (NSMutableArray*)array {
+    self = [super init];
+    if (self) {
+        _array = array;
+    }
+    return self;
+}
+
+- (NSUInteger)count {
+    return _array.count;
+}
+
+- (id)objectAtIndex:(NSUInteger)index {
+    id obj = _array[index];
+    if ([obj isKindOfClass: [NSData class]]) {
+        obj = [CBL_Body objectWithFleeceData: obj];
+        _array[index] = obj;
+    }
+    return obj;
+}
+
+@end

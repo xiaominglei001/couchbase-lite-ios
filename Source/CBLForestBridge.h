@@ -31,7 +31,7 @@ namespace couchbase_lite {
                              encryptionKey: (CBLSymmetricKey*)key
                                      error: (NSError**)outError;
 
-+ (NSMutableDictionary*) bodyOfNode: (const forestdb::Revision*)revNode;
++ (NSDictionary*) bodyOfNode: (const forestdb::Revision*)revNode;
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (forestdb::VersionedDocument&)doc
                                                revID: (NSString*)revID
@@ -51,4 +51,14 @@ namespace couchbase_lite {
 + (NSArray*) getRevisionHistoryOfNode: (const forestdb::Revision*)revNode
                          backToRevIDs: (NSSet*)ancestorRevIDs;
 
+@end
+
+
+/** Wrapper for an NSArray of Fleece data, that avoids having to parse the data if it's not used.
+ NSData objects in the array will be parsed into native objects before being returned to the caller from -objectAtIndex. */
+@interface CBLLazyArrayOfFleece : NSArray
+
+/** Initialize a lazy array.
+ @param array   An NSArray of NSData objects, each containing Fleece. */
+- (instancetype) initWithMutableArray: (NSMutableArray*)array;
 @end

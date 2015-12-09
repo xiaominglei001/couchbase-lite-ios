@@ -15,6 +15,7 @@
 - (instancetype) initWithProperties: (NSDictionary*)properties;
 - (instancetype) initWithArray: (NSArray*)array;
 - (instancetype) initWithJSON: (NSData*)json;
+- (instancetype) initWithFleece: (NSData*)fleece;
 
 + (instancetype) bodyWithProperties: (NSDictionary*)properties;
 + (instancetype) bodyWithJSON: (NSData*)json;
@@ -25,11 +26,16 @@
                   addingDocID: (NSString*)docID
                         revID: (NSString*)revID
                       deleted: (BOOL)deleted;
+- (instancetype) initWithFleece: (NSData*)fleece
+                    addingDocID: (NSString*)docID
+                          revID: (NSString*)revID
+                        deleted: (BOOL)deleted;
 
 @property (readonly) BOOL isValidJSON;
 @property (readonly) NSData* asJSON;
 @property (readonly) NSData* asPrettyJSON;
 @property (readonly) NSString* asJSONString;
+@property (readonly) NSData* asFleece;
 @property (readonly) id asObject;
 @property (readonly) BOOL error;
 

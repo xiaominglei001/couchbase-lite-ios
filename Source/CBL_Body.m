@@ -16,15 +16,19 @@
 #import "CBL_Body.h"
 #import "CBLInternal.h"
 #import "CBLMisc.h"
-#import "yajl_gen.h"
+#import "CBLRevDictionary.h"
+#import "CBL_Body+Fleece.h"
 
 
 @implementation CBL_Body
 {
     @private
     NSData* _json;
+    NSData* _fleece;
     NSDictionary* _object;
     BOOL _error;
+    NSString *_docID, *_revID;
+    BOOL _deleted;
 }
 
 - (instancetype) initWithProperties: (UU NSDictionary*)properties {
@@ -48,6 +52,15 @@
     return self;
 }
 
+- (instancetype) initWithFleece: (NSData*)fleece {
+    NSParameterAssert(fleece);
+    self = [super init];
+    if (self) {
+        _fleece = [fleece copy];
+    }
+    return self;
+}
+
 + (instancetype) bodyWithProperties: (NSDictionary*)properties {
     return [[self alloc] initWithProperties: properties];
 }
@@ -60,44 +73,37 @@
                         revID: (NSString*)revID
                       deleted: (BOOL)deleted
 {
-    if (json.length < 2) {
-        return [self initWithProperties: $dict({@"_id", docID},
-                                               {@"_rev", revID},
-                                               {@"_deleted", (deleted ? $true : nil)})];
+    self = [self initWithJSON: json];
+    if (self) {
+        _docID = [docID copy];
+        _revID = [revID copy];
+        _deleted = deleted;
     }
+    return self;
+}
 
-    // Generate JSON data for {"_id":docID,"_rev":revID,"_deleted":deleted} :
-    yajl_gen gen = yajl_gen_alloc(NULL);
-    yajl_gen_map_open(gen);
-    yajl_gen_string(gen, (const unsigned char*)"_id", 3);
-    CBLWithStringBytes(docID, ^(const char *chars, size_t len) {
-        yajl_gen_string(gen, (const unsigned char*)chars, len);
-    });
-    yajl_gen_string(gen, (const unsigned char*)"_rev", 4);
-    CBLWithStringBytes(revID, ^(const char *chars, size_t len) {
-        yajl_gen_string(gen, (const unsigned char*)chars, len);
-    });
-    if (deleted) {
-        yajl_gen_string(gen, (const unsigned char*)"_deleted", 8);
-        yajl_gen_bool(gen, true);
+- (instancetype) initWithFleece: (NSData*)fleece
+                    addingDocID: (NSString*)docID
+                          revID: (NSString*)revID
+                        deleted: (BOOL)deleted
+{
+    self = [self initWithFleece: fleece];
+    if (self) {
+        _docID = [docID copy];
+        _revID = [revID copy];
+        _deleted = deleted;
     }
-    yajl_gen_map_close(gen);
-
-    // Append that JSON to the input:
-    const uint8_t* buf;
-    size_t len;
-    yajl_gen_get_buf(gen, &buf, &len);
-    NSData* extra = [[NSData alloc] initWithBytesNoCopy: (void*)buf length: len freeWhenDone: NO];
-    self = [self initWithJSON: [CBLJSON appendJSONDictionaryData: extra
-                                            toJSONDictionaryData: json]];
-    yajl_gen_free(gen);
     return self;
 }
 
 - (id) copyWithZone: (NSZone*)zone {
     CBL_Body* body = [[[self class] allocWithZone: zone] init];
     body->_object = [_object copy];
-    body->_json = [_json copy];
+    body->_json = _json;
+    body->_fleece = _fleece;
+    body->_docID = _docID;
+    body->_revID = _revID;
+    body->_deleted = _deleted;
     body->_error = _error;
     return body;
 }
@@ -107,6 +113,8 @@
 - (BOOL) isValidJSON {
     // Yes, this is just like asObject except it doesn't warn.
     if (!_object && !_error) {
+        if (_fleece)
+            return YES;
         _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: NULL] copy];
         if (!_object) {
             _error = YES;
@@ -116,8 +124,14 @@
 }
 
 - (NSData*) asJSON {
-    if (!_json && !_error) {
-        _json = [[CBLJSON dataWithJSONObject: _object options: 0 error: NULL] copy];
+    if (_json) {
+        if (_docID) {
+            NSDictionary* meta = _deleted ? @{@"_id": _docID, @"_rev": _revID, @"_deleted": @YES} : @{@"_id": _docID, @"_rev": _revID};
+            _json = [CBLJSON appendDictionary: meta toJSONDictionaryData: _json];
+            _docID = _revID = nil;
+        }
+    } else if (!_error) {
+        _json = [[CBLJSON dataWithJSONObject: self.asObject options: 0 error: NULL] copy];
         if (!_json) {
             Warn(@"CBL_Body: couldn't convert to JSON");
             _error = YES;
@@ -145,14 +159,38 @@
     return self.asJSON.my_UTF8ToString;
 }
 
+- (NSData*) asFleece {
+    if (_fleece)
+        return _fleece;
+    return [CBL_Body encodeRevAsFleece: self.asObject];
+}
+
 - (id) asObject {
     if (!_object && !_error) {
-        NSError* error = nil;
-        _object = [[CBLJSON JSONObjectWithData: _json options: 0 error: &error] copy];
-        if (!_object) {
-            Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
-            _error = YES;
+        id object;
+        if (_json) {
+            NSError* error = nil;
+            object = [[CBLJSON JSONObjectWithData: _json options: 0 error: &error] copy];
+            if (!object) {
+                Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
+                _error = YES;
+                return nil;
+            }
+        } else {
+            Assert(_fleece);
+            object = [CBL_Body objectWithFleeceData: _fleece];
         }
+        if (![object isKindOfClass: [NSDictionary class]]) {
+            Warn(@"CBL_Body: JSON isn't a dictionary: %@", [_json my_UTF8ToString]);
+            _error = YES;
+            return nil;
+        }
+        if (_docID)
+            object = [[CBLRevDictionary alloc] initWithDictionary: object
+                                                            docID: _docID
+                                                            revID: _revID
+                                                          deleted: _deleted];
+        _object = object;
     }
     return _object;
 }
@@ -170,7 +208,8 @@
 }
 
 - (BOOL) compact {
-    (void)[self asJSON];
+    if (!_fleece && !_json)
+        (void)[self asJSON];
     if (_error)
         return NO;
     _object = nil;

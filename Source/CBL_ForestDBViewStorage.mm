@@ -23,12 +23,16 @@ extern "C" {
 #import "ExceptionUtils.h"
 #import "CBLSymmetricKey.h"
 #import "MYAction.h"
+#import "FleeceDocument.h"
+#import "CBLRevDictionary.h"
 }
 #import <CBForest/CBForest.hh>
 #import <CBForest/GeoIndex.hh>
 #import <CBForest/MapReduceDispatchIndexer.hh>
 #import <CBForest/Tokenizer.hh>
 using namespace forestdb;
+#import "Encoder.hh"
+using namespace fleece;
 #import "CBLForestBridge.h"
 using namespace couchbase_lite;
 
@@ -98,15 +102,15 @@ public:
             @autoreleasepool {
                 VersionedDocument vdoc(_indexes[0]->sourceStore(), cppDoc);
                 const Revision* node = vdoc.currentRevision();
-                NSMutableDictionary* body = [CBLForestBridge bodyOfNode: node];
-                body[@"_local_seq"] = @(node->sequence);
+                auto body = (CBLRevDictionary*)[CBLForestBridge bodyOfNode: node];
+                [body _setLocalSeq: node->sequence];
 
                 if (vdoc.hasConflict()) {
                     NSArray* conflicts = [CBLForestBridge getCurrentRevisionIDs: vdoc
                                                                  includeDeleted: NO];
                     if (conflicts.count > 1)
-                        body[@"_conflicts"] = [conflicts subarrayWithRange:
-                                               NSMakeRange(1, conflicts.count - 1)];
+                        [body _setConflicts: [conflicts subarrayWithRange:
+                                               NSMakeRange(1, conflicts.count - 1)]];
                 }
 
                 LogTo(ViewVerbose, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
@@ -141,11 +145,11 @@ public:
             CBLMapEmitBlock emit = ^(id key, id value) {
                 if (indexType == kCBLFullTextIndex) {
                     Assert([key isKindOfClass: [NSString class]]);
-                    LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, toJSONStr(value));
+                    LogTo(ViewVerbose, @"    emit(\"%@\", %@)", key, showValue(value));
                     emitText(key, value, doc, emitFn);
                 } else if ([key isKindOfClass: [CBLSpecialKey class]]) {
                     CBLSpecialKey *specialKey = key;
-                    LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, toJSONStr(value));
+                    LogTo(ViewVerbose, @"    emit(%@, %@)", specialKey, showValue(value));
                     NSString* text = specialKey.text;
                     if (text) {
                         emitText(text, value, doc, emitFn);
@@ -153,7 +157,7 @@ public:
                         emitGeo(specialKey, value, doc, emitFn);
                     }
                 } else if (key) {
-                    LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", toJSONStr(key), toJSONStr(value), viewName);
+                    LogTo(ViewVerbose, @"    emit(%@, %@)  to %@", showValue(key), showValue(value), viewName);
                     callEmit(key, value, doc, emitFn);
                 }
             };
@@ -166,10 +170,8 @@ private:
         nsstring_slice textSlice(text);
         if (value == doc) {
             emitFn.emitTextTokens(textSlice, Index::kSpecialValue);
-        } else if (value) {
-            emitFn.emitTextTokens(textSlice, nsstring_slice(toJSONStr(value)));
         } else {
-            emitFn.emitTextTokens(textSlice, slice::null);
+            emitFn.emitTextTokens(textSlice, encodeValue(value));
         }
     }
 
@@ -179,10 +181,8 @@ private:
         slice geoJSON = slice(geoKey.geoJSONData);
         if (value == doc) {
             emitFn(geoArea, geoJSON, Index::kSpecialValue);
-        } else if (value) {
-            emitFn(geoArea, geoJSON, nsstring_slice(toJSONStr(value)));
         } else {
-            emitFn(geoArea, geoJSON, slice::null);
+            emitFn(geoArea, geoJSON, encodeValue(value));
         }
     }
 
@@ -191,14 +191,22 @@ private:
         Collatable collKey(key);
         if (value == doc) {
             emitFn(collKey, Index::kSpecialValue);
-        } else if (value) {
-            emitFn(collKey, nsstring_slice(toJSONStr(value)));
         } else {
-            emitFn(collKey, slice::null);
+            emitFn(collKey, encodeValue(value));
         }
     }
 
-    static NSString* toJSONStr(id obj) {
+    static alloc_slice encodeValue(id value) {
+        if (!value)
+            return alloc_slice();
+        Writer writer;
+        Encoder encoder(writer);
+        encoder.write(value);
+        encoder.end();
+        return writer.extractOutput();
+    }
+
+    static NSString* showValue(id obj) {
         if (!obj)
             return @"nil";
         return [CBLJSON stringWithJSONObject: obj options: CBLJSONWritingAllowFragments error: nil];
@@ -545,8 +553,14 @@ static NSString* viewNames(NSArray* views) {
 
     IndexEnumerator *e = [self _runForestQueryWithOptions: [CBLQueryOptions new]];
     while (e->next()) {
-        NSString* valueStr = (NSString*)e->value();
-        Assert(valueStr || e->value().size == 0);//TEMP
+        NSString* valueStr = nil;
+        if (e->value().buf) {
+            // Convert from Fleece to JSON:
+            auto fleeceValue = value::fromData(e->value());
+            auto json = fleeceValue->toJSON();
+            valueStr = [[NSString alloc] initWithCString: json.c_str()
+                                                encoding: NSUTF8StringEncoding];
+        }
         [result addObject: $dict({@"key", CBLJSONString(e->key().readNSObject())},
                                  {@"value", valueStr},
                                  {@"seq", @(e->sequence())})];
@@ -594,12 +608,14 @@ static NSString* viewNames(NSArray* views) {
 }
 
 
-static id parseJSONSlice(slice s) {
-    NSError* error;
-    id value = [CBLJSON JSONObjectWithData: s.uncopiedNSData()
-                                   options: CBLJSONReadingAllowFragments error: &error];
+static id parseRowValue(slice s) {
+    if (s.buf == NULL)
+        return nil;
+    if (s == Index::kSpecialValue)
+        return s.copiedNSData();
+    id value = [FleeceDocument objectWithFleeceBytes: s.buf length: s.size trusted: YES];
     if (!value)
-        Warn(@"Couldn't parse JSON value: %@", s.uncopiedNSData());
+        Warn(@"Couldn't parse Fleece value: %@", s.uncopiedNSData());
     return value;
 }
 
@@ -631,17 +647,13 @@ static id parseJSONSlice(slice s) {
             while (e->next()) {
                 CBL_Revision* docRevision = nil;
                 id key = e->key().readNSObject();
-                id value = nil;
+                id value = parseRowValue(e->value());
                 NSString* docID = (NSString*)e->docID();
                 SequenceNumber sequence = e->sequence();
 
                 if (options->includeDocs) {
-                    NSDictionary* valueDict = nil;
-                    NSString* linkedID = nil;
-                    if (e->value().size > 0 && e->value()[0] == '{') {
-                        valueDict = $castIf(NSDictionary, parseJSONSlice(e->value()));
-                        linkedID = valueDict.cbl_id;
-                    }
+                    NSDictionary* valueDict = $castIf(NSDictionary, value);
+                    NSString* linkedID = valueDict.cbl_id;
                     if (linkedID) {
                         // Linked document: http://wiki.apache.org/couchdb/Introduction_to_CouchDB_views#Linked_documents
                         NSString* linkedRev = valueDict.cbl_rev; // usually nil
@@ -655,9 +667,6 @@ static id parseJSONSlice(slice s) {
                                                            withBody: YES status: &status];
                     }
                 }
-
-                if (!value)
-                    value = e->value().copiedNSData();
 
                 LogTo(QueryVerbose, @"Query %@: Found row with key=%@, value=%@, id=%@",
                       _name, CBLJSONString(key), value, CBLJSONString(docID));
@@ -772,7 +781,7 @@ static id parseJSONSlice(slice s) {
                         if (!value)
                             Warn(@"%@: Couldn't load doc for row value: status %d", self, status);
                     } else if (rawValue.size > 0) {
-                        value = parseJSONSlice(rawValue);
+                        value = parseRowValue(rawValue);
                     }
                     [valuesToReduce addObject: (value ?: $null)];
                     //TODO: Reduce the keys/values when there are too many; then rereduce at end
@@ -793,10 +802,7 @@ static id parseJSONSlice(slice s) {
 }
 
 
-#define PARSED_KEYS
-
 // Are key1 and key2 grouped together at this groupLevel?
-#ifdef PARSED_KEYS
 static bool groupTogether(id key1, id key2, unsigned groupLevel) {
     if (groupLevel == 0)
         return [key1 isEqual: key2];
@@ -817,27 +823,6 @@ static id groupKey(id key, unsigned groupLevel) {
     else
         return key;
 }
-#else
-static bool groupTogether(NSData* key1, NSData* key2, unsigned groupLevel) {
-    if (!key1 || !key2)
-        return NO;
-    if (groupLevel == 0)
-        groupLevel = UINT_MAX;
-    return CBLCollateJSONLimited(kCBLCollateJSON_Unicode,
-                                (int)key1.length, key1.bytes,
-                                (int)key2.length, key2.bytes,
-                                groupLevel) == 0;
-}
-
-// Returns the prefix of the key to use in the result row, at this groupLevel
-static id groupKey(NSData* keyJSON, unsigned groupLevel) {
-    id key = fromJSON(keyJSON);
-    if (groupLevel > 0 && [key isKindOfClass: [NSArray class]] && [key count] > groupLevel)
-        return [key subarrayWithRange: NSMakeRange(0, groupLevel)];
-    else
-        return key;
-}
-#endif
 
 
 // Invokes the reduce function on the parallel arrays of keys and values
@@ -845,12 +830,8 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
     if (!reduceBlock)
         return nil;
     NSArray *lazyKeys, *lazyValues;
-#ifdef PARSED_KEYS
     lazyKeys = keys;
-#else
-    keys = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: keys];
-#endif
-    lazyValues = [[CBLLazyArrayOfJSON alloc] initWithMutableArray: values];
+    lazyValues = [[CBLLazyArrayOfFleece alloc] initWithMutableArray: values];
     @try {
         id result = reduceBlock(lazyKeys, lazyValues, NO);
         if (result)
@@ -905,14 +886,13 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
                 id key = fullTextID > 0 ? @[docID, @(fullTextID)] : docID;
                 CBLFullTextQueryRow* row = docRows[key];
                 if (!row) {
-                    alloc_slice valueSlice = index->readFullTextValue(nsstring_slice(docID),
+                    id value = parseRowValue(index->readFullTextValue(nsstring_slice(docID),
                                                                       e.sequence(),
-                                                                      fullTextID);
-                    NSData* valueData = valueSlice.copiedNSData();
+                                                                      fullTextID));
                     row = [[CBLFullTextQueryRow alloc] initWithDocID: docID
                                                             sequence: e.sequence()
                                                           fullTextID: fullTextID
-                                                               value: valueData
+                                                               value: value
                                                              storage: self];
                     docRows[key] = row;
                 }
@@ -992,7 +972,7 @@ static id callReduce(CBLReduceBlock reduceBlock, NSMutableArray* keys, NSMutable
              self, docID, sequence, fullTextID);
         return nil;
     }
-    return valueSlice.copiedNSData();
+    return valueSlice.convertToNSData();
 }
 
 

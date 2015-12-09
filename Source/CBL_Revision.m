@@ -18,6 +18,7 @@
 #import "CBL_Body.h"
 #import "CBJSONEncoder.h"
 #import "CBLMisc.h"
+#import "FleeceDocument.h"
 
 
 @implementation CBL_Revision
@@ -165,6 +166,10 @@
     return _body.asJSON;
 }
 
+- (NSData*) asFleece {
+    return _body.asFleece;
+}
+
 - (NSString*) description {
     return $sprintf(@"{%@ #%@%@}", _docID, _revID, (_deleted ?@" DEL" :@""));
 }
@@ -262,7 +267,7 @@
 
 @implementation CBL_MutableRevision
 
-@dynamic body, properties, asJSON, missing;     // Necessary because this class redeclares them
+@dynamic body, properties, asJSON, asFleece, missing;     // Necessary because this class redeclares them
 
 - (void) setBody:(UU CBL_Body *)body {
     _body = body;
@@ -297,6 +302,11 @@
 - (void) setAsJSON:(UU NSData *)asJSON {
     _body = [[CBL_Body alloc] initWithJSON: asJSON
                                addingDocID: _docID revID: _revID deleted: _deleted];
+}
+
+- (void) setAsFleece:(UU NSData *)asFleece {
+    _body = [[CBL_Body alloc] initWithFleece: asFleece
+                                 addingDocID: _docID revID: _revID deleted: _deleted];
 }
 
 - (void) setObject: (UU id)object forKeyedSubscript: (UU NSString*)key {

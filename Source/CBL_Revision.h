@@ -42,6 +42,8 @@
     This has all the special keys like "_id" stripped out, and keys in canonical order. */
 @property (readonly) NSData* asCanonicalJSON;
 
+@property (readonly,copy) NSData* asFleece;
+
 + (NSData*) asCanonicalJSON: (NSDictionary*)properties
                       error: (NSError**)error;
 
@@ -89,6 +91,8 @@
 /** Overridden to make this settable. When set, the "_id", "_rev" and "_deleted" properties will be
     added to the JSON data; it MUST NOT already include them! */
 @property (readwrite, copy) NSData* asJSON;
+
+@property (readwrite, copy) NSData* asFleece;
 
 - (void) setDocID:(NSString *)docID
             revID: (NSString*)revID;
