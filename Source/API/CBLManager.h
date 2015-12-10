@@ -187,7 +187,7 @@ typedef struct CBLManagerOptions {
 
 /** Redirects Couchbase Lite logging: instead of writing to the console/stderr, it will call the
     given block. Passing a nil block restores the default behavior. */
-+ (void) redirectLogging: (nullable void (^)(NSString* type, NSString* message))callback;
++ (void) redirectLogging: (nullable BOOL (^)(NSString* type, NSString* message))callback;
 
 
 @property (readonly, nonatomic, nullable) NSMutableDictionary* customHTTPHeaders;

@@ -85,7 +85,7 @@ static NSData* dataOfNode(const Revision* rev) {
                                                revID: (NSString*)revID
                                             withBody: (BOOL)withBody
 {
-    CBL_MutableRevision* rev;
+    CBL_MutableRevision* rev = nil;
     NSString* docID = (NSString*)doc.docID();
     if (doc.revsAvailable()) {
         const Revision* revNode;
@@ -102,15 +102,19 @@ static NSData* dataOfNode(const Revision* rev) {
                                                    revID: revID
                                                  deleted: revNode->isDeleted()];
         rev.sequence = revNode->sequence;
-    } else {
+        if (withBody) {
+            NSData* fleece = dataOfNode(revNode);
+            if (!fleece)
+                return nil;
+            rev.asFleece = fleece;
+        }
+    } else if (!withBody) {
         Assert(revID == nil || $equal(revID, (NSString*)doc.revID()));
         rev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                    revID: (NSString*)doc.revID()
                                                  deleted: doc.isDeleted()];
         rev.sequence = doc.sequence();
     }
-    if (withBody && ![self loadBodyOfRevisionObject: rev doc: doc])
-        return nil;
     return rev;
 }
 
@@ -142,6 +146,29 @@ static NSData* dataOfNode(const Revision* rev) {
                                                             deleted: rev->isDeleted()];
     Assert(body, @"Unable to parse doc from db");
     return body;
+}
+
+
++ (BOOL) bodyOfNode: (const Revision*)rev into: (CBLFleeceRevDictionary*)body {
+    // Use inline body if possible since it doesn't have to be copied.
+    alloc_slice copiedData;
+    slice data = rev->inlineBody();
+    if (!data.buf) {
+        try {
+            copiedData = rev->readBody();
+        } catch (...) {
+        }
+        if (!copiedData.buf)
+            return NO;
+        data = copiedData;
+    }
+    const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
+    [body setTemporaryFleeceBytes: data.buf length: data.size
+                          trusted: YES
+                            docID: (NSString*)doc->docID()
+                            revID: rev->revID.copiedNSData()
+                          deleted: rev->isDeleted()];
+    return YES;
 }
 
 

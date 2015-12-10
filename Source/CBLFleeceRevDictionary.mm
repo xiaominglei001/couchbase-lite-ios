@@ -124,6 +124,35 @@ static id objectForValue(const value* v, UU NSData* fleeceData) {
     return self;
 }
 
+- (BOOL) setTemporaryFleeceBytes: (const void*)bytes length: (NSUInteger)length
+                         trusted: (BOOL)trusted
+                           docID: (NSString*)docID
+                           revID: (id)revID
+                         deleted: (BOOL)deleted
+{
+    NSParameterAssert(bytes && docID && revID);
+
+    slice fleece(bytes, length);
+    const value *root = trusted ? value::fromTrustedData(fleece) : value::fromData(fleece);
+    if (!root || !root->asDict())
+        return NO;
+
+    _fleeceData = nil;
+    _dict = root->asDict();
+    DAssert(!_dict->get(slice("_id")));
+    DAssert(!_dict->get(slice("_rev")));
+    DAssert(!_dict->get(slice("_deleted")));
+
+    _count = _dict->count() + 2 + (!!deleted);
+    _docID = docID;
+    _revID = revID;
+    _deleted = deleted;
+    _localSeq = 0;
+    _conflicts = nil;
+    _count = _dict->count();
+    return YES;
+}
+
 
 - (void) _setLocalSeq: (uint64_t)seq {
     NSParameterAssert(seq != 0);

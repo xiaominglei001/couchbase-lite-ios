@@ -63,16 +63,19 @@ static CBLGeoRect areaToGeoRect(geohash::area area) {
 
 class CocoaMappable : public Mappable {
 public:
-    explicit CocoaMappable(const Document& doc, NSDictionary* dict)
+    explicit CocoaMappable(const Document& doc, CBLFleeceRevDictionary* dict)
     :Mappable(doc), body(dict)
     { }
 
-    __strong NSDictionary* body;
+    UU CBLFleeceRevDictionary* body;
 };
 
 class CocoaIndexer : public MapReduceIndexer {
 public:
-    CocoaIndexer() { }
+    CocoaIndexer()
+    {
+        _body = [[CBLFleeceRevDictionary alloc] init];
+    }
 
     void addDocType(const alloc_slice& type) {
         _docTypes.push_back(type);
@@ -102,19 +105,19 @@ public:
             @autoreleasepool {
                 VersionedDocument vdoc(_indexes[0]->sourceStore(), cppDoc);
                 const Revision* node = vdoc.currentRevision();
-                auto body = (CBLFleeceRevDictionary*)[CBLForestBridge bodyOfNode: node];
-                [body _setLocalSeq: node->sequence];
+                [CBLForestBridge bodyOfNode: node into: _body];
+                [_body _setLocalSeq: node->sequence];
 
                 if (vdoc.hasConflict()) {
                     NSArray* conflicts = [CBLForestBridge getCurrentRevisionIDs: vdoc
                                                                  includeDeleted: NO];
                     if (conflicts.count > 1)
-                        [body _setConflicts: [conflicts subarrayWithRange:
-                                               NSMakeRange(1, conflicts.count - 1)]];
+                        [_body _setConflicts: [conflicts subarrayWithRange:
+                                                            NSMakeRange(1, conflicts.count - 1)]];
                 }
 
-                LogTo(ViewVerbose, @"Mapping %@ rev %@", body.cbl_id, body.cbl_rev);
-                CocoaMappable mappable(cppDoc, body);
+                LogTo(ViewVerbose, @"Mapping %@ rev %@", _body.cbl_id, _body.cbl_rev);
+                CocoaMappable mappable(cppDoc, _body);
                 addMappable(mappable);
             }
         } else {
@@ -126,6 +129,7 @@ public:
 
 private:
     std::vector<alloc_slice> _docTypes;
+    CBLFleeceRevDictionary* _body;
 };
 
 

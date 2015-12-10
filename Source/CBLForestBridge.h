@@ -11,7 +11,7 @@ extern "C" {
 #import <CBForest/CBForest.hh>
 #import "CBL_Storage.h"
 }
-@class CBLSymmetricKey;
+@class CBLSymmetricKey, CBLFleeceRevDictionary;
 
 
 namespace couchbase_lite {
@@ -32,6 +32,7 @@ namespace couchbase_lite {
                                      error: (NSError**)outError;
 
 + (NSDictionary*) bodyOfNode: (const forestdb::Revision*)revNode;
++ (BOOL) bodyOfNode: (const forestdb::Revision*)rev into: (CBLFleeceRevDictionary*)body;
 
 + (CBL_MutableRevision*) revisionObjectFromForestDoc: (forestdb::VersionedDocument&)doc
                                                revID: (NSString*)revID

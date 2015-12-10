@@ -20,6 +20,14 @@
 - (void) _setLocalSeq: (uint64_t)seq;
 - (void) _setConflicts:(NSArray *)conflicts;
 
+/** Reset with different data, for temporary use only: this object and dicts/arrays obtained
+    from it become invalid as soon as the source bytes do, and will crash when called. */
+- (BOOL) setTemporaryFleeceBytes: (const void*)bytes length: (NSUInteger)length
+                         trusted: (BOOL)trusted
+                           docID: (NSString*)docID
+                           revID: (id)revID
+                         deleted: (BOOL)deleted;
+
 
 + (id) objectWithFleeceData: (NSData*)fleece
                     trusted: (BOOL)trusted;

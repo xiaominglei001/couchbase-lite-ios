@@ -119,7 +119,7 @@ static NSCharacterSet* kIllegalNameChars;
 #endif
 }
 
-+ (void) redirectLogging: (void (^)(NSString* type, NSString* message))callback {
++ (void) redirectLogging: (BOOL (^)(NSString* type, NSString* message))callback {
 #ifndef MY_DISABLE_LOGGING
     MYLoggingCallback = callback;
 #endif
