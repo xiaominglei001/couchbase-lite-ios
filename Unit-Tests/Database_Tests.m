@@ -368,10 +368,12 @@
 - (void) test08_SaveDocumentWithNaNProperty {
     NSDictionary* properties = @{@"aNumber": [NSDecimalNumber notANumber]};
     CBLDocument* doc = [db createDocument];
-    NSError* error;
-    CBLSavedRevision* rev = [doc putProperties: properties error: &error];
-    AssertEq(error.code, 400);
-    Assert(!rev);
+    [self allowWarningsIn:^{
+        NSError* error;
+        CBLSavedRevision* rev = [doc putProperties: properties error: &error];
+        AssertEq(error.code, 400);
+        Assert(!rev);
+    }];
 }
 
 

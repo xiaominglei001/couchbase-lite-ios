@@ -14,7 +14,7 @@
 
 - (instancetype) initWithDictionary: (NSDictionary*)dict
                               docID: (NSString*)docID
-                              revID: (NSString*)revID
+                              revID: (id)revID          // NSString or NSData (ForestDB compressed)
                             deleted: (BOOL)deleted;
 
 - (void) _setLocalSeq: (uint64_t)seq;

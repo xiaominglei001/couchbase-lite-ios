@@ -26,8 +26,8 @@ extern "C" {
 #import "ExceptionUtils.h"
 #import "MYAction.h"
 #import "MYBackgroundMonitor.h"
-#import "CBL_Body+Fleece.h"
 }
+#import "CBL_Body+Fleece.h"
 #import <CBForest/CBForest.hh>
 #import "CBLForestBridge.h"
 
@@ -980,17 +980,13 @@ static inline NSDictionary* getDocProperties(const Document& doc) {
         return nil;
     }
 
-    __block NSData* json = nil;
-    if (properties) {
-        json = [CBL_Revision asCanonicalJSON: properties error: NULL];
-        if (!json) {
-            *outStatus = kCBLStatusBadJSON;
-            CBLStatusToOutNSError(*outStatus, outError);
-            return nil;
-        }
-    } else {
-        json = [NSData dataWithBytes: "{}" length: 2];
+    alloc_slice fleece = [CBL_Body encodeRevAsFleeceSlice: properties];
+    if (!fleece.buf) {
+        *outStatus = kCBLStatusBadJSON;
+        CBLStatusToOutNSError(*outStatus, outError);
+        return nil;
     }
+    NSData* json = [CBL_Body canonicalJSONFromFleece: fleece];
 
     __block CBL_MutableRevision* putRev = nil;
     __block CBLDatabaseChange* change = nil;
@@ -1047,7 +1043,6 @@ static inline NSDictionary* getDocProperties(const Document& doc) {
         if (!newRevID)
             return kCBLStatusBadID;  // invalid previous revID (no numeric prefix)
 
-        NSData* fleece = [CBL_Body encodeRevAsFleece: properties];
         putRev = [[CBL_MutableRevision alloc] initWithDocID: docID
                                                       revID: newRevID
                                                     deleted: deleting];

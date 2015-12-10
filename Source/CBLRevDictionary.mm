@@ -1,5 +1,5 @@
 //
-//  CBLRevDictionary.m
+//  CBLRevDictionary.mm
 //  CouchbaseLite
 //
 //  Created by Jens Alfke on 12/7/15.
@@ -15,7 +15,8 @@ extern "C" {
 @implementation CBLRevDictionary
 {
     NSDictionary* _dict;
-    NSString* _docID, *_revID;
+    NSString* _docID;
+    id _revID;
     BOOL _deleted;
     SequenceNumber _localSeq;
     NSArray *_conflicts;
@@ -24,18 +25,18 @@ extern "C" {
 
 - (instancetype) initWithDictionary: (NSDictionary*)dict
                               docID: (NSString*)docID
-                              revID: (NSString*)revID
+                              revID: (id)revID
                             deleted: (BOOL)deleted
 {
     NSParameterAssert(dict && docID && revID);
-    Assert(!dict[@"_id"]);
-    Assert(!dict[@"_rev"]);
-    Assert(!dict[@"_deleted"]);
+    DAssert(!dict[@"_id"]);
+    DAssert(!dict[@"_rev"]);
+    DAssert(!dict[@"_deleted"]);
     self = [super init];
     if (self) {
         _dict = [dict copy];
         _docID = [docID copy];
-        _revID = [revID copy];
+        _revID = revID;
         _deleted = deleted;
     }
     return self;
@@ -58,7 +59,7 @@ extern "C" {
 - (NSMutableDictionary*) mutableCopy {
     NSMutableDictionary* m = [_dict mutableCopy] ?: [[NSMutableDictionary alloc] init];
     m[@"_id"] = _docID;
-    m[@"_rev"] = _revID;
+    m[@"_rev"] = self.cbl_rev;
     if (_deleted)
         m[@"_deleted"] = @YES;
     if (_localSeq)
@@ -86,7 +87,7 @@ extern "C" {
     else if ([key isEqualToString: @"_id"])
         return _docID;
     else if ([key isEqualToString: @"_rev"])
-        return _revID;
+        return self.cbl_rev;
     else if (_deleted && [key isEqualToString: @"_deleted"])
         return @YES;
     else if (_localSeq && [key isEqualToString: @"_local_seq"])

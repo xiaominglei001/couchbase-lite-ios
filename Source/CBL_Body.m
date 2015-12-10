@@ -171,25 +171,25 @@
         if (_json) {
             NSError* error = nil;
             object = [[CBLJSON JSONObjectWithData: _json options: 0 error: &error] copy];
-            if (!object) {
-                Warn(@"CBL_Body: couldn't parse JSON: %@ (error=%@)", [_json my_UTF8ToString], error);
+            if (![object isKindOfClass: [NSDictionary class]]) {
+                Warn(@"CBL_Body: couldn't parse JSON to dictionary: %@ (error=%@)", [_json my_UTF8ToString], error);
                 _error = YES;
                 return nil;
             }
+            if (_docID)
+                object = [[CBLRevDictionary alloc] initWithDictionary: object
+                                                                docID: _docID
+                                                                revID: _revID
+                                                              deleted: _deleted];
         } else {
             Assert(_fleece);
-            object = [CBL_Body objectWithFleeceData: _fleece];
+            object = [CBL_Body dictionaryWithFleeceData: _fleece
+                                                  docID: _docID
+                                                  revID: _revID
+                                                deleted: _deleted];
+            if (!object)
+                _error = YES;
         }
-        if (![object isKindOfClass: [NSDictionary class]]) {
-            Warn(@"CBL_Body: JSON isn't a dictionary: %@", [_json my_UTF8ToString]);
-            _error = YES;
-            return nil;
-        }
-        if (_docID)
-            object = [[CBLRevDictionary alloc] initWithDictionary: object
-                                                            docID: _docID
-                                                            revID: _revID
-                                                          deleted: _deleted];
         _object = object;
     }
     return _object;

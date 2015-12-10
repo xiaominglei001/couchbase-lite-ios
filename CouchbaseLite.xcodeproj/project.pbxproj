@@ -150,7 +150,6 @@
 		2741144717974555005EF2F8 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27F1E4A7169799DA00F0E50F /* JavaScriptCore.framework */; };
 		27424B1D1C17AAA3007065D9 /* Encoder.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDA01C16625D00E5C991 /* Encoder.cc */; };
 		27424B1E1C17AAA3007065D9 /* Encoder+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDA21C16625D00E5C991 /* Encoder+ObjC.mm */; };
-		27424B1F1C17AAA3007065D9 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDA51C16625D00E5C991 /* FleeceDocument.mm */; };
 		27424B201C17AAA3007065D9 /* StringTable.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDB41C16627A00E5C991 /* StringTable.cc */; };
 		27424B211C17AAA3007065D9 /* Value.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDB61C16627A00E5C991 /* Value.cc */; };
 		27424B221C17AAA3007065D9 /* Value+JSON.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDB81C16627A00E5C991 /* Value+JSON.cc */; };
@@ -159,6 +158,9 @@
 		27424B271C17AB5D007065D9 /* CBL_Body+Fleece.h in Headers */ = {isa = PBXBuildFile; fileRef = 27424B251C17AB5D007065D9 /* CBL_Body+Fleece.h */; };
 		27424B281C17AB5D007065D9 /* CBL_Body+Fleece.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27424B261C17AB5D007065D9 /* CBL_Body+Fleece.mm */; };
 		27424B291C17AB5D007065D9 /* CBL_Body+Fleece.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27424B261C17AB5D007065D9 /* CBL_Body+Fleece.mm */; };
+		27424B321C17E9D9007065D9 /* CBLFleeceRevDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 27424B301C17E9D9007065D9 /* CBLFleeceRevDictionary.h */; };
+		27424B331C17E9D9007065D9 /* CBLFleeceRevDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27424B311C17E9D9007065D9 /* CBLFleeceRevDictionary.mm */; };
+		27424B341C17E9D9007065D9 /* CBLFleeceRevDictionary.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27424B311C17E9D9007065D9 /* CBLFleeceRevDictionary.mm */; };
 		27452B311AB0E6AA00327776 /* View_Benchmarks.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452B301AB0E6AA00327776 /* View_Benchmarks.m */; };
 		27452B321AB0E6AA00327776 /* View_Benchmarks.m in Sources */ = {isa = PBXBuildFile; fileRef = 27452B301AB0E6AA00327776 /* View_Benchmarks.m */; };
 		27452BB01AB115A200327776 /* libCouchbaseLite.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27B0B7A91492B83B00A817AD /* libCouchbaseLite.a */; };
@@ -421,8 +423,6 @@
 		2797BDAA1C16625D00E5C991 /* Encoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA11C16625D00E5C991 /* Encoder.hh */; };
 		2797BDAB1C16625D00E5C991 /* Encoder+ObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDA21C16625D00E5C991 /* Encoder+ObjC.mm */; };
 		2797BDAD1C16625D00E5C991 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA31C16625D00E5C991 /* Endian.hh */; };
-		2797BDAE1C16625D00E5C991 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA41C16625D00E5C991 /* FleeceDocument.h */; };
-		2797BDAF1C16625D00E5C991 /* FleeceDocument.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDA51C16625D00E5C991 /* FleeceDocument.mm */; };
 		2797BDB11C16625D00E5C991 /* Internal.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA61C16625D00E5C991 /* Internal.hh */; };
 		2797BDBC1C16627A00E5C991 /* StringTable.cc in Sources */ = {isa = PBXBuildFile; fileRef = 2797BDB41C16627A00E5C991 /* StringTable.cc */; };
 		2797BDBE1C16627A00E5C991 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDB51C16627A00E5C991 /* StringTable.hh */; };
@@ -434,7 +434,6 @@
 		2797BDC81C16627A00E5C991 /* Writer.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDBB1C16627A00E5C991 /* Writer.hh */; };
 		2797BDCA1C16628E00E5C991 /* Encoder.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA11C16625D00E5C991 /* Encoder.hh */; };
 		2797BDCC1C16628E00E5C991 /* Endian.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA31C16625D00E5C991 /* Endian.hh */; };
-		2797BDCD1C16628E00E5C991 /* FleeceDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA41C16625D00E5C991 /* FleeceDocument.h */; };
 		2797BDCF1C16628E00E5C991 /* Internal.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDA61C16625D00E5C991 /* Internal.hh */; };
 		2797BDD11C16628E00E5C991 /* StringTable.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDB51C16627A00E5C991 /* StringTable.hh */; };
 		2797BDD31C16628E00E5C991 /* Value.hh in Headers */ = {isa = PBXBuildFile; fileRef = 2797BDB71C16627A00E5C991 /* Value.hh */; };
@@ -1350,6 +1349,8 @@
 		2740D8521A8C240500809EE0 /* GeoIndex_Test.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = GeoIndex_Test.mm; path = "../vendor/CBForest/CBForest Tests/GeoIndex_Test.mm"; sourceTree = "<group>"; };
 		27424B251C17AB5D007065D9 /* CBL_Body+Fleece.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBL_Body+Fleece.h"; sourceTree = "<group>"; };
 		27424B261C17AB5D007065D9 /* CBL_Body+Fleece.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "CBL_Body+Fleece.mm"; sourceTree = "<group>"; };
+		27424B301C17E9D9007065D9 /* CBLFleeceRevDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLFleeceRevDictionary.h; sourceTree = "<group>"; };
+		27424B311C17E9D9007065D9 /* CBLFleeceRevDictionary.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CBLFleeceRevDictionary.mm; sourceTree = "<group>"; };
 		27452B301AB0E6AA00327776 /* View_Benchmarks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = View_Benchmarks.m; sourceTree = "<group>"; };
 		27452BAD1AB1156F00327776 /* libCouchbaseLiteFat.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCouchbaseLiteFat.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		27452BB81AB1180800327776 /* CouchbaseLite.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CouchbaseLite.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1533,8 +1534,6 @@
 		2797BDA11C16625D00E5C991 /* Encoder.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Encoder.hh; path = Fleece/Encoder.hh; sourceTree = "<group>"; };
 		2797BDA21C16625D00E5C991 /* Encoder+ObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "Encoder+ObjC.mm"; path = "Fleece/Encoder+ObjC.mm"; sourceTree = "<group>"; };
 		2797BDA31C16625D00E5C991 /* Endian.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Endian.hh; path = Fleece/Endian.hh; sourceTree = "<group>"; };
-		2797BDA41C16625D00E5C991 /* FleeceDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FleeceDocument.h; path = Fleece/FleeceDocument.h; sourceTree = "<group>"; };
-		2797BDA51C16625D00E5C991 /* FleeceDocument.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = FleeceDocument.mm; path = Fleece/FleeceDocument.mm; sourceTree = "<group>"; };
 		2797BDA61C16625D00E5C991 /* Internal.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Internal.hh; path = Fleece/Internal.hh; sourceTree = "<group>"; };
 		2797BDB41C16627A00E5C991 /* StringTable.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringTable.cc; path = Fleece/StringTable.cc; sourceTree = "<group>"; };
 		2797BDB51C16627A00E5C991 /* StringTable.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = StringTable.hh; path = Fleece/StringTable.hh; sourceTree = "<group>"; };
@@ -2221,6 +2220,8 @@
 				27486F241A606C76008D94F0 /* CBLJSONValidator.m */,
 				2797BCFE1C16447100E5C991 /* CBLRevDictionary.h */,
 				2797BCFF1C16447100E5C991 /* CBLRevDictionary.mm */,
+				27424B301C17E9D9007065D9 /* CBLFleeceRevDictionary.h */,
+				27424B311C17E9D9007065D9 /* CBLFleeceRevDictionary.mm */,
 				27424B251C17AB5D007065D9 /* CBL_Body+Fleece.h */,
 				27424B261C17AB5D007065D9 /* CBL_Body+Fleece.mm */,
 			);
@@ -2513,8 +2514,6 @@
 				2797BDA11C16625D00E5C991 /* Encoder.hh */,
 				2797BDA21C16625D00E5C991 /* Encoder+ObjC.mm */,
 				2797BDA31C16625D00E5C991 /* Endian.hh */,
-				2797BDA41C16625D00E5C991 /* FleeceDocument.h */,
-				2797BDA51C16625D00E5C991 /* FleeceDocument.mm */,
 				2797BDA61C16625D00E5C991 /* Internal.hh */,
 				2797BDB41C16627A00E5C991 /* StringTable.cc */,
 				2797BDB51C16627A00E5C991 /* StringTable.hh */,
@@ -3024,6 +3023,7 @@
 				27513A431A674C9B0055DC40 /* FMDatabase.h in Headers */,
 				2711CE0314C759BD00505D55 /* CBLDatabase+Replication.h in Headers */,
 				2737A6CE1B703DD500CEF619 /* CBLAttachmentDownloader.h in Headers */,
+				27424B321C17E9D9007065D9 /* CBLFleeceRevDictionary.h in Headers */,
 				27726AAC1889835F00AE6931 /* CBLGeometry.h in Headers */,
 				2786CE621B83A4830061998D /* CBLKVOProxy.h in Headers */,
 				27513A461A674C9B0055DC40 /* FMDatabaseAdditions.h in Headers */,
@@ -3036,7 +3036,6 @@
 				27A9D67F1A661ED10074FDD2 /* CBL_ViewStorage.h in Headers */,
 				2786CE781B84FFAE0061998D /* CBL_BlobStoreWriter.h in Headers */,
 				93EBA2781B2ECEDF0006C66C /* CBLJSFunction.h in Headers */,
-				2797BDAE1C16625D00E5C991 /* FleeceDocument.h in Headers */,
 				277B5D2F1821A8380088881E /* yajl_alloc.h in Headers */,
 				270B3E241489392600E0A926 /* CBL_Server.h in Headers */,
 				272401CB1860D39B0080E082 /* CBLWebSocketChangeTracker.h in Headers */,
@@ -3188,7 +3187,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				27B945B317692E2000B2DF2D /* CBLModel_Internal.h in Headers */,
-				2797BDCD1C16628E00E5C991 /* FleeceDocument.h in Headers */,
 				275A29041649A12B00B0D8EE /* CBLAttachment.h in Headers */,
 				27B0B8051492BDE800A817AD /* CouchbaseLite.h in Headers */,
 				2797BDCC1C16628E00E5C991 /* Endian.hh in Headers */,
@@ -4071,7 +4069,6 @@
 				27821BB8148E7D6F0099B373 /* CBLRestReplicator.m in Sources */,
 				27B0B797149290AB00A817AD /* CBLChangeTracker.m in Sources */,
 				27B0B79F1492932800A817AD /* CBLBase64.m in Sources */,
-				2797BDAF1C16625D00E5C991 /* FleeceDocument.mm in Sources */,
 				2797BDC61C16627A00E5C991 /* Writer.cc in Sources */,
 				27731F001493FA3100815D67 /* CBL_BlobStore.m in Sources */,
 				279906E5149A65B8003D4338 /* CBLRemoteRequest.m in Sources */,
@@ -4177,6 +4174,7 @@
 				27B086991B38823F00D3D9D8 /* MYZip.m in Sources */,
 				277B5D371821A8380088881E /* yajl_gen.c in Sources */,
 				2797BDC41C16627A00E5C991 /* Value+ObjC.mm in Sources */,
+				27424B331C17E9D9007065D9 /* CBLFleeceRevDictionary.mm in Sources */,
 				277B5D411821A8380088881E /* yajl_version.c in Sources */,
 				277B5D391821A8380088881E /* yajl_lex.c in Sources */,
 				277B5D3C1821A8380088881E /* yajl_parser.c in Sources */,
@@ -4481,7 +4479,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				27424B241C17AAA3007065D9 /* Writer.cc in Sources */,
-				27424B1F1C17AAA3007065D9 /* FleeceDocument.mm in Sources */,
 				27424B231C17AAA3007065D9 /* Value+ObjC.mm in Sources */,
 				27424B211C17AAA3007065D9 /* Value.cc in Sources */,
 				27424B1E1C17AAA3007065D9 /* Encoder+ObjC.mm in Sources */,
@@ -4491,6 +4488,7 @@
 				27E66AE81A7307590091DA3F /* CBLForestBridge.mm in Sources */,
 				27424B291C17AB5D007065D9 /* CBL_Body+Fleece.mm in Sources */,
 				27424B221C17AAA3007065D9 /* Value+JSON.cc in Sources */,
+				27424B341C17E9D9007065D9 /* CBLFleeceRevDictionary.mm in Sources */,
 				27424B201C17AAA3007065D9 /* StringTable.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4864,6 +4862,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 				VERSIONING_SYSTEM = "apple-generic";

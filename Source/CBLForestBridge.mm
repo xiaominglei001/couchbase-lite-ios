@@ -19,7 +19,7 @@ extern "C" {
 #import "ExceptionUtils.h"
 #import "CBLSymmetricKey.h"
 #import "CBL_Body+Fleece.h"
-#import "CBLRevDictionary.h"
+#import "CBLFleeceRevDictionary.h"
 }
 
 using namespace forestdb;
@@ -134,16 +134,14 @@ static NSData* dataOfNode(const Revision* rev) {
     NSData* fleece = dataOfNode(rev);
     if (!fleece)
         return nil;
-    NSDictionary* properties = [CBL_Body objectWithFleeceData: fleece];
-    Assert(properties, @"Unable to parse doc from db");
-    NSString* revID = (NSString*)rev->revID;
-    Assert(revID);
-
     const VersionedDocument* doc = (const VersionedDocument*)rev->owner;
-    return [[CBLRevDictionary alloc] initWithDictionary: properties
-                                                  docID: (NSString*)doc->docID()
-                                                  revID: revID
-                                                deleted: rev->isDeleted()];
+    auto body =  [[CBLFleeceRevDictionary alloc] initWithFleeceData: fleece
+                                                            trusted: YES
+                                                              docID: (NSString*)doc->docID()
+                                                              revID: rev->revID.copiedNSData()
+                                                            deleted: rev->isDeleted()];
+    Assert(body, @"Unable to parse doc from db");
+    return body;
 }
 
 

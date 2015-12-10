@@ -24,7 +24,7 @@ extern "C" {
 #import "CBLSymmetricKey.h"
 #import "MYAction.h"
 #import "FleeceDocument.h"
-#import "CBLRevDictionary.h"
+#import "CBLFleeceRevDictionary.h"
 }
 #import <CBForest/CBForest.hh>
 #import <CBForest/GeoIndex.hh>
@@ -102,7 +102,7 @@ public:
             @autoreleasepool {
                 VersionedDocument vdoc(_indexes[0]->sourceStore(), cppDoc);
                 const Revision* node = vdoc.currentRevision();
-                auto body = (CBLRevDictionary*)[CBLForestBridge bodyOfNode: node];
+                auto body = (CBLFleeceRevDictionary*)[CBLForestBridge bodyOfNode: node];
                 [body _setLocalSeq: node->sequence];
 
                 if (vdoc.hasConflict()) {
@@ -557,9 +557,7 @@ static NSString* viewNames(NSArray* views) {
         if (e->value().buf) {
             // Convert from Fleece to JSON:
             auto fleeceValue = value::fromData(e->value());
-            auto json = fleeceValue->toJSON();
-            valueStr = [[NSString alloc] initWithCString: json.c_str()
-                                                encoding: NSUTF8StringEncoding];
+            valueStr = (NSString*)fleeceValue->toJSON();
         }
         [result addObject: $dict({@"key", CBLJSONString(e->key().readNSObject())},
                                  {@"value", valueStr},
@@ -613,7 +611,7 @@ static id parseRowValue(slice s) {
         return nil;
     if (s == Index::kSpecialValue)
         return s.copiedNSData();
-    id value = [FleeceDocument objectWithFleeceBytes: s.buf length: s.size trusted: YES];
+    id value = [CBLFleeceRevDictionary objectWithFleeceBytes: s.buf length: s.size trusted: YES];
     if (!value)
         Warn(@"Couldn't parse Fleece value: %@", s.uncopiedNSData());
     return value;

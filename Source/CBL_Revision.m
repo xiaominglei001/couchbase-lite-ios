@@ -18,7 +18,6 @@
 #import "CBL_Body.h"
 #import "CBJSONEncoder.h"
 #import "CBLMisc.h"
-#import "FleeceDocument.h"
 
 
 @implementation CBL_Revision

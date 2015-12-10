@@ -6,6 +6,11 @@
 //  Copyright (c) 2011-2013 Couchbase, Inc. All rights reserved.
 //
 
+#if !defined(NDEBUG) && !DEBUG
+#define NDEBUG
+#endif
+
+
 #ifdef __OBJC__
 
 #ifdef GNUSTEP
