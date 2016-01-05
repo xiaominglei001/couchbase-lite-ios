@@ -22,6 +22,7 @@
     CBLChangeTracker* _changeTracker;   // Watcher of the _changes feed
     BOOL _canBulkGet;                   // Does the server support _bulk_get requests?
     BOOL _caughtUp;                     // Have I received all current _changes entries?
+    BOOL _ignoreDeletions;              // Should I ignore deleted revs?
     CBLSequenceMap* _pendingSequences;  // Received but not yet copied into local DB
     NSMutableArray* _revsToPull;        // Queue of CBLPulledRevisions to download
     NSMutableArray* _deletedRevsToPull; // Separate lower-priority of deleted CBLPulledRevisions

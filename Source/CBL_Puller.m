@@ -135,7 +135,10 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     NSMutableDictionary* headers = $mdict({@"User-Agent", [CBLRemoteRequest userAgentHeader]});
     [headers addEntriesFromDictionary: _requestHeaders];
     _changeTracker.requestHeaders = headers;
-    
+
+    _ignoreDeletions = (_lastSequence == nil) &&
+            [$castIf(NSNumber, _options[kCBLReplicatorOption_IgnoreInitialDeletions]) boolValue];
+
     [_changeTracker start];
     if (!_changeTracker.continuous)
         [self asyncTaskStarted];
@@ -236,9 +239,13 @@ static NSString* joinQuotedEscaped(NSArray* strings);
                                 revIDs: (NSArray*)revIDs
                                deleted: (BOOL)deleted
 {
-    // Process each change from the feed:
     if (![CBLDatabase isValidDocumentID: docID])
         return;
+    if (deleted && _ignoreDeletions) {
+        LogTo(SyncVerbose, @"%@: Received #%@ %@ (deletion; ignoring)",
+              self, remoteSequenceID, docID);
+        return;
+    }
     
     self.changesTotal += revIDs.count;
     for (NSString* revID in revIDs) {
@@ -263,6 +270,7 @@ static NSString* joinQuotedEscaped(NSArray* strings);
     if (!_caughtUp) {
         LogTo(Sync, @"%@: Caught up with changes!", self);
         _caughtUp = YES;
+        _ignoreDeletions = NO;
         [self asyncTasksFinished: 1];  // balances -asyncTaskStarted in -beginReplicating
     }
 }

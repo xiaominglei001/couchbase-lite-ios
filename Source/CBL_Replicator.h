@@ -136,3 +136,4 @@ extern NSString* CBL_ReplicatorStoppedNotification;
 // Boolean; default is YES. Setting this option will have no effect and result to always 'trust' if
 // the kCBLReplicatorOption_Network option is also set.
 #define kCBLReplicatorOption_TrustReachability @"trust_reachability"
+#define kCBLReplicatorOption_IgnoreInitialDeletions @"ignoreInitialDeletions" // Boolean, default NO
