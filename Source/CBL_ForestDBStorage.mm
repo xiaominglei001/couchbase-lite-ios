@@ -94,20 +94,12 @@ static MYBackgroundMonitor *bgMonitor;
 #endif
 
 
-static void onCompactCallback(Database *db, bool compacting) {
+static void onCompactCallback(Database *, bool compacting) {
+    // This is called on a background thread and we can't actually access the Database*.
+    // This problem is resolved in a better way in 1.3; for 1.2.2 I'm just ignoring the Database*
+    // and not logging the name of the database, to at least avoid crashes.
     const char *what = (compacting ?"starting" :"finished");
-    NSString* path = [[NSString alloc] initWithCString: db->filename().c_str()
-                                              encoding: NSUTF8StringEncoding];
-    NSString* viewName = path.lastPathComponent;
-    path = path.stringByDeletingLastPathComponent;
-    NSString* dbName = path.lastPathComponent.stringByDeletingPathExtension;
-    if ([viewName isEqualToString: kDBFilename]) {
-        Log(@"Database '%@' %s compaction", dbName, what);
-    } else {
-        dbName = [dbName stringByAppendingPathComponent: viewName];
-        Log(@"View index '%@/%@' %s compaction",
-            dbName, viewName.stringByDeletingPathExtension, what);
-    }
+    Log(@"ForestDB database %s compaction", what);
 }
 
 
