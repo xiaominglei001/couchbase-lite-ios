@@ -308,7 +308,7 @@
 // Cloudant returns 401 or 403 if we send it a POST to _changes for a write-protected database.
 // (See issues #1020, #1267.)
 - (BOOL) isCloudantAuthError: (NSError*)error {
-    if (![_serverName containsString: @"CouchDB/1.0.2"])     // No kidding! (Accurate as of 5/2016)
+    if ([_serverName rangeOfString: @"CouchDB/1.0.2"].length == 0) // (Accurate as of 5/2016)
         return NO;
     return [error my_hasDomain: NSURLErrorDomain code: NSURLErrorUserAuthenticationRequired]
         || [error my_hasDomain: CBLHTTPErrorDomain code: kCBLStatusForbidden];
