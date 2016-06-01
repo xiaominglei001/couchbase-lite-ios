@@ -13,13 +13,6 @@
 #import <objc/runtime.h>
 
 
-#ifdef __IPHONE_OS_VERSION_MIN_REQUIRED
-#define USE_BLOCKS (__IPHONE_OS_VERSION_MIN_REQUIRED >= 50000)
-#else
-#define USE_BLOCKS (MAC_OS_X_VERSION_MIN_REQUIRED >= 1070)
-#endif
-
-
 DefineLogDomain(Model);
 
 
@@ -53,8 +46,6 @@ NS_INLINE BOOL isSetter(const char* name) {
     return strncmp("set", name, 3) == 0 && name[strlen(name)-1] == ':';
 }
 
-// IDEA: to speed this code up, create a map from SEL to NSString mapping selectors to their keys.
-
 // converts a getter selector to an NSString, equivalent to NSStringFromSelector().
 NS_INLINE NSString *getterKey(SEL sel) {
     return [NSString stringWithUTF8String:sel_getName(sel)];
@@ -71,109 +62,6 @@ NS_INLINE NSString *setterKey(SEL sel, BOOL upperCase) {
     buffer[length - 1] = '\0';       // and remove the ':'
     return [NSString stringWithUTF8String:buffer];
 }
-
-+ (NSString*) getterKey: (SEL)sel   {return getterKey(sel);}
-+ (NSString*) setterKey: (SEL)sel   {return setterKey(sel, NO);}
-
-
-
-#pragma mark - GENERIC ACCESSOR METHOD IMPS:
-
-
-#if USE_BLOCKS
-
-static inline void setIdProperty(CBLDynamicObject *self, NSString* property, id value) {
-    BOOL result = [self setValue: value ofProperty: property];
-    NSCAssert(result, @"Property %@.%@ is not settable", [self class], property);
-}
-
-#else
-
-static id getIdProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [self getValueOfProperty: getterKey(_cmd)];
-}
-
-static void setIdProperty(CBLDynamicObject *self, SEL _cmd, id value) {
-    NSString* property = setterKey(_cmd, NO);
-    BOOL result = [self setValue: value ofProperty: property];
-    NSCAssert(result, @"Property %@.%@ is not settable", [self class], property);
-}
-
-static int getIntProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [getIdProperty(self,_cmd) intValue];
-}
-
-static void setIntProperty(CBLDynamicObject *self, SEL _cmd, int value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithInt:value]);
-}
-
-static unsigned int getIntProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [getIdProperty(self,_cmd) unsignedIntValue];
-}
-
-static void setUnsignedIntProperty(CBLDynamicObject *self, SEL _cmd, unsigned int value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithUnsignedInt:value]);
-}
-
-static long getLongProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [getIdProperty(self,_cmd) longValue];
-}
-
-static void setLongProperty(CBLDynamicObject *self, SEL _cmd, long value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithLong:value]);
-}
-
-static unsigned long getUnsignedLongProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [getIdProperty(self,_cmd) unsignedLongValue];
-}
-
-static void setUnsignedLongProperty(CBLDynamicObject *self, SEL _cmd, unsigned long value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithUnsignedLong:value]);
-}
-
-static long long getLongProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [getIdProperty(self,_cmd) longLongValue];
-}
-
-static void setLongLongProperty(CBLDynamicObject *self, SEL _cmd, long long value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithLongLong:value]);
-}
-
-static unsigned long long getUnsignedLongProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [getIdProperty(self,_cmd) unsignedLongLongValue];
-}
-
-static void setUnsignedLongProperty(CBLDynamicObject *self, SEL _cmd, unsigned long long value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithUnsignedLongLong:value]);
-}
-
-static bool getBoolProperty(CBLDynamicObject *self, SEL _cmd) {
-    return [getIdProperty(self,_cmd) boolValue];
-}
-
-static void setBoolProperty(CBLDynamicObject *self, SEL _cmd, bool value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithBool:value]);
-}
-
-static double getDoubleProperty(CBLDynamicObject *self, SEL _cmd) {
-    id number = getIdProperty(self,_cmd);
-    return number ?[number doubleValue] :0.0;
-}
-
-static void setDoubleProperty(CBLDynamicObject *self, SEL _cmd, double value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithDouble:value]);
-}
-
-static float getFloatProperty(CBLDynamicObject *self, SEL _cmd) {
-    id number = getIdProperty(self,_cmd);
-    return number ?[number floatValue] :0.0;
-}
-
-static void setFloatProperty(CBLDynamicObject *self, SEL _cmd, float value) {
-    setIdProperty(self, _cmd, [NSNumber numberWithFloat:value]);
-}
-
-#endif // USE_BLOCKS
 
 
 #pragma mark - PROPERTY INTROSPECTION:
@@ -206,7 +94,7 @@ static void setFloatProperty(CBLDynamicObject *self, SEL _cmd, float value) {
 
 
 // Look up the encoded type of a property, and whether it's settable or readonly
-static const char* MYGetPropertyType(objc_property_t property, BOOL *outIsSettable) {
+static const char* getPropertyType(objc_property_t property, BOOL *outIsSettable) {
     *outIsSettable = YES;
     const char *result = "@";
 
@@ -234,10 +122,11 @@ static const char* MYGetPropertyType(objc_property_t property, BOOL *outIsSettab
 
 // Look up a class's property by name, and find its type and which class declared it
 BOOL CBLGetPropertyInfo(Class cls,
-                     NSString *propertyName,
-                     BOOL setter,
-                     Class *declaredInClass,
-                     const char* *propertyType) {
+                        NSString *propertyName,
+                        BOOL setter,
+                        Class *declaredInClass,
+                        const char* *propertyType)
+{
     // Find the property declaration:
     const char *name = [propertyName UTF8String];
     objc_property_t property = class_getProperty(cls, name);
@@ -258,7 +147,7 @@ BOOL CBLGetPropertyInfo(Class cls,
     
     // Get the property's type:
     BOOL isSettable;
-    *propertyType = MYGetPropertyType(property, &isSettable);
+    *propertyType = getPropertyType(property, &isSettable);
     if (setter && !isSettable) {
         // Asked for a setter, but property is readonly:
         *propertyType = NULL;
@@ -268,7 +157,7 @@ BOOL CBLGetPropertyInfo(Class cls,
 }
 
 
-// subroutine for MY___FromType. Invokes callback first with a module-qualified name (if any),
+// subroutine for CBL___FromType. Invokes callback first with a module-qualified name (if any),
 // then if that returns nil, with the base name. Necessary because the class name in the metadata
 // doesn't include the class's module, so we have to guess it. (rdar://21368142)
 static id lookUp(const char* baseName, Class relativeToClass, id (^callback)(const char*)) {
@@ -329,6 +218,12 @@ Protocol* CBLProtocolFromType(const char* propertyType, Class relativeToClass) {
 }
 
 
+static inline void setIdProperty(CBLDynamicObject *self, NSString* property, id value) {
+    BOOL result = [self setValue: value ofProperty: property];
+    NSCAssert(result, @"Property %@.%@ is not settable", [self class], property);
+}
+
+
 + (Class) classOfProperty: (NSString*)propertyName {
     Class declaredInClass;
     const char* propertyType;
@@ -338,49 +233,33 @@ Protocol* CBLProtocolFromType(const char* propertyType, Class relativeToClass) {
 }
 
 
-+ (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-#if USE_BLOCKS
-    return imp_implementationWithBlock(^id(CBLDynamicObject* receiver) {
++ (id) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
+    return ^id(CBLDynamicObject* receiver) {
         return [receiver getValueOfProperty: property];
-    });
-#else
-    return (IMP)getIdProperty;
-#endif
+    };
 }
 
-+ (IMP) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-#if USE_BLOCKS
-    return imp_implementationWithBlock(^(CBLDynamicObject* receiver, id value) {
++ (id) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
+    return ^(CBLDynamicObject* receiver, id value) {
         setIdProperty(receiver, property, value);
-    });
-#else
-    return (IMP)setIdProperty;
-#endif
+    };
 }
 
 
-+ (IMP) impForGetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol {
-#if USE_BLOCKS
-    return imp_implementationWithBlock(^id(CBLDynamicObject* receiver) {
++ (id) impForGetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol {
+    return ^id(CBLDynamicObject* receiver) {
         return [receiver getValueOfProperty: property];
-    });
-#else
-    return (IMP)getIdProperty;
-#endif
+    };
 }
 
-+ (IMP) impForSetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol {
-#if USE_BLOCKS
-    return imp_implementationWithBlock(^(CBLDynamicObject* receiver, id value) {
++ (id) impForSetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol {
+    return ^(CBLDynamicObject* receiver, id value) {
         setIdProperty(receiver, property, value);
-    });
-#else
-    return (IMP)setIdProperty;
-#endif
+    };
 }
 
 
-+ (IMP) impForGetterOfProperty: (NSString*)property ofType: (const char*)propertyType {
++ (id) impForGetterOfProperty: (NSString*)property ofType: (const char*)propertyType {
     switch (propertyType[0]) {
         case _C_ID: {
             Class klass = CBLClassFromType(propertyType, self);
@@ -391,90 +270,54 @@ Protocol* CBLProtocolFromType(const char* propertyType, Class relativeToClass) {
                 return [self impForGetterOfProperty: property ofProtocol: proto];
             Warn(@"CBLDynamicObject: %@.%@ has type %s which is not a known class or protocol",
                  self, property, propertyType);
-            return NULL;
+            return nil;
         }
         case _C_INT:
         case _C_SHT:
         case _C_USHT:
         case _C_CHR:
         case _C_UCHR:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^int(CBLDynamicObject* receiver) {
+            return ^int(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] intValue];
-            });
-#else
-            return (IMP)getIntProperty;
-#endif
+            };
         case _C_UINT:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^unsigned int(CBLDynamicObject* receiver) {
+            return ^unsigned int(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] unsignedIntValue];
-            });
-#else
-            return (IMP)getUnsignedIntProperty;
-#endif
+            };
         case _C_LNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^long(CBLDynamicObject* receiver) {
+            return ^long(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] longValue];
-            });
-#else
-            return (IMP)getLongProperty;
-#endif
+            };
         case _C_ULNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^unsigned long(CBLDynamicObject* receiver) {
+            return ^unsigned long(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] unsignedLongValue];
-            });
-#else
-            return (IMP)getUnsignedLongProperty;
-#endif
+            };
         case _C_LNG_LNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^long long(CBLDynamicObject* receiver) {
+            return ^long long(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] longLongValue];
-            });
-#else
-            return (IMP)getLongLongProperty;
-#endif
+            };
         case _C_ULNG_LNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^unsigned long long(CBLDynamicObject* receiver) {
+            return ^unsigned long long(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] unsignedLongLongValue];
-            });
-#else
-            return (IMP)getUnsignedLongLongProperty;
-#endif
+            };
         case _C_BOOL:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^bool(CBLDynamicObject* receiver) {
+            return ^bool(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] boolValue];
-            });
-#else
-            return (IMP)getBoolProperty;
-#endif
+            };
         case _C_FLT:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^float(CBLDynamicObject* receiver) {
+            return ^float(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] floatValue];
-            });
-#else
-            return (IMP)getFloatProperty;
-#endif
+            };
         case _C_DBL:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^double(CBLDynamicObject* receiver) {
+            return ^double(CBLDynamicObject* receiver) {
                 return [[receiver getValueOfProperty: property] doubleValue];
-            });
-#else
-            return (IMP)getDoubleProperty;
-#endif
+            };
         default:
-            return NULL;
+            return nil;
     }
 }
 
-+ (IMP) impForSetterOfProperty: (NSString*)property ofType: (const char*)propertyType {
++ (id) impForSetterOfProperty: (NSString*)property ofType: (const char*)propertyType {
     switch (propertyType[0]) {
         case _C_ID: {
             Class klass = CBLClassFromType(propertyType, self);
@@ -485,86 +328,50 @@ Protocol* CBLProtocolFromType(const char* propertyType, Class relativeToClass) {
                 return [self impForSetterOfProperty: property ofProtocol: proto];
             Warn(@"CBLDynamicObject: %@.%@ has type %s which is not a known class or protocol",
                  self, property, propertyType);
-            return NULL;
+            return nil;
         }
         case _C_INT:
         case _C_SHT:
         case _C_USHT:
         case _C_CHR:            // Note that "BOOL" is a typedef so it compiles to 'char'
         case _C_UCHR:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, int value) {
+            return ^(CBLDynamicObject* receiver, int value) {
                 setIdProperty(receiver, property, [NSNumber numberWithInt: value]);
-            });
-#else
-            return (IMP)setIntProperty;
-#endif
+            };
         case _C_UINT:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, unsigned int value) {
+            return ^(CBLDynamicObject* receiver, unsigned int value) {
                 setIdProperty(receiver, property, [NSNumber numberWithUnsignedInt: value]);
-            });
-#else
-            return (IMP)setUnsignedIntProperty;
-#endif
+            };
         case _C_LNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, long value) {
+            return ^(CBLDynamicObject* receiver, long value) {
                 setIdProperty(receiver, property, [NSNumber numberWithLong: value]);
-            });
-#else
-            return (IMP)setLongProperty;
-#endif
+            };
         case _C_ULNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, unsigned long value) {
+            return ^(CBLDynamicObject* receiver, unsigned long value) {
                 setIdProperty(receiver, property, [NSNumber numberWithUnsignedLong: value]);
-            });
-#else
-            return (IMP)setUnsignedLongProperty;
-#endif
+            };
         case _C_LNG_LNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, long long value) {
+            return ^(CBLDynamicObject* receiver, long long value) {
                 setIdProperty(receiver, property, [NSNumber numberWithLongLong: value]);
-            });
-#else
-            return (IMP)setLongLongProperty;
-#endif
+            };
         case _C_ULNG_LNG:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, unsigned long long value) {
+            return ^(CBLDynamicObject* receiver, unsigned long long value) {
                 setIdProperty(receiver, property, [NSNumber numberWithUnsignedLongLong: value]);
-            });
-#else
-            return (IMP)setUnsignedLongLongProperty;
-#endif
+            };
         case _C_BOOL:           // This is the true native C99/C++ "bool" type
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, bool value) {
+            return ^(CBLDynamicObject* receiver, bool value) {
                 setIdProperty(receiver, property, [NSNumber numberWithBool: value]);
-            });
-#else
-            return (IMP)setBoolProperty;
-#endif
+            };
         case _C_FLT:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, float value) {
+            return ^(CBLDynamicObject* receiver, float value) {
                 setIdProperty(receiver, property, [NSNumber numberWithFloat: value]);
-            });
-#else
-            return (IMP)setFloatProperty;
-#endif
+            };
         case _C_DBL:
-#if USE_BLOCKS
-            return imp_implementationWithBlock(^(CBLDynamicObject* receiver, double value) {
+            return ^(CBLDynamicObject* receiver, double value) {
                 setIdProperty(receiver, property, [NSNumber numberWithDouble: value]);
-            });
-#else
-            return (IMP)setDoubleProperty;
-#endif
+            };
         default:
-            return NULL;
+            return nil;
     }
 }
 
@@ -577,7 +384,7 @@ Protocol* CBLProtocolFromType(const char* propertyType, Class relativeToClass) {
     Class declaredInClass;
     const char *propertyType = NULL;
     char signature[5];
-    IMP accessor = NULL;
+    id accessor = nil;
     
     if (isSetter(name)) {
         // choose an appropriately typed generic setter function.
@@ -605,7 +412,7 @@ Protocol* CBLProtocolFromType(const char* propertyType, Class relativeToClass) {
     
     if (accessor) {
         LogVerbose(Model, @"Creating dynamic accessor method -[%@ %s]", declaredInClass, name);
-        class_addMethod(declaredInClass, sel, accessor, signature);
+        class_addMethod(declaredInClass, sel, imp_implementationWithBlock(accessor), signature);
         return YES;
     }
     

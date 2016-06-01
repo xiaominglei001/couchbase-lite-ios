@@ -9,7 +9,9 @@
 #import "CBLDynamicObject.h"
 
 
-/** Base interface for use with the CBLInterface class. */
+/** Base interface for use with the CBLInterface class.
+    Extend this interface and define your own properties, then use +[CBLInterface accessObject...]
+    methods to create instances of your interface that expose values from a dictionary. */
 @protocol CBLInterface
 
 // Supports subscript-style access to arbitrary named properties:

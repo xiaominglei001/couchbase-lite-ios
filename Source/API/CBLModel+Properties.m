@@ -198,9 +198,7 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
 
 
 // Generates a method for a property getter.
-+ (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-    id (^impBlock)(CBLModel*) = nil;
-    
++ (id) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     if (propertyClass == Nil || propertyClass == [NSObject class]) {
         // Untyped
         return [super impForGetterOfProperty: property ofClass: propertyClass];
@@ -208,14 +206,14 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                || propertyClass == [NSNumber class]
                || propertyClass == [NSDictionary class]) {
         // String, number, dictionary: do some type-checking:
-        impBlock = ^id(CBLModel* receiver) {
+        return ^id(CBLModel* receiver) {
             return [receiver getValueOfProperty: property ofClass: propertyClass];
         };
     } else if (propertyClass == [NSArray class]) {
         Class itemClass = [self itemClassForArrayProperty: property];
         if (itemClass == nil) {
             // Untyped array:
-            impBlock = ^id(CBLModel* receiver) {
+            return ^id(CBLModel* receiver) {
                 return [receiver getValueOfProperty: property ofClass: propertyClass];
             };
         } else if ([itemClass isSubclassOfClass: [CBLModel class]]) {
@@ -228,13 +226,13 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
                 Assert([itemClass hasRelation: inverse],
                        @"%@.%@ specified as inverse of %@.%@, which is not a valid relation",
                        self, property, itemClass, inverse);
-                impBlock = ^id(CBLModel* receiver) {
+                return ^id(CBLModel* receiver) {
                     return [receiver findInverseOfRelation: inverse fromClass: itemClass];
                 };
             } else {
                 // This is an explicit array of docIDs:
                 LogTo(Model, @"%@.%@ is an explicit array of %@", self, property, itemClass);
-                impBlock = ^id(CBLModel* receiver) {
+                return ^id(CBLModel* receiver) {
                     return [receiver getArrayRelationProperty: property withModelClass: itemClass];
                 };
             }
@@ -243,37 +241,35 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             ValueConverter itemConverter = valueConverterToClass(itemClass);
             if (itemConverter) {
                 ValueConverter converter = arrayValueConverter(itemConverter);
-                impBlock = ^id(CBLModel* receiver) {
+                return ^id(CBLModel* receiver) {
                     return [receiver getProperty: property withConverter: converter];
                 };
             }
         }
     } else if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
         // Model-valued property:
-        impBlock = ^id(CBLModel* receiver) {
+        return ^id(CBLModel* receiver) {
             return [receiver getModelProperty: property];
         };
     } else {
         // Other property type -- use a ValueConverter if we have one:
         ValueConverter converter = valueConverterToClass(propertyClass);
         if (converter) {
-            impBlock = ^id(CBLModel* receiver) {
+            return ^id(CBLModel* receiver) {
                 return [receiver getProperty: property withConverter: converter];
             };
         }
     }
 
-    return impBlock ? imp_implementationWithBlock(impBlock) : NULL;
+    return nil;
 }
 
 
 // Generates a method for a property setter.
-+ (IMP) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-    void (^impBlock)(CBLModel*,id) = nil;
-
++ (id) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     if ([propertyClass isSubclassOfClass: [CBLModel class]]) {
         // Model-valued property:
-        impBlock = ^(CBLModel* receiver, CBLModel* value) {
+        return ^(CBLModel* receiver, CBLModel* value) {
             [receiver setModel: value forProperty: property];
         };
     } else if ([propertyClass isSubclassOfClass: [NSArray class]]) {
@@ -285,11 +281,11 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             // Model-valued array (to-many relation):
             Assert(![self inverseRelationForArrayProperty: property],
                    @"Inverse relation %@.%@ is not settable", self, property);
-            impBlock = ^(CBLModel* receiver, NSArray* value) {
+            return ^(CBLModel* receiver, NSArray* value) {
                 [receiver setArray: value forProperty: property ofModelClass: itemClass];
             };
         } else if ([itemClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
-            impBlock = ^(CBLModel* receiver, NSArray* value) {
+            return ^(CBLModel* receiver, NSArray* value) {
                 __weak CBLModel* weakSelf = receiver;
                 for (id<CBLJSONEncoding> subValue in value) {
                     if ([subValue respondsToSelector: @selector(setOnMutate:)]) {
@@ -302,12 +298,12 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
             };
         } else {
             // Scalar-valued array:
-            impBlock = ^(CBLModel* receiver, NSArray* value) {
+            return ^(CBLModel* receiver, NSArray* value) {
                 [receiver setValue: value ofProperty: property];
             };
         }
     } else if ([propertyClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
-        impBlock = ^(CBLModel* receiver, id<CBLJSONEncoding> value) {
+        return ^(CBLModel* receiver, id<CBLJSONEncoding> value) {
             if ([value respondsToSelector: @selector(setOnMutate:)]) {
                 __weak CBLModel* weakSelf = receiver;
                 [value setOnMutate: ^{
@@ -319,8 +315,6 @@ static ValueConverter arrayValueConverter(ValueConverter itemConverter) {
     } else {
         return [super impForSetterOfProperty: property ofClass: propertyClass];
     }
-
-    return impBlock ? imp_implementationWithBlock(impBlock) : NULL;
 }
 
 

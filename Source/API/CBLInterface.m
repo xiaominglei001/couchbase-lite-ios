@@ -193,9 +193,7 @@ static void forEachParent(Protocol* protocol, BOOL (^block)(Protocol* parent)) {
 
 
 // Generates a method for a property getter.
-+ (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-    id (^impBlock)(CBLInterface*) = nil;
-    
++ (id) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     if (propertyClass == Nil || propertyClass == [NSObject class]) {
         // Untyped
         return [super impForGetterOfProperty: property ofClass: propertyClass];
@@ -203,24 +201,22 @@ static void forEachParent(Protocol* protocol, BOOL (^block)(Protocol* parent)) {
                || propertyClass == [NSNumber class]
                || propertyClass == [NSDictionary class]) {
         // String, number, dictionary: do some type-checking:
-        impBlock = ^id(CBLInterface* receiver) {
+        return ^id(CBLInterface* receiver) {
             return [receiver getValueOfProperty: property ofClass: propertyClass];
         };
     } else if (propertyClass == [NSArray class]) {
         Class itemClass = [self itemClassForArrayProperty: property];
         if (itemClass == nil) {
             // Untyped array:
-            impBlock = ^id(CBLInterface* receiver) {
+            return ^id(CBLInterface* receiver) {
                 return [receiver getValueOfProperty: property ofClass: propertyClass];
             };
         } else {
             // Typed array of scalar class:
             ValueConverter itemConverter = CBLValueConverterToClass(itemClass);
             if (itemConverter) {
-                impBlock = ^id(CBLInterface* receiver) {
-                    return [$castIf(NSArray, receiver[property]) my_map: ^id(id value) {
-                        return itemConverter(value);
-                    }];
+                return ^id(CBLInterface* receiver) {
+                    return [$castIf(NSArray, receiver[property]) my_map: itemConverter];
                 };
             }
         }
@@ -228,20 +224,20 @@ static void forEachParent(Protocol* protocol, BOOL (^block)(Protocol* parent)) {
         // Other property type -- use a ValueConverter if we have one:
         ValueConverter converter = CBLValueConverterToClass(propertyClass);
         if (converter) {
-            impBlock = ^id(CBLInterface* receiver) {
+            return ^id(CBLInterface* receiver) {
                 return converter(receiver[property]);
             };
         }
     }
 
-    return impBlock ? imp_implementationWithBlock(impBlock) : NULL;
+    return [super impForGetterOfProperty: property ofClass: propertyClass];
 }
 
-// Generates a method for a property getter.
-+ (IMP) impForGetterOfProperty: (NSString*)property ofProtocol:(Protocol *)propertyProtocol {
-    id (^impBlock)(CBLInterface*) = nil;
+// Generates a method for a protocol-valued property getter.
++ (id) impForGetterOfProperty: (NSString*)property ofProtocol:(Protocol *)propertyProtocol {
     if (protocol_conformsToProtocol(propertyProtocol, @protocol(CBLInterface))) {
-        impBlock = ^id(CBLInterface* receiver) {
+        return ^id(CBLInterface* receiver) {
+            // CBLInterface-valued property:
             NSDictionary* value = [receiver getValueOfProperty: property];
             if (![value isKindOfClass: [NSDictionary class]])
                 return nil;
@@ -252,17 +248,15 @@ static void forEachParent(Protocol* protocol, BOOL (^block)(Protocol* parent)) {
                 return [CBLInterface accessObject: value throughProtocol: propertyProtocol];
         };
     }
-    return impBlock ? imp_implementationWithBlock(impBlock) : NULL;
+    return [super impForGetterOfProperty: property ofProtocol: propertyProtocol];
 }
 
 
 // Generates a method for a property setter.
-+ (IMP) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
-    void (^impBlock)(CBLInterface*,id) = nil;
-
++ (id) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass {
     if ([propertyClass isSubclassOfClass: [CBLInterface class]]) {
-        // Model-valued property:
-        impBlock = ^(CBLInterface* receiver, CBLInterface* value) {
+        // CBLInterface-valued property:
+        return ^(CBLInterface* receiver, CBLInterface* value) {
             [receiver setValue: value.$allProperties forKey: property];
         };
     } else if ([propertyClass isSubclassOfClass: [NSArray class]]) {
@@ -271,15 +265,15 @@ static void forEachParent(Protocol* protocol, BOOL (^block)(Protocol* parent)) {
             // Untyped array:
             return [super impForSetterOfProperty: property ofClass: propertyClass];
         } else if ([itemClass isSubclassOfClass: [CBLInterface class]]) {
-            // Model-valued array (to-many relation):
-            impBlock = ^(CBLInterface* receiver, NSArray* value) {
+            // CBLInterface-valued array (to-many relation):
+            return ^(CBLInterface* receiver, NSArray* value) {
                 value = [value my_map:^id(CBLInterface* obj) {
                     return obj.$allProperties;
                 }];
                 [receiver setValue: value ofProperty: property];
             };
         } else if ([itemClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
-            impBlock = ^(CBLInterface* receiver, NSArray* value) {
+            return ^(CBLInterface* receiver, NSArray* value) {
                 value = [value my_map:^id(id<CBLJSONEncoding> obj) {
                     return [obj encodeAsJSON];
                 }];
@@ -287,36 +281,35 @@ static void forEachParent(Protocol* protocol, BOOL (^block)(Protocol* parent)) {
             };
         } else {
             // Scalar-valued array:
-            impBlock = ^(CBLInterface* receiver, NSArray* value) {
+            return ^(CBLInterface* receiver, NSArray* value) {
                 [receiver setValue: value ofProperty: property];
             };
         }
     } else if ([propertyClass conformsToProtocol: @protocol(CBLJSONEncoding)]) {
-        impBlock = ^(CBLInterface* receiver, id<CBLJSONEncoding> value) {
+        return ^(CBLInterface* receiver, id<CBLJSONEncoding> value) {
             [receiver setValue: [value encodeAsJSON] ofProperty: property];
         };
     } else {
         // Other property type -- use a ValueConverter if we have one:
         ValueConverter converter = CBLValueConverterFromClass(propertyClass);
         if (converter) {
-            impBlock = ^(CBLInterface* receiver, id value) {
+            return ^(CBLInterface* receiver, id value) {
                 [receiver setValue: converter(value) ofProperty: property];
             };
         }
     }
-
-    return impBlock ? imp_implementationWithBlock(impBlock) : NULL;
+    return [super impForSetterOfProperty: property ofClass: propertyClass];
 }
 
-// Generates a method for a property setter.
-+ (IMP) impForSetterOfProperty: (NSString*)property ofProtocol:(Protocol *)propertyProtocol {
-    void (^impBlock)(CBLInterface*,id) = nil;
+// Generates a method for a protocol-valued property setter.
++ (id) impForSetterOfProperty: (NSString*)property ofProtocol:(Protocol *)propertyProtocol {
     if (protocol_conformsToProtocol(propertyProtocol, @protocol(CBLInterface))) {
-        impBlock = ^void(CBLInterface* receiver, id<CBLInterface> value) {
+        // CBLInterface-valued property:
+        return ^void(CBLInterface* receiver, id<CBLInterface> value) {
             [receiver setValue: value.$allProperties ofProperty: property];
         };
     }
-    return impBlock ? imp_implementationWithBlock(impBlock) : NULL;
+    return [super impForSetterOfProperty: property ofProtocol: propertyProtocol];
 }
 
 

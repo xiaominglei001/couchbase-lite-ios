@@ -36,17 +36,15 @@
     Returns nil if the property doesn't exist, or if its type isn't an object pointer or is 'id'. */
 + (Class) classOfProperty: (NSString*)propertyName;
 
-+ (NSString*) getterKey: (SEL)sel;
-+ (NSString*) setterKey: (SEL)sel;
 
 // ADVANCED STUFF FOR SUBCLASSES TO OVERRIDE:
 
-+ (IMP) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass;
-+ (IMP) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass;
-+ (IMP) impForGetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol;
-+ (IMP) impForSetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol;
-+ (IMP) impForGetterOfProperty: (NSString*)property ofType: (const char*)propertyType;
-+ (IMP) impForSetterOfProperty: (NSString*)property ofType: (const char*)propertyType;
++ (id) impForGetterOfProperty: (NSString*)property ofClass: (Class)propertyClass;
++ (id) impForSetterOfProperty: (NSString*)property ofClass: (Class)propertyClass;
++ (id) impForGetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol;
++ (id) impForSetterOfProperty: (NSString*)property ofProtocol: (Protocol*)propertyProtocol;
++ (id) impForGetterOfProperty: (NSString*)property ofType: (const char*)propertyType;
++ (id) impForSetterOfProperty: (NSString*)property ofType: (const char*)propertyType;
 
 @end
 
@@ -57,10 +55,10 @@
     and the property string part of the property attributes string.
  */
 BOOL CBLGetPropertyInfo(Class cls,
-                       NSString *propertyName,
-                       BOOL setter,
-                       Class *declaredInClass,
-                       const char* *propertyType);
+                        NSString *propertyName,
+                        BOOL setter,
+                        Class *declaredInClass,
+                        const char* *propertyType);
 
 
 /** Given an Objective-C property type string, returns the property type as a Class object, 
