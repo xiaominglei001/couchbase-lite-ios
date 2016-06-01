@@ -28,6 +28,8 @@
     Returns YES without doing anything, if no changes have been made. */
 - (BOOL) save: (NSError**)outError;
 
+@property (nonatomic) BOOL autosaves;
+
 /** Persistent "type" property */
 @property (copy) NSString* documentType;
 

@@ -38,7 +38,7 @@
 
 - (CBLNuModel*) existingModelWithDocumentID: (NSString*)docID error: (NSError**)outError {
     CBLNuModel* model;
-    model = [self.nuModelFactory existingModelWithDocumentID: docID];
+    model = [self.nuModelFactory availableModelWithDocumentID: docID];
     if (model)
         return model;
 
@@ -59,7 +59,7 @@
         CBLStatusToOutNSError(kCBLStatusUnsupportedType, outError);
         return nil;
     }
-    return [_nuFactory modelWithDocumentID: docID ofClass: klass asFault:NO error:outError];
+    return [_nuFactory modelWithDocumentID: docID ofClass: klass readProperties:YES error:outError];
 }
 
 - (void) addNuModel: (CBLNuModel*)model {
@@ -75,7 +75,7 @@
 }
 
 - (void) _revisionAdded:(CBLDatabaseChange *)change notify:(BOOL)notify {
-    CBLNuModel* model = [_nuFactory existingModelWithDocumentID: change.documentID];
+    CBLNuModel* model = [_nuFactory availableModelWithDocumentID: change.documentID];
     if (!model || model.isFault)
         return;
     CBL_RevID* revID = change.winningRevisionID;

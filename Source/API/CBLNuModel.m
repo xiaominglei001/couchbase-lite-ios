@@ -28,7 +28,7 @@
 
 
 @synthesize factory=_factory, documentID=_documentID, revID=_revID, deleted=_deleted,
-            isNew=_isNew;
+            isNew=_isNew, autosaves=_autosaves;
 
 CBLSynthesizeAs(documentType, type);
 
@@ -121,7 +121,7 @@ CBLSynthesizeAs(documentType, type);
                 return nil;
             return [_factory modelWithDocumentID: rawValue
                                          ofClass: propertyClass
-                                         asFault: YES
+                                  readProperties: NO
                                            error: nil];
         }
     }

@@ -300,7 +300,7 @@ static NSDictionary* dirtyProperties(CBLObject* m) {
     NSError* error;
     TestNuModel* doc1 = (TestNuModel*) [factory modelWithDocumentID: @"doc1"
                                                             ofClass: [TestNuModel class]
-                                                            asFault: NO
+                                                     readProperties: YES
                                                               error: &error];
     Assert(doc1);
     Assert([doc1 isKindOfClass: [TestNuModel class]]);

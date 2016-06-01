@@ -64,7 +64,7 @@
 
 - (CBLNuModel*) modelWithDocumentID: (NSString*)documentID
                             ofClass: (Class)ofClass
-                            asFault: (BOOL)asFault
+                     readProperties: (BOOL)readProperties
                               error: (NSError**)outError
 {
     CBLNuModel* model = [_cache resourceWithCacheKey: documentID];
@@ -72,14 +72,14 @@
         model = [[ofClass alloc] initWithFactory: self documentID: documentID];
         if (!model)
             return nil;
-        if (asFault) {
-            [_cache addResource: model];
-            [model turnIntoFault];
-        } else {
+        if (readProperties) {
             if (![self readPropertiesOfModel: model error: outError])
                 return nil;
             [_cache addResource: model];
             [model awakeFromFetch];
+        } else {
+            [_cache addResource: model];
+            [model turnIntoFault];
         }
     }
     Assert(!ofClass || model.isFault || [model isKindOfClass: ofClass],
@@ -89,7 +89,7 @@
 }
 
 
-- (CBLNuModel*) existingModelWithDocumentID: (NSString*)documentID {
+- (CBLNuModel*) availableModelWithDocumentID: (NSString*)documentID {
     return [_cache resourceWithCacheKey: documentID];
 }
 
@@ -103,16 +103,28 @@
 
 
 - (BOOL) saveAllModels: (NSError**)outError {
+    if (_unsavedModels.count == 0)
+        return YES;
     id<CBLNuModelFactoryDelegate> delegate = _delegate;
     Assert(delegate);
-    return [delegate savePropertiesOfModels: _unsavedModels error: outError];
+    return [delegate savePropertiesOfModels: [_unsavedModels copy] error: outError];
 }
 
 - (BOOL) autosaveAllModels: (NSError**)outError {
+    NSMutableSet* autosaveModels = nil;
+    for (CBLNuModel* model in _unsavedModels) {
+        if (model.autosaves) {
+            if (!autosaveModels)
+                autosaveModels = [[NSMutableSet alloc] initWithCapacity: _unsavedModels.count];
+            [autosaveModels addObject: model];
+        }
+    }
+    if (!autosaveModels)
+        return YES;
+
     id<CBLNuModelFactoryDelegate> delegate = _delegate;
     Assert(delegate);
-    return [delegate savePropertiesOfModels: _unsavedModels error: outError];
-    //FIX: This should filter by models that have autosave enabled
+    return [delegate savePropertiesOfModels: autosaveModels error: outError];
 }
 
 - (BOOL) readPropertiesOfModel: (CBLNuModel*)model error: (NSError**)error {
