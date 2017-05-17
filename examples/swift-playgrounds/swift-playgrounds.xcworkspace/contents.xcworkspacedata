@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:Carthage/Checkouts/couchbase-lite-ios/CouchbaseLite.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:api-walkthrough.playground">
+   </FileRef>
+   <FileRef
+      location = "group:query-and-fts.playground">
+   </FileRef>
+</Workspace>
