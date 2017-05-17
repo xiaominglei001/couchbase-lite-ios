@@ -73,7 +73,6 @@ newTask.toDictionary()
  */
 newTask.set("Chocolate croissants", forKey: "name")
 try database.save(newTask)
-
 /*:
  - Note:
  Need example with ArrayObject, DictObjct, Fragment API, SwiftyJSON.
@@ -182,7 +181,6 @@ newTask.getDate("createdAt")
  - Experiment:
  Use the `getBlob()` type accessor to display the image in the playground as a `UIImage`.
  */
-
 if let taskBlob = newTask.getBlob("image") {
     UIImage(data: taskBlob.content!)
 }
