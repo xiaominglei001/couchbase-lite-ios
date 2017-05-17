@@ -30,7 +30,7 @@ for (index, row) in database.allDocuments.enumerated() {
 */
 let faaQuery = Query
     .select()
-    .from(DataSource.database(database!))
+    .from(DataSource.database(database))
     .where(Expression.property("faa").equalTo("SfO".uppercased()))
 for row in try! faaQuery.run() {
 //    print("faaQuery :: \(row.document.properties!["airportname"]!)")
@@ -121,7 +121,6 @@ for row in try! startsWithQuery.run() {
  - Experiment:
  Modify the query above to order the results by the `airportname` value.
 */
-
 /*:
  ## Data aggregation
  - Is this supported in the cross platform Query API?

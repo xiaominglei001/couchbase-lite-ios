@@ -9,8 +9,10 @@ import PlaygroundSupport
 let documentsDirectory = playgroundSharedDataDirectory.resolvingSymlinksInPath()
 /*:
  ## Getting Started
- The pre-built database from the 1.x online tutorial can be used in this playground. Run the following steps to install it.
+ Run the following steps to install a pre-built database and start using the 2.0 API.
  1. Download [todo.zip](https://cl.ly/3G453b0T1M1q/todo.zip)
+    - 1.x pre-built database with a single list called **Groceries**.
+    ![](groceries.png)
  2. Create the directory `~/Documents/Shared Playground Data`
  3. Unzip the downloaded file and move `todo.cblite2` to the playground data folder.
  ## Creating a Database
@@ -35,7 +37,7 @@ let database = try Database(name: "todo", options: options)
  Iterate over all the documents in the database (print the `id` and `type` properties). You should see that there are `task` and `task-list` documents already.
 */
 for (index, row) in database.allDocuments.enumerated() {
-//    let string = "id \(row.id), type \(row.getString("type"))"
+    let string = "id \(row.id), type \(row.getString("type"))"
 }
 /*:
  ## Create Document
@@ -46,14 +48,15 @@ for (index, row) in database.allDocuments.enumerated() {
  - `Document` initializers to create a new Document.
 */
 let dict: [String: Any] = ["type": "task-list",
-                           "owner": "todo"]
-let movieList = Document("movie.123", dictionary: dict)
-try database.save(movieList)
+                           "owner": "todo",
+                           "createdAt": Date()]
+let newTask = Document(dictionary: dict)
+try database.save(newTask)
 /*:
  - Experiment:
  Print the properties of the `movieList` document.
 */
-movieList.toDictionary()
+newTask.toDictionary()
 /*:
  ## Update Document
  - `Document` properties are now mutable.
@@ -68,15 +71,18 @@ movieList.toDictionary()
  - Experiment:
  Add the missing `name` field to the `movieList` document.
  */
-movieList.set("Movie", forKey: "name")
-try database.save(movieList)
-movieList.toDictionary()
-// Changing a nested property: Dictionary API in DB7 (can also be done in the Fragment API - similar to SwiftyJSON)
+newTask.set("Chocolate croissants", forKey: "name")
+try database.save(newTask)
+
+/*:
+ - Note:
+ Need example with ArrayObject, DictObjct, Fragment API, SwiftyJSON.
+*/
 /*:
  - Experiment:
  Verify that the property was successfully modified.
 */
-movieList.getString("name")
+newTask.toDictionary()
 /*:
  ## Threading model
  - Same threading model across platforms.
@@ -91,12 +97,11 @@ movieList.getString("name")
 */
 var list1 = database.getDocument("todo.123")
 var list2 = database.getDocument("todo.123")
-// re-write this closure to be the more descriptive form
-withUnsafePointer(to: &list1) {
-    $0
+withUnsafeBytes(of: &list1) { (bufferPointer) in
+    bufferPointer.baseAddress
 }
-withUnsafePointer(to: &list2) {
-    $0
+withUnsafeBytes(of: &list2) { (bufferPointer) in
+    bufferPointer.baseAddress
 }
 /*:
  ## Index
@@ -107,8 +112,6 @@ withUnsafePointer(to: &list2) {
  ### 2.0 API
  - It will speed up queries that test that property.
  - Creating an index is optional.
- - To see if a query uses an index, call the `explain()` method.
- - With an index, the query will run a binary search instead of a linear scan.
 */
 try database.createIndex(["type"])
 /*:
@@ -117,6 +120,9 @@ try database.createIndex(["type"])
  - A Query is instantiated with the `createQuery()` method.
  - Query options such as `limit`, `descending` are set on the query object.
  ### 2.0 API
+ - Unified cross-platform query API.
+ - To see if a query uses an index, call the `explain()` method.
+ - With an index, the query will run a binary search instead of a linear scan.
 */
 let typeQuery = Query
              .select()
@@ -156,13 +162,13 @@ let imageData = UIImageJPEGRepresentation(painAuChocolat, 1)!
  Persist the `imageData` value as a blob name `image` with a content-type of `image/jpg`.
 */
 let blob = Blob(contentType: "image/jpg", data: imageData)
-movieList.set(blob, forKey: "image")
-try database.save(movieList)
+newTask.set(blob, forKey: "image")
+try database.save(newTask)
 /*:
  - Experiment:
- Print the properties of the `movieList` document.
+ Print the properties of the `newTask` document.
  */
-movieList.toDictionary()
+newTask.toDictionary()
 /*:
  ## Typed accessors
  ### 1.x API
@@ -170,22 +176,14 @@ movieList.toDictionary()
  ### 2.0 API
  - Typed accessors provided for all JSON types and `Blob`.
 */
-// are attachments upgrade going to be supported.
-let appleQuery = Query
-    .select()
-    .from(DataSource.database(database))
-    .where(Expression.property("task").equalTo("apples"))
-for (index, row) in try appleQuery.run().enumerated() {
-    let task = row.document.getString("task")
-    let date = row.document.getDate("createdAt")
-    let image = row.document.getBlob("_attachments")
-    image?.content
-}
+newTask.getString("name")
+newTask.getDate("createdAt")
 /*:
  - Experiment:
  Use the `getBlob()` type accessor to display the image in the playground as a `UIImage`.
  */
-if let taskBlob = movieList.getBlob("image") {
+
+if let taskBlob = newTask.getBlob("image") {
     UIImage(data: taskBlob.content!)
 }
 /*:
@@ -197,26 +195,12 @@ if let taskBlob = movieList.getBlob("image") {
 */
 let url = URL(string: "blip://localhost:4984/db")!
 let replication = database.replication(with: url)
-PlaygroundPage.current.needsIndefiniteExecution = true
-/*:
-  With `.needsIndefiniteExecution = true`, we must explicitly call `PlaygroundPage.current.finishExecution()` when the asynchronous operation has completed.
- - Experiment:
- Implement the replication change listener and call `PlaygroundPage.current.finishExecution()` once the replication has completed.
-*/
-public class ReplicationListener: ReplicationDelegate {
-    public init() {
-        
-    }
-    public func replication(_ replication: CBLReplication, didChange status: Replication.Status) {
-        print(status)
-    }
-    public func replication(_ replication: CBLReplication, didStopWithError error: Error?) {
-        print(error)
-    }
-}
-replication.delegate = ReplicationListener()
-replication.continuous = true
 replication.start()
+/*:
+ - Experiment:
+ Use the `PlaygroundPage.current.needsIndefiniteExecution = true` statement to execute the playground indefinitely.
+*/
+PlaygroundPage.current.needsIndefiniteExecution = true
 /*:
  ## Conflict Resolvers
  ### 1.x API
