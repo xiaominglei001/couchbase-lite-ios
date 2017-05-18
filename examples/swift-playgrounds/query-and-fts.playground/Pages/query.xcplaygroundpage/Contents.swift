@@ -2,24 +2,27 @@
 //: # N1QL queries in Couchbase Mobile 2.0
 import CouchbaseLiteSwift
 import PlaygroundSupport
+
 let documentsDirectory = playgroundSharedDataDirectory
 /*:
- ## Pre-existing database
- - Database with the same data as the travel sample data.
- - Replicated to a 1.x instance.
- - Opened with 2.0 (automatically upgraded).
+ ## Getting Started
+ Run the following steps to install a pre-built database and start using the 2.0 API.
+ 1. Download [travel-sample.zip](https://cl.ly/2m1I2g21102h/travel-sample.zip)
+    - 1.x pre-built database of the travel-sample bucket.
+    ![](travel-sample.png)
+ 2. Create the `~/Documents/Shared Playground Data` directory.
+ 3. Unzip the downloaded file and move `travel-sample.cblite2` to the playground data folder.
 */
 var options = DatabaseOptions()
 options.directory = documentsDirectory.path
 let database = try Database(name: "travel-sample", options: options)
-for (index, row) in database.allDocuments.enumerated() {
-    print(row)
-}
 /*:
  - Experiment:
  Find out how many documents are in the database.
 */
-
+for (index, row) in database.allDocuments.enumerated() {
+    let string = "type \(row.getString("type"))"
+}
 /*:
  ## Airport Query
  ### = statement
@@ -33,12 +36,8 @@ let faaQuery = Query
     .from(DataSource.database(database))
     .where(Expression.property("faa").equalTo("SfO".uppercased()))
 for row in try! faaQuery.run() {
-//    print("faaQuery :: \(row.document.properties!["airportname"]!)")
+    "faaQuery :: \(row.document.getString("airportname"))"
 }
-/*:
- - Note:
- Notice that the `geo` dictionary is logged as a `Subdocument`.
-*/
 /*:
  ### = statement
  - If the input text is 4 characters long match on the `icao` field.
@@ -46,32 +45,32 @@ for row in try! faaQuery.run() {
  SELECT airportname from `travel-sample` WHERE icao = UPPER('YYYY');
  ```
 */
-//let icaoQuery: Query
+let icaoQuery = Query
+    .select()
+    .from(DataSource.database(database))
+    .where(Expression.property("icao").equalTo("kSfO".uppercased()))
+for row in try! icaoQuery.run() {
+    "icaoQuery :: \(row.document.getString("airportname"))"
+}
 /*:
- - Experiment:
- Write the query equivalent to the N1QL statement above for Boston (icao: **KBOS**).
  ### LIKE statement
  - The `like` statement can be used to match on a prefix ("match values that start with ...").
+ - Case sensitive.
  ```
  SELECT airportname from `travel-sample` WHERE LOWER(airportname) LIKE LOWER('%ZZZZZ%');
  ```
 */
 let startsWithQuery = Query
                         .select()
-                        .from(DataSource.database(database!))
-                        .where(Expression.property("airportname").like("%Heath%"))
+                        .from(DataSource.database(database))
+                        .where(Expression.property("airportname").like("Heath%"))
 for row in try! startsWithQuery.run() {
-    print("startsWithQuery :: \(row.document.properties!["airportname"]!)")
+    row.document.getString("airportname")
 }
 /*:
- - Note:
- What is the granularity of results? Is it adjustable?
+ - Experiment:
+ Update the above query to match rows that begin with (only) a particular set of characters.
 */
-// case insensitive
-// best reference on this is the SQLite documentation (same as N1QL)
-// there's also a regex match for more complex matching
-// queries with the like operator can't be indexed. -> FTS
-// regex to match on uppercase only prefix
 /*:
  ## FlightPath Query
  ### AND statement
@@ -86,51 +85,55 @@ for row in try! startsWithQuery.run() {
  ORDER BY a.name ASC;
  ```
 */
-//let flightPathQuery = Query
-//                        .select()
-//                        .from(DataSource.database(database!))
-//                        .where(Expression.property("sourceairport").equalTo("MCO")
-//                            .and(Expression.property("destinationairport").equalTo("SEA")))
-//for row in try! flightPathQuery.run() {
-////    print("flightPathQuery :: \(row.document.properties!["airline"]!)")
-//}
-//// JOINS will be in a future DB
-// alternative currently
-// with CBL, data can't be unested in the current DB. (not sure if it will be in the future)
+let flightPathQuery = Query
+                        .select()
+                        .from(DataSource.database(database))
+                        .where(Expression.property("sourceairport").equalTo("MCO")
+                            .and(Expression.property("destinationairport").equalTo("SEA")))
+for (index, row) in try flightPathQuery.run().enumerated() {
+    "flightPathQuery :: \(row.document.getString("airline"))"
+}
 /*:
  - Experiment:
  Modify the code above to print the schedule for each airline flying this route.
 */
-
 /*:
  ## Ordering
  ### orderBy statement
- - By default, the results are ordered in lexicographic order of the document ID property.
- - The `orderBy` method can be used on a query to specify the ordering of results.
+ - By default, there is no ordering (however they get pulled from the database).
+ - That's also why the query result is a `Set`.
+ - If ordering is important to the app, must use the `orderBy` statement.
+ - Performance vs ordering trade-off.
 */
-// by default there's no ordering. they come out in whatever way SQLite pulled them from the database. may change accross app runs so if ordering is important to the app then must use the orderBy. that's why it's called a set because there's no ordering guaranteed. perfomance vs ordering is trade-off
+let orderedStartsWithQuery = Query
+    .select()
+    .from(DataSource.database(database))
+    .where(Expression.property("airportname").like("%London%"))
+for (index, row) in try orderedStartsWithQuery.run().enumerated() {
+    "orderedStartsWithQuery :: \(row.document.getString("airportname"))"
+}
 
-//let orderedStartsWithQuery = Query
+//let orderedStartsWithQuery2 = Query
 //    .select()
-//    .from(DataSource.database(database!))
+//    .from(DataSource.database(database))
 //    .where(Expression.property("airportname").like("%London%"))
-//for row in try! orderedStartsWithQuery.run() {
-////    print("orderedStartsWithQuery :: \(row.document.properties!["airportname"]!)")
+//.orderBy(Expression.property("airportname"))
+//for (index, row) in try orderedStartsWithQuery2.run().enumerated() {
+//    "orderedStartsWithQuery :: \(row.document.getString("airportname"))"
 //}
 /*:
  - Experiment:
  Modify the query above to order the results by the `airportname` value.
 */
 /*:
- ## Data aggregation
- - Is this supported in the cross platform Query API?
+ ### REGEX statement
+ - there's also a regex match for more complex matching
+ - queries with the like operator can't be indexed.
+ - FTS regex to match on uppercase only prefix
 */
-//let routesQuery = Query
-//                    .select()
-//                    .from(DataSource.database(database!))
-//                    .where(Expression.property("type").equalTo("route"))
-// Todo
 /*:
- - Note:
- Is this feature currently available in the cross-platform API.
+ ### Coming soon
+ - Data aggregation
+ - JOINS will be in a future DB
+ - Data can't be unested in the current Developer Build
 */
