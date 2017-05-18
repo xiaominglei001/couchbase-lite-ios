@@ -24,14 +24,14 @@ let documentsDirectory = playgroundSharedDataDirectory.resolvingSymlinksInPath()
  - No `Manager` class.
  - Instead databases are created using the `Database` initializer.
 */
-let emptyDatabase = try Database(name: "todo")
+var database = try Database(name: "todo")
 /*:
  - Experiment:
  Use the `Database(name: String, options: DatabaseOptions)` initializer to open the existing **todo** database.
 */
 var options = DatabaseOptions()
 options.directory = documentsDirectory.path
-let database = try Database(name: "todo", options: options)
+database = try Database(name: "todo", options: options)
 /*:
  - Experiment:
  Iterate over all the documents in the database (print the `id` and `type` properties). You should see that there are `task` and `task-list` documents already.
