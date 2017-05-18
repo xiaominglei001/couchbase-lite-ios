@@ -54,7 +54,7 @@ let newTask = Document(dictionary: dict)
 try database.save(newTask)
 /*:
  - Experiment:
- Print the properties of the `movieList` document.
+ Print the properties of the `newTask` document.
 */
 newTask.toDictionary()
 /*:
@@ -69,7 +69,7 @@ newTask.toDictionary()
 */
 /*:
  - Experiment:
- Add the missing `name` field to the `movieList` document.
+ Add the missing `name` field to the `newTask` document.
  */
 newTask.set("Chocolate croissants", forKey: "name")
 try database.save(newTask)
@@ -158,7 +158,7 @@ let painAuChocolat = #imageLiteral(resourceName: "croissant.jpg")
 let imageData = UIImageJPEGRepresentation(painAuChocolat, 1)!
 /*:
  - Experiment:
- Persist the `imageData` value as a blob name `image` with a content-type of `image/jpg`.
+ Persist the `imageData` value as a blob named `image` with a content-type of `image/jpg`.
 */
 let blob = Blob(contentType: "image/jpg", data: imageData)
 newTask.set(blob, forKey: "image")
@@ -198,7 +198,7 @@ replication.start()
  - Experiment:
  Use the `PlaygroundPage.current.needsIndefiniteExecution = true` statement to execute the playground indefinitely.
 */
-PlaygroundPage.current.needsIndefiniteExecution = true
+
 /*:
  ## Conflict Resolvers
  ### 1.x API
