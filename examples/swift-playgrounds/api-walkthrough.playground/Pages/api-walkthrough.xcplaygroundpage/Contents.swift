@@ -48,7 +48,8 @@ for (index, row) in database.allDocuments.enumerated() {
  - `Document` initializers to create a new Document.
 */
 let dict: [String: Any] = ["type": "task",
-                           "owner": "todo"]
+                           "owner": "todo",
+                           "createdAt": Date()]
 let newTask = Document(dictionary: dict)
 try database.save(newTask)
 /*:
@@ -84,7 +85,7 @@ newTask.toDictionary()
     2. Add 2 new tasks item under the `tasks` property.
     3. Save the document and verify that the tasks were added successfully.
 */
-let newList = Document(dictionary: ["name": "Holidays"])
+let newList = Document(dictionary: ["name": "Holidays", "type": "task-list"])
 newList.set([], forKey: "tasks")
     .getArray("tasks")?.add(["name": "Spade", "complete": false])
                        .add(["name": "Sandpit", "complete": false])
@@ -142,8 +143,8 @@ try nameQuery.explain()
  ### 2.0 API
  - Treated the same as other data types.
 */
-let painAuChocolat = #imageLiteral(resourceName: "croissant.jpg")
-let imageData = UIImageJPEGRepresentation(painAuChocolat, 1)!
+let croissantPicture = #imageLiteral(resourceName: "croissant.jpg")
+let imageData = UIImageJPEGRepresentation(croissantPicture, 1)!
 /*:
  - Experiment:
  Persist the `imageData` value as a blob named `image` with a content-type of `image/jpg`.
