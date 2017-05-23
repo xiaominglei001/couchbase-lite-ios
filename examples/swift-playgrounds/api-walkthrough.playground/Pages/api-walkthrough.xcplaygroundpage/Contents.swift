@@ -48,15 +48,15 @@ for (index, row) in database.allDocuments.enumerated() {
  - `Document` initializers to create a new Document.
 */
 let dict: [String: Any] = ["type": "task-list",
-                           "owner": "todo",
-                           "createdAt": Date()]
-let newTask = Document(dictionary: dict)
-try database.save(newTask)
+                           "name": "Holidays",
+                           "owner": "todo"]
+let newList = Document(dictionary: dict)
+try database.save(newList)
 /*:
  - Experiment:
  Print the properties of the `newTask` document.
 */
-newTask.toDictionary()
+newList.toDictionary()
 /*:
  ## Update Document
  - `Document` properties are now mutable.
@@ -71,8 +71,8 @@ newTask.toDictionary()
  - Experiment:
  Add the missing `name` field to the `newTask` document.
  */
-newTask.set("Chocolate croissants", forKey: "name")
-try database.save(newTask)
+newList.set("Chocolate croissants", forKey: "name")
+try database.save(newList)
 /*:
  - Note:
  Need example with ArrayObject, DictObjct, Fragment API, SwiftyJSON.
@@ -81,7 +81,7 @@ try database.save(newTask)
  - Experiment:
  Verify that the property was successfully modified.
 */
-newTask.toDictionary()
+newList.toDictionary()
 /*:
  ## Threading model
  - Same threading model across platforms.
@@ -161,13 +161,13 @@ let imageData = UIImageJPEGRepresentation(painAuChocolat, 1)!
  Persist the `imageData` value as a blob named `image` with a content-type of `image/jpg`.
 */
 let blob = Blob(contentType: "image/jpg", data: imageData)
-newTask.set(blob, forKey: "image")
-try database.save(newTask)
+newList.set(blob, forKey: "image")
+try database.save(newList)
 /*:
  - Experiment:
  Print the properties of the `newTask` document.
  */
-newTask.toDictionary()
+newList.toDictionary()
 /*:
  ## Typed accessors
  ### 1.x API
@@ -175,13 +175,13 @@ newTask.toDictionary()
  ### 2.0 API
  - Typed accessors provided for all JSON types and `Blob`.
 */
-newTask.getString("name")
-newTask.getDate("createdAt")
+newList.getString("name")
+newList.getDate("createdAt")
 /*:
  - Experiment:
  Use the `getBlob()` type accessor to display the image in the playground as a `UIImage`.
  */
-if let taskBlob = newTask.getBlob("image") {
+if let taskBlob = newList.getBlob("image") {
     UIImage(data: taskBlob.content!)
 }
 /*:
