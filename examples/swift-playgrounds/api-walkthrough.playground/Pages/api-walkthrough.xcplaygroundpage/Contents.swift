@@ -47,16 +47,15 @@ for (index, row) in database.allDocuments.enumerated() {
  - `getDocument` returns nil if the document doesn't exist.
  - `Document` initializers to create a new Document.
 */
-let dict: [String: Any] = ["type": "task-list",
-                           "name": "Holidays",
+let dict: [String: Any] = ["type": "task",
                            "owner": "todo"]
-let newList = Document(dictionary: dict)
-try database.save(newList)
+let newTask = Document(dictionary: dict)
+try database.save(newTask)
 /*:
  - Experiment:
  Print the properties of the `newTask` document.
 */
-newList.toDictionary()
+newTask.toDictionary()
 /*:
  ## Update Document
  - `Document` properties are now mutable.
@@ -71,37 +70,26 @@ newList.toDictionary()
  - Experiment:
  Add the missing `name` field to the `newTask` document.
  */
-newList.set("Chocolate croissants", forKey: "name")
-try database.save(newList)
-/*:
- - Note:
- Need example with ArrayObject, DictObjct, Fragment API, SwiftyJSON.
-*/
+newTask.set("Croissant", forKey: "name")
+try database.save(newTask)
 /*:
  - Experiment:
  Verify that the property was successfully modified.
 */
-newList.toDictionary()
-/*:
- ## Threading model
- - Same threading model across platforms.
- - Couchbase Lite objects are thread safe.
- - When getting a document multiple times, even on the same thread, it will return different instances of the Document.
- */
+newTask.toDictionary()
 /*:
  - Experiment:
-     1. Create two instances of the same document.
-     2. Print the address of each instance to the console.
-     3. Notice the address of each instance is different.
+ The getter methods are chainable.
+    1. Get the document with id `todo.123`.
+    2. Add 2 new tasks item under the `tasks` property.
+    3. Save the document and verify that the tasks were added successfully.
 */
-var list1 = database.getDocument("todo.123")
-var list2 = database.getDocument("todo.123")
-withUnsafeBytes(of: &list1) { (bufferPointer) in
-    bufferPointer.baseAddress
-}
-withUnsafeBytes(of: &list2) { (bufferPointer) in
-    bufferPointer.baseAddress
-}
+let newList = Document(dictionary: ["name": "Holidays"])
+newList.set([], forKey: "tasks")
+    .getArray("tasks")?.add(["name": "Spade", "complete": false])
+                       .add(["name": "Sandpit", "complete": false])
+try database.save(newList)
+newList.getArray("tasks")?.count
 /*:
  ## Index
  - What is an index?
@@ -161,13 +149,13 @@ let imageData = UIImageJPEGRepresentation(painAuChocolat, 1)!
  Persist the `imageData` value as a blob named `image` with a content-type of `image/jpg`.
 */
 let blob = Blob(contentType: "image/jpg", data: imageData)
-newList.set(blob, forKey: "image")
-try database.save(newList)
+newTask.set(blob, forKey: "image")
+try database.save(newTask)
 /*:
  - Experiment:
  Print the properties of the `newTask` document.
  */
-newList.toDictionary()
+newTask.toDictionary()
 /*:
  ## Typed accessors
  ### 1.x API
@@ -175,13 +163,13 @@ newList.toDictionary()
  ### 2.0 API
  - Typed accessors provided for all JSON types and `Blob`.
 */
-newList.getString("name")
-newList.getDate("createdAt")
+newTask.getString("name")
+newTask.getDate("createdAt")
 /*:
  - Experiment:
  Use the `getBlob()` type accessor to display the image in the playground as a `UIImage`.
  */
-if let taskBlob = newList.getBlob("image") {
+if let taskBlob = newTask.getBlob("image") {
     UIImage(data: taskBlob.content!)
 }
 /*:
@@ -190,6 +178,7 @@ if let taskBlob = newList.getBlob("image") {
  - Push/pull replication methods.
  ### 2.0 API
  - Replication is always bi-directional.
+ - Methods to enabled push or pull.
 */
 let url = URL(string: "blip://localhost:4984/db")!
 let replication = database.replication(with: url)
