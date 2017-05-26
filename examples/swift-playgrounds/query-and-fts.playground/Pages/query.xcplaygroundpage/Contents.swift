@@ -127,13 +127,12 @@ for (index, row) in try orderedStartsWithQuery.run().enumerated() {
 */
 /*:
  ### REGEX statement
- - there's also a regex match for more complex matching
- - queries with the like operator can't be indexed.
- - FTS regex to match on uppercase only prefix
+ - There's also a regex match for more complex matching.
+ - Queries with the like operator can't be indexed.
 */
 /*:
  ### Coming soon
- - Data aggregation
- - JOINS will be in a future DB
- - Data can't be unested in the current Developer Build
+ - Projection
+ - Data aggregation (groupBy)
+ - Joins
 */

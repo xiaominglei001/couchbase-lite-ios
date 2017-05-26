@@ -29,7 +29,7 @@ for (index, row) in database.allDocuments.enumerated() {
  - The array is the primary and secondary key. The index ordering is based on those and is purely used for performance.
  - Generally, best to stick to 1 property in the index.
 */
-let hotelSearchIndex = try database.createIndex(["description"], options: IndexOptions.fullTextIndex(language: nil, ignoreDiacritics: false))
+//let hotelSearchIndex = try database.createIndex(["description"], options: IndexOptions.fullTextIndex(language: nil, ignoreDiacritics: false))
 /*:
  - Note:
  Need to find a way to know if the index already exists.
