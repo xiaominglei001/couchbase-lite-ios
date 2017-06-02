@@ -13,15 +13,15 @@ let documentsDirectory = playgroundSharedDataDirectory
  2. Create the `~/Documents/Shared Playground Data` directory.
  3. Unzip the downloaded file and move `travel-sample.cblite2` to the playground data folder.
 */
-var options = DatabaseOptions()
-options.directory = documentsDirectory.path
-let database = try Database(name: "travel-sample", options: options)
+var config = DatabaseConfiguration()
+config.directory = documentsDirectory.path
+let database = try Database(name: "travel-sample", config: config)
 /*:
  - Experiment:
  Find out how many documents are in the database.
 */
 for (index, row) in database.allDocuments.enumerated() {
-    let string = "type \(row.getString("type"))"
+    let string = "type \(row.string(forKey: "type"))"
 }
 /*:
  ## Airport Query
@@ -36,7 +36,7 @@ let faaQuery = Query
     .from(DataSource.database(database))
     .where(Expression.property("faa").equalTo("SfO".uppercased()))
 for row in try! faaQuery.run() {
-    "faaQuery :: \(row.document.getString("airportname"))"
+    "faaQuery :: \(row.document.string(forKey: "airportname"))"
 }
 /*:
  ### = statement
@@ -50,7 +50,7 @@ let icaoQuery = Query
     .from(DataSource.database(database))
     .where(Expression.property("icao").equalTo("kSfO".uppercased()))
 for row in try! icaoQuery.run() {
-    "icaoQuery :: \(row.document.getString("airportname"))"
+    "icaoQuery :: \(row.document.string(forKey: "airportname"))"
 }
 /*:
  ### LIKE statement
@@ -65,7 +65,7 @@ let startsWithQuery = Query
                         .from(DataSource.database(database))
                         .where(Expression.property("airportname").like("Heath%"))
 for row in try! startsWithQuery.run() {
-    row.document.getString("airportname")
+    row.document.string(forKey: "airportname")
 }
 /*:
  - Experiment:
@@ -91,7 +91,7 @@ let flightPathQuery = Query
                         .where(Expression.property("sourceairport").equalTo("MCO")
                             .and(Expression.property("destinationairport").equalTo("SEA")))
 for (index, row) in try flightPathQuery.run().enumerated() {
-    "flightPathQuery :: \(row.document.getString("airline"))"
+    "flightPathQuery :: \(row.document.string(forKey: "airportname"))"
 }
 /*:
  - Experiment:
@@ -110,17 +110,8 @@ let orderedStartsWithQuery = Query
     .from(DataSource.database(database))
     .where(Expression.property("airportname").like("%London%"))
 for (index, row) in try orderedStartsWithQuery.run().enumerated() {
-    "orderedStartsWithQuery :: \(row.document.getString("airportname"))"
+    "orderedStartsWithQuery :: \(row.document.string(forKey: "airportname"))"
 }
-
-//let orderedStartsWithQuery2 = Query
-//    .select()
-//    .from(DataSource.database(database))
-//    .where(Expression.property("airportname").like("%London%"))
-//.orderBy(Expression.property("airportname"))
-//for (index, row) in try orderedStartsWithQuery2.run().enumerated() {
-//    "orderedStartsWithQuery :: \(row.document.getString("airportname"))"
-//}
 /*:
  - Experiment:
  Modify the query above to order the results by the `airportname` value.

@@ -11,15 +11,15 @@ let documentsDirectory = playgroundSharedDataDirectory.path
  2. Create the `~/Documents/Shared Playground Data` directory.
  3. Unzip the downloaded file and move `travel-sample.cblite2` to the playground data folder.
  */
-var options = DatabaseOptions()
-options.directory = documentsDirectory
-let database = try Database(name: "travel-sample", options: options)
+var config = DatabaseConfiguration()
+config.directory = documentsDirectory
+let database = try Database(name: "travel-sample", config: config)
 /*:
  - Experiment:
  Find out how many documents are in the database.
  */
 for (index, row) in database.allDocuments.enumerated() {
-    "type \(row.getString("type"))"
+    "type \(row.string(forKey: "type"))"
 }
 /*:
  ## Hotel Search

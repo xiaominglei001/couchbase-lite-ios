@@ -29,15 +29,15 @@ var database = try Database(name: "todo")
  - Experiment:
  Use the `Database(name: String, options: DatabaseOptions)` initializer to open the existing **todo** database.
 */
-var options = DatabaseOptions()
-options.directory = documentsDirectory.path
-database = try Database(name: "todo", options: options)
+var configuration = DatabaseConfiguration()
+configuration.directory = documentsDirectory.path
+database = try Database(name: "todo", config: configuration)
 /*:
  - Experiment:
  Iterate over all the documents in the database (print the `id` and `type` properties). You should see that there are `task` and `task-list` documents already.
 */
 for (index, row) in database.allDocuments.enumerated() {
-    let string = "id \(row.id), type \(row.getString("type"))"
+    let string = "id \(row.id), type \(row.string(forKey: "type"))"
 }
 /*:
  ## Create Document
@@ -87,10 +87,10 @@ newTask.toDictionary()
 */
 let newList = Document(dictionary: ["name": "Holidays", "type": "task-list"])
 newList.set([], forKey: "tasks")
-    .getArray("tasks")?.add(["name": "Spade", "complete": false])
+    .array(forKey: "tasks")?.add(["name": "Spade", "complete": false])
                        .add(["name": "Sandpit", "complete": false])
 try database.save(newList)
-newList.getArray("tasks")?.count
+newList.array(forKey: "tasks")?.count
 /*:
  ## Index
  - What is an index?
@@ -164,13 +164,13 @@ newTask.toDictionary()
  ### 2.0 API
  - Typed accessors provided for all JSON types and `Blob`.
 */
-newTask.getString("name")
-newTask.getDate("createdAt")
+newTask.string(forKey: "name")
+newTask.date(forKey: "createdAt")
 /*:
  - Experiment:
  Use the `getBlob()` type accessor to display the image in the playground as a `UIImage`.
  */
-if let taskBlob = newTask.getBlob("image") {
+if let taskBlob = newTask.blob(forKey: "image") {
     UIImage(data: taskBlob.content!)
 }
 /*:
@@ -182,7 +182,11 @@ if let taskBlob = newTask.getBlob("image") {
  - Methods to enabled push or pull.
 */
 let url = URL(string: "blip://localhost:4984/db")!
-let replication = database.replication(with: url)
+var config = ReplicatorConfiguration()
+config.database = database
+config.target = .url(url)
+config.continuous = true
+let replication = Replicator(config: config)
 replication.start()
 /*:
  - Experiment:
