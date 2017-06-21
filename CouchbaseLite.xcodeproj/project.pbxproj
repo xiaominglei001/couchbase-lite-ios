@@ -335,6 +335,8 @@
 		93E17F0F1ED3BA7500671CA1 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */; };
 		93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 93E17EF71ED3ABE200671CA1 /* CBLDocumentChange.m */; };
 		93E17F151ED4ED4000671CA1 /* NotificationTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93E17F141ED4ED4000671CA1 /* NotificationTest.swift */; };
+		93F5D1711EF9F37400E2DF53 /* CBLThreadSafe.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F5D15F1EF9F0BD00E2DF53 /* CBLThreadSafe.h */; };
+		93F5D1721EF9F37400E2DF53 /* CBLThreadSafe.h in Headers */ = {isa = PBXBuildFile; fileRef = 93F5D15F1EF9F0BD00E2DF53 /* CBLThreadSafe.h */; };
 		93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93F74A8A1EC5549C001289F8 /* FragmentTest.swift */; };
 /* End PBXBuildFile section */
 
@@ -750,6 +752,7 @@
 		93E17F091ED3AC8100671CA1 /* CBLDatabaseChange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseChange.h; sourceTree = "<group>"; };
 		93E17F0A1ED3AC8100671CA1 /* CBLDatabaseChange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseChange.m; sourceTree = "<group>"; };
 		93E17F141ED4ED4000671CA1 /* NotificationTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationTest.swift; sourceTree = "<group>"; };
+		93F5D15F1EF9F0BD00E2DF53 /* CBLThreadSafe.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLThreadSafe.h; sourceTree = "<group>"; };
 		93F74A8A1EC5549C001289F8 /* FragmentTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FragmentTest.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -1009,6 +1012,7 @@
 				9381959B1EB9A6FC0032CC51 /* CBLStatus.mm */,
 				934F4CA51E241FB500F90659 /* CBLSymmetricKey.h */,
 				934F4CA61E241FB500F90659 /* CBLSymmetricKey.m */,
+				93F5D15F1EF9F0BD00E2DF53 /* CBLThreadSafe.h */,
 			);
 			name = Support;
 			sourceTree = "<group>";
@@ -1308,6 +1312,7 @@
 				275F929E1E4D377C007FD5A2 /* CBLDatabase.h in Headers */,
 				272850A71E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */,
 				9381962B1EC15F410032CC51 /* CBLC4Document.h in Headers */,
+				93F5D1721EF9F37400E2DF53 /* CBLThreadSafe.h in Headers */,
 				93E17F0D1ED3BA6300671CA1 /* CBLDocumentChange.h in Headers */,
 				93B5036B1E64B093002C4680 /* CBLJSON.h in Headers */,
 				938196321EC15F620032CC51 /* CBLFLDict.h in Headers */,
@@ -1388,6 +1393,7 @@
 				93E17EF81ED3ABE200671CA1 /* CBLDocumentChange.h in Headers */,
 				934F4CAB1E241FB500F90659 /* CBLInternal.h in Headers */,
 				931C145E1EAACAAA0094F9B2 /* CBLReadOnlyDictionaryFragment.h in Headers */,
+				93F5D1711EF9F37400E2DF53 /* CBLThreadSafe.h in Headers */,
 				27F961991ED8D9440060F804 /* CBLReachability.h in Headers */,
 				934F4CAF1E241FB500F90659 /* CBLLog.h in Headers */,
 				938195981EB97E7A0032CC51 /* CBLDocumentFragment.h in Headers */,
